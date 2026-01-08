@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Referral Program - JeetOWin</title>
+    <link rel="stylesheet" href="/frontend/css/styles.css">
+    <link rel="stylesheet" href="/frontend/css/dark-mode.css">
+    <style>
+        .app-container { display: flex; min-height: 100vh; background: var(--bg-primary); }
+        .sidebar { width: var(--sidebar-width); background: var(--bg-secondary); border-right: 1px solid var(--border-color); position: fixed; left: 0; top: 0; height: 100vh; overflow-y: auto; z-index: 1000; transition: transform 0.3s; }
+        .sidebar-header { padding: var(--spacing-lg); border-bottom: 1px solid var(--border-color); }
+        .sidebar-logo { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .sidebar-menu { padding: var(--spacing-md) 0; }
+        .menu-item { display: flex; align-items: center; padding: var(--spacing-md) var(--spacing-lg); color: var(--text-secondary); cursor: pointer; transition: all 0.2s; text-decoration: none; border-left: 3px solid transparent; }
+        .menu-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+        .menu-item.active { background: var(--bg-hover); color: var(--accent-primary); border-left-color: var(--accent-primary); }
+        .menu-item-icon { margin-right: var(--spacing-md); width: 20px; text-align: center; }
+        .main-content { flex: 1; margin-left: var(--sidebar-width); display: flex; flex-direction: column; }
+        .header { height: var(--header-height); background: var(--bg-secondary); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; padding: 0 var(--spacing-lg); position: sticky; top: 0; z-index: 100; }
+        .header-left { display: flex; align-items: center; gap: var(--spacing-lg); }
+        .header-title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); color: var(--text-primary); }
+        .header-right { display: flex; align-items: center; gap: var(--spacing-md); }
+        .header-balance { font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold); color: var(--accent-primary); }
+        .theme-toggle { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: var(--spacing-sm) var(--spacing-md); cursor: pointer; color: var(--text-primary); font-size: var(--font-size-sm); }
+        .theme-toggle:hover { background: var(--bg-hover); }
+        .content { flex: 1; padding: var(--spacing-xl); overflow-y: auto; }
+        .mobile-menu-toggle { display: none; background: none; border: none; color: var(--text-primary); font-size: var(--font-size-xl); cursor: pointer; }
+        .mobile-menu-close { display: none; background: none; border: none; color: var(--text-primary); font-size: var(--font-size-xl); cursor: pointer; position: absolute; right: var(--spacing-md); top: var(--spacing-md); }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.active { transform: translateX(0); }
+            .mobile-menu-toggle, .mobile-menu-close { display: block; }
+            .main-content { margin-left: 0; }
+        }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--spacing-lg); margin-bottom: var(--spacing-xl); }
+        .stat-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: var(--spacing-lg); text-align: center; }
+        .stat-value { font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); color: var(--accent-primary); }
+        .stat-label { color: var(--text-muted); font-size: var(--font-size-sm); margin-top: var(--spacing-sm); }
+        .referral-link-box { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: var(--spacing-lg); margin-bottom: var(--spacing-xl); }
+        .referral-link { background: var(--bg-secondary); padding: var(--spacing-md); border-radius: var(--radius-md); font-family: monospace; word-break: break-all; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar" id="sidebar">
+            <button class="mobile-menu-close" id="mobile-menu-close">×</button>
+            <div class="sidebar-header"><div class="sidebar-logo">JeetOWin</div></div>
+            <nav class="sidebar-menu">
+                <a href="/frontend/client/dashboard.html" class="menu-item" data-href="/frontend/client/dashboard.html"><span class="menu-item-icon">📊</span><span>Dashboard</span></a>
+                <a href="/frontend/client/transactions.html" class="menu-item" data-href="/frontend/client/transactions.html"><span class="menu-item-icon">💳</span><span>Transactions</span></a>
+                <a href="/frontend/client/accounts.html" class="menu-item" data-href="/frontend/client/accounts.html"><span class="menu-item-icon">👤</span><span>My Accounts</span></a>
+                <a href="/frontend/client/wallets.html" class="menu-item" data-href="/frontend/client/wallets.html"><span class="menu-item-icon">💰</span><span>My Wallets</span></a>
+                <a href="/frontend/client/promotions.html" class="menu-item" data-href="/frontend/client/promotions.html"><span class="menu-item-icon">🎁</span><span>Promotions</span></a>
+                <a href="/frontend/client/referral.html" class="menu-item active" data-href="/frontend/client/referral.html"><span class="menu-item-icon">🔗</span><span>Referral Program</span></a>
+                <a href="/frontend/client/notifications.html" class="menu-item" data-href="/frontend/client/notifications.html"><span class="menu-item-icon">🔔</span><span>Notifications</span></a>
+                <a href="/frontend/client/contact.html" class="menu-item" data-href="/frontend/client/contact.html"><span class="menu-item-icon">📞</span><span>Contact Us</span></a>
+                <a href="#" class="menu-item" onclick="logout(); return false;"><span class="menu-item-icon">🚪</span><span>Logout</span></a>
+            </nav>
+        </aside>
+        <div class="main-content">
+            <header class="header">
+                <div class="header-left"><button class="mobile-menu-toggle" id="mobile-menu-toggle">☰</button><h1 class="header-title">JeetOWin</h1></div>
+                <div class="header-right"><div class="header-balance" id="header-balance">Rs. 0.00</div><button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">🌓</button></div>
+            </header>
+            <main class="content">
+                <h2 style="margin-bottom: var(--spacing-xl);">Referral Program</h2>
+                <div class="tabs-container">
+                    <div class="tabs">
+                        <button class="tab active" data-tab="summary">Summary</button>
+                        <button class="tab" data-tab="overall">Overall</button>
+                    </div>
+                </div>
+                <div id="summary-tab">
+                    <div class="referral-link-box">
+                        <h3 style="margin-bottom: var(--spacing-md);">Your Referral Link</h3>
+                        <div class="referral-link" id="referral-link">https://jeetowin.com/register?ref=ABC123</div>
+                        <button class="btn btn-primary btn-sm mt-md" onclick="navigator.clipboard.writeText(document.getElementById('referral-link').textContent)">Copy Link</button>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value">0</div>
+                            <div class="stat-label">Total Referrals</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">Rs. 0.00</div>
+                            <div class="stat-label">Total Commission</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">Rs. 0.00</div>
+                            <div class="stat-label">This Month</div>
+                        </div>
+                    </div>
+                </div>
+                <div id="overall-tab" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Referral History</h3>
+                        </div>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Referral</th>
+                                    <th>Commission</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">No referrals yet</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    <script src="/frontend/js/api.js"></script>
+    <script src="/frontend/js/auth.js"></script>
+    <script src="/frontend/js/dark-mode.js"></script>
+    <script src="/frontend/js/app.js"></script>
+    <script>
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                const tabName = this.getAttribute('data-tab');
+                document.getElementById('summary-tab').style.display = tabName === 'summary' ? 'block' : 'none';
+                document.getElementById('overall-tab').style.display = tabName === 'overall' ? 'block' : 'none';
+            });
+        });
+    </script>
+</body>
+</html>
