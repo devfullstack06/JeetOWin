@@ -6,58 +6,78 @@
  * @param {string} email - User's email address
  * @param {string} password - User's password
  * @returns {Promise<object>} - Response data containing token and role
+ * @throws {Error} - Throws error with readable message if login fails
  */
 export async function login({ email, password }) {
-  console.log("[authService] Starting login API call");
-  console.log("[authService] URL: /api/auth/login");
-  console.log("[authService] Method: POST");
-  console.log("[authService] Body:", { email, password: "***" });
+  let res;
+  let responseText;
 
-  const res = await fetch("/api/auth/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
-  });
+  try {
+    // Attempt to fetch from server
+    res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+  } catch (networkError) {
+    // Handle network errors (server not reachable, CORS, etc.)
+    console.error("[authService] Network error:", networkError);
+    throw new Error("Server not reachable. Please check your connection and try again.");
+  }
 
-  console.log("[authService] Fetch completed");
-  console.log("[authService] HTTP Status:", res.status, res.statusText);
-  console.log("[authService] Response OK:", res.ok);
-  console.log("[authService] Response Headers:", Object.fromEntries(res.headers.entries()));
+  // Get raw response text for safe parsing
+  try {
+    responseText = await res.text();
+  } catch (readError) {
+    // Handle errors reading response body
+    console.error("[authService] Failed to read response:", readError);
+    throw new Error("Failed to read server response. Please try again.");
+  }
 
-  // Get raw response text first for logging
-  const responseText = await res.text();
-  console.log("[authService] Raw response text:", responseText);
-
-  // Parse JSON from the text
+  // Safely parse JSON response
   let data;
   try {
-    data = JSON.parse(responseText);
-    console.log("[authService] Parsed JSON data:", data);
+    // Handle empty responses
+    if (!responseText.trim()) {
+      data = {};
+    } else {
+      data = JSON.parse(responseText);
+    }
   } catch (parseError) {
+    // Handle non-JSON responses (HTML error pages, plain text, etc.)
     console.error("[authService] Failed to parse JSON:", parseError);
-    console.error("[authService] Response text was:", responseText);
+    console.error("[authService] Response was:", responseText.substring(0, 200));
+    
+    // If response is not OK, provide context
+    if (!res.ok) {
+      throw new Error(`Server error (${res.status}). Please try again later.`);
+    }
+    
+    // If response is OK but not JSON, it's unexpected
     throw new Error("Invalid response from server. Please try again.");
   }
 
+  // Check if response indicates an error
   if (!res.ok) {
-    const msg = data?.error || data?.message || `Login failed (${res.status})`;
-    console.error("[authService] Login failed:", msg);
-    throw new Error(msg);
+    // Extract error message from response data
+    const errorMessage =
+      data?.error ||
+      data?.message ||
+      `Login failed (${res.status})`;
+
+    throw new Error(errorMessage);
   }
 
   // Store token in localStorage if provided
   if (data?.token) {
-    console.log("[authService] Storing token in localStorage");
     localStorage.setItem("token", data.token);
   }
 
   // Store role if provided
   if (data?.role) {
-    console.log("[authService] Storing role in localStorage:", data.role);
     localStorage.setItem("role", data.role);
   }
 
-  console.log("[authService] Login successful, returning data");
   return data;
 }
 
