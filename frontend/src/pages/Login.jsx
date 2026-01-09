@@ -29,34 +29,46 @@ export default function Login() {
    * Sends email and password to backend API
    */
   async function handleSubmit(e) {
+    console.log("[Login] handleSubmit called");
     e.preventDefault();
+    console.log("[Login] preventDefault executed");
     setError("");
 
     // Validation
     if (!email || !password) {
+      console.log("[Login] Validation failed - missing email or password");
       setError("Please enter both username and password");
       return;
     }
 
+    console.log("[Login] Starting login API call with email:", email);
+
     try {
       setLoading(true);
+      console.log("[Login] Loading state set to true");
+      
       const data = await loginApi({ email, password });
+      console.log("[Login] API call successful, received data:", data);
 
       // Token is already stored in authService
       // Check if user is a client (only clients should access client login)
       if (data.role && data.role !== "client") {
+        console.log("[Login] Role check failed - user role is:", data.role);
         localStorage.removeItem("token");
         localStorage.removeItem("role");
         setError("Access denied. This login is for clients only.");
         return;
       }
 
+      console.log("[Login] Login successful, redirecting to dashboard");
       // Redirect to old HTML dashboard temporarily until React dashboard is built
       // Once React dashboard is ready, change to: navigate("/dashboard")
       window.location.href = "/frontend/client/dashboard.html";
     } catch (err) {
+      console.error("[Login] Error during login:", err);
       setError(err?.message || "Login failed. Please try again.");
     } finally {
+      console.log("[Login] Setting loading state to false");
       setLoading(false);
     }
   }
