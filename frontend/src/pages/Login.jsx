@@ -32,10 +32,18 @@ export default function Login() {
 
     try {
       setLoading(true);
-      await loginApi({ email, password });
+      const data = await loginApi({ email, password });
 
-      // TEMP: stay on page / or navigate later (design task only)
-      // navigate("/");
+      // Check if user is a client (only clients should access client login)
+      if (data.role && data.role !== "client") {
+        localStorage.removeItem("token");
+        localStorage.removeItem("role");
+        setError("Access denied. This login is for clients only.");
+        return;
+      }
+
+      // Navigate to dashboard after successful login
+      navigate("/dashboard");
     } catch (err) {
       setError(err?.message || "Login failed. Please try again.");
     } finally {
