@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - JeetOWin</title>
+    <link rel="stylesheet" href="/frontend/css/styles.css">
+    <style>
+        /* Register Page Specific Styles */
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-lg);
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+        }
+
+        .auth-card {
+            width: 100%;
+            max-width: 420px;
+            background: var(--bg-card);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-2xl);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-color);
+        }
+
+        .auth-logo {
+            text-align: center;
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .auth-logo h1 {
+            font-size: var(--font-size-3xl);
+            font-weight: var(--font-weight-bold);
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .auth-subtitle {
+            text-align: center;
+            color: var(--text-muted);
+            margin-bottom: var(--spacing-xl);
+            font-size: var(--font-size-sm);
+        }
+
+        .auth-footer {
+            text-align: center;
+            margin-top: var(--spacing-lg);
+            color: var(--text-muted);
+            font-size: var(--font-size-sm);
+        }
+
+        .auth-footer a {
+            color: var(--accent-primary);
+            font-weight: var(--font-weight-medium);
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-logo">
+                <h1>JeetOWin</h1>
+            </div>
+            <p class="auth-subtitle">Create your account</p>
+
+            <div id="error-message" class="error-message" style="display: none;"></div>
+            <div id="success-message" class="success-message" style="display: none;"></div>
+
+            <form id="register-form">
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        placeholder="Enter your email"
+                        required
+                        autocomplete="email"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        placeholder="Enter your password (min 6 characters)"
+                        required
+                        autocomplete="new-password"
+                        minlength="6"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="referral_code">Referral Code (Optional)</label>
+                    <input 
+                        type="text" 
+                        id="referral_code" 
+                        name="referral_code" 
+                        placeholder="Enter referral code if you have one"
+                        autocomplete="off"
+                    >
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;" id="submit-btn">
+                    Sign Up
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                Already have an account? <a href="/frontend/client/login.html">Sign In</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="/frontend/js/api.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const registerForm = document.getElementById('register-form');
+            const errorMessage = document.getElementById('error-message');
+            const successMessage = document.getElementById('success-message');
+            const submitBtn = document.getElementById('submit-btn');
+
+            registerForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                const email = document.getElementById('email').value.trim();
+                const password = document.getElementById('password').value;
+                const referralCode = document.getElementById('referral_code').value.trim();
+
+                errorMessage.style.display = 'none';
+                successMessage.style.display = 'none';
+                errorMessage.textContent = '';
+                successMessage.textContent = '';
+
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner"></span> Creating account...';
+
+                try {
+                    const body = { email, password };
+                    if (referralCode) {
+                        body.referral_code = referralCode;
+                    }
+
+                    await apiRequest('/auth/register', 'POST', body);
+
+                    successMessage.textContent = 'Account created successfully! Redirecting to login...';
+                    successMessage.style.display = 'block';
+
+                    setTimeout(() => {
+                        window.location.href = '/frontend/client/login.html';
+                    }, 2000);
+
+                } catch (error) {
+                    errorMessage.textContent = error.message || 'Registration failed. Please try again.';
+                    errorMessage.style.display = 'block';
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Sign Up';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

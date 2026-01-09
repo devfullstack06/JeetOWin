@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transactions - JeetOWin</title>
+    <link rel="stylesheet" href="/frontend/css/styles.css">
+    <link rel="stylesheet" href="/frontend/css/dark-mode.css">
+    <style>
+        .tabs-container {
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .preset-amounts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: var(--spacing-md);
+            margin: var(--spacing-lg) 0;
+        }
+
+        .preset-amount-btn {
+            padding: var(--spacing-md);
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .preset-amount-btn:hover {
+            border-color: var(--accent-primary);
+            background: var(--bg-hover);
+        }
+
+        .preset-amount-btn.active {
+            border-color: var(--accent-primary);
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .payment-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: var(--spacing-md);
+            margin: var(--spacing-lg) 0;
+        }
+
+        .payment-method {
+            padding: var(--spacing-md);
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .payment-method:hover {
+            border-color: var(--accent-primary);
+        }
+
+        .payment-method.active {
+            border-color: var(--accent-primary);
+            background: var(--bg-hover);
+        }
+
+        .file-upload {
+            border: 2px dashed var(--border-color);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-xl);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .file-upload:hover {
+            border-color: var(--accent-primary);
+            background: var(--bg-hover);
+        }
+
+        .file-upload input {
+            display: none;
+        }
+
+        .transaction-form {
+            max-width: 600px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <button class="mobile-menu-close" id="mobile-menu-close">×</button>
+            
+            <!-- Sidebar Header -->
+            <div class="sidebar-header">
+                <div class="sidebar-logo">JeetOWin</div>
+            </div>
+
+            <!-- Sidebar Profile Section -->
+            <div class="sidebar-profile">
+                <div class="sidebar-profile-greeting">Hi,</div>
+                <div class="sidebar-profile-name" id="sidebar-user-name">User</div>
+                <div class="sidebar-profile-balance">My Balance: <span id="sidebar-balance">Rs. 0.00</span></div>
+                <div class="sidebar-actions">
+                    <a href="/frontend/client/transactions.html?tab=deposit" class="btn btn-success" style="text-decoration: none; width: 100%;">Deposit</a>
+                    <a href="/frontend/client/transactions.html?tab=withdraw" class="btn btn-warning" style="text-decoration: none; width: 100%; background: var(--warning);">Withdraw</a>
+                </div>
+            </div>
+
+            <!-- Sidebar Menu -->
+            <nav class="sidebar-menu">
+                <a href="/frontend/client/accounts.html" class="menu-item" data-href="/frontend/client/accounts.html">
+                    <span class="menu-item-icon">👤</span>
+                    <span>Accounts</span>
+                </a>
+                <a href="/frontend/client/wallets.html" class="menu-item" data-href="/frontend/client/wallets.html">
+                    <span class="menu-item-icon">💰</span>
+                    <span>My Wallets</span>
+                </a>
+                <a href="/frontend/client/promotions.html" class="menu-item" data-href="/frontend/client/promotions.html">
+                    <span class="menu-item-icon">🎁</span>
+                    <span>Promotions</span>
+                </a>
+                <a href="/frontend/client/referral.html" class="menu-item" data-href="/frontend/client/referral.html">
+                    <span class="menu-item-icon">🔗</span>
+                    <span>Referral Program</span>
+                </a>
+                <a href="/frontend/client/notifications.html" class="menu-item" data-href="/frontend/client/notifications.html">
+                    <span class="menu-item-icon">🔔</span>
+                    <span>Notifications</span>
+                </a>
+                <a href="/frontend/client/contact.html" class="menu-item" data-href="/frontend/client/contact.html">
+                    <span class="menu-item-icon">📞</span>
+                    <span>Contact Us</span>
+                </a>
+                <a href="#" class="menu-item" onclick="logout(); return false;">
+                    <span class="menu-item-icon">🚪</span>
+                    <span>Logout</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <button class="mobile-menu-toggle" id="mobile-menu-toggle">☰</button>
+                    <h1 class="header-title">JeetOWin</h1>
+                </div>
+                <div class="header-right">
+                    <div class="header-balance" id="header-balance">
+                        Rs. 0.00
+                        <span class="header-balance-icon">+</span>
+                    </div>
+                    <button class="theme-toggle" id="theme-toggle">🌓</button>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <main class="content">
+                <h2 style="margin-bottom: var(--spacing-xl);">Transactions</h2>
+
+                <!-- Tabs -->
+                <div class="tabs-container">
+                    <div class="tabs">
+                        <button class="tab active" data-tab="deposit">Deposit</button>
+                        <button class="tab" data-tab="withdraw">Withdraw</button>
+                    </div>
+                </div>
+
+                <!-- Deposit Form -->
+                <div id="deposit-form" class="transaction-form tab-content">
+                    <div class="card">
+                        <h3 class="card-title" style="margin-bottom: var(--spacing-lg);">Deposit Funds</h3>
+                        
+                        <div class="form-group">
+                            <label>Payment Method</label>
+                            <div class="payment-methods">
+                                <div class="payment-method active" data-method="bank">
+                                    <div>🏦</div>
+                                    <div>Bank Transfer</div>
+                                </div>
+                                <div class="payment-method" data-method="upi">
+                                    <div>📱</div>
+                                    <div>UPI</div>
+                                </div>
+                                <div class="payment-method" data-method="crypto">
+                                    <div>₿</div>
+                                    <div>Crypto</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="deposit-amount">Amount</label>
+                            <input type="number" id="deposit-amount" placeholder="Enter amount" min="1" step="0.01" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Quick Amount</label>
+                            <div class="preset-amounts">
+                                <button type="button" class="preset-amount-btn" data-amount="1000">Rs. 1,000</button>
+                                <button type="button" class="preset-amount-btn" data-amount="5000">Rs. 5,000</button>
+                                <button type="button" class="preset-amount-btn" data-amount="10000">Rs. 10,000</button>
+                                <button type="button" class="preset-amount-btn" data-amount="25000">Rs. 25,000</button>
+                                <button type="button" class="preset-amount-btn" data-amount="50000">Rs. 50,000</button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Upload Payment Slip</label>
+                            <div class="file-upload" onclick="document.getElementById('deposit-slip').click()">
+                                <input type="file" id="deposit-slip" accept="image/*">
+                                <div>📎 Click to upload payment slip</div>
+                                <div class="text-muted" style="font-size: var(--font-size-sm); margin-top: var(--spacing-sm);">
+                                    JPG, PNG or PDF (Max 5MB)
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">Submit Deposit Request</button>
+                    </div>
+                </div>
+
+                <!-- Withdraw Form -->
+                <div id="withdraw-form" class="transaction-form tab-content" style="display: none;">
+                    <div class="card">
+                        <h3 class="card-title" style="margin-bottom: var(--spacing-lg);">Withdraw Funds</h3>
+                        
+                        <div class="form-group">
+                            <label for="withdraw-amount">Amount</label>
+                            <input type="number" id="withdraw-amount" placeholder="Enter amount" min="1" step="0.01" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Quick Amount</label>
+                            <div class="preset-amounts">
+                                <button type="button" class="preset-amount-btn" data-amount="1000">Rs. 1,000</button>
+                                <button type="button" class="preset-amount-btn" data-amount="5000">Rs. 5,000</button>
+                                <button type="button" class="preset-amount-btn" data-amount="10000">Rs. 10,000</button>
+                                <button type="button" class="preset-amount-btn" data-amount="25000">Rs. 25,000</button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="withdraw-method">Withdrawal Method</label>
+                            <select id="withdraw-method" required>
+                                <option value="">Select method</option>
+                                <option value="bank">Bank Transfer</option>
+                                <option value="upi">UPI</option>
+                                <option value="crypto">Crypto Wallet</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="withdraw-account">Account Details</label>
+                            <textarea id="withdraw-account" rows="4" placeholder="Enter account number, IFSC, etc." required></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">Submit Withdrawal Request</button>
+                    </div>
+                </div>
+
+                <!-- Transaction History -->
+                <div class="card" style="margin-top: var(--spacing-xl);">
+                    <div class="card-header">
+                        <h3 class="card-title">Transaction History</h3>
+                    </div>
+                    <div id="transaction-history">
+                        <p class="text-muted text-center">Loading transactions...</p>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="/frontend/js/api.js"></script>
+    <script src="/frontend/js/auth.js"></script>
+    <script src="/frontend/js/dark-mode.js"></script>
+    <script src="/frontend/js/app.js"></script>
+    <script>
+        // Load balance for header and sidebar
+        async function loadBalance() {
+            try {
+                const data = await apiRequest('/client/dashboard', 'GET');
+                const balance = data.balance || 0;
+                
+                // Update header balance
+                const headerBalanceEl = document.getElementById('header-balance');
+                if (headerBalanceEl) {
+                    headerBalanceEl.innerHTML = `Rs. ${formatCurrency(balance)} <span class="header-balance-icon">+</span>`;
+                }
+
+                // Update sidebar balance
+                const sidebarBalanceEl = document.getElementById('sidebar-balance');
+                if (sidebarBalanceEl) {
+                    sidebarBalanceEl.textContent = `Rs. ${formatCurrency(balance)}`;
+                }
+            } catch (error) {
+                console.error('Failed to load balance:', error);
+            }
+        }
+
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const tabName = this.getAttribute('data-tab');
+                
+                // Update tabs
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Update forms
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.style.display = 'none';
+                });
+                document.getElementById(`${tabName}-form`).style.display = 'block';
+            });
+        });
+
+        // Preset amount buttons
+        document.querySelectorAll('.preset-amount-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const amount = this.getAttribute('data-amount');
+                const form = this.closest('.transaction-form');
+                const input = form.querySelector('input[type="number"]');
+                if (input) {
+                    input.value = amount;
+                }
+                
+                // Update active state
+                this.parentElement.querySelectorAll('.preset-amount-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Payment method selection
+        document.querySelectorAll('.payment-method').forEach(method => {
+            method.addEventListener('click', function() {
+                this.parentElement.querySelectorAll('.payment-method').forEach(m => m.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Load transaction history
+        async function loadTransactionHistory() {
+            try {
+                const data = await apiRequest('/client/transactions', 'GET');
+                const container = document.getElementById('transaction-history');
+                
+                if (!data.transactions || data.transactions.length === 0) {
+                    container.innerHTML = '<p class="text-muted text-center">No transactions yet</p>';
+                    return;
+                }
+
+                container.innerHTML = `
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Balance After</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.transactions.map(t => `
+                                <tr>
+                                    <td>${new Date(t.created_at).toLocaleString()}</td>
+                                    <td><span class="badge badge-${t.type === 'deposit' ? 'success' : t.type === 'withdrawal' ? 'error' : 'info'}">${t.type}</span></td>
+                                    <td>Rs. ${formatCurrency(t.amount)}</td>
+                                    <td>Rs. ${formatCurrency(t.balance_after)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } catch (error) {
+                console.error('Failed to load transactions:', error);
+            }
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-IN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(amount);
+        }
+
+        // Check URL for tab parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const tab = urlParams.get('tab');
+        if (tab === 'withdraw') {
+            document.querySelector('.tab[data-tab="withdraw"]').click();
+        }
+
+        // Load data on page load
+        loadBalance();
+        loadTransactionHistory();
+    </script>
+</body>
+</html>

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - JeetOWin</title>
+    <link rel="stylesheet" href="/frontend/css/styles.css">
+    <link rel="stylesheet" href="/frontend/css/dark-mode.css">
+    <style>
+        /* Dashboard Specific Styles */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .dashboard-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-xl);
+            border: 1px solid var(--border-color);
+        }
+
+        .dashboard-card-title {
+            font-size: var(--font-size-sm);
+            color: var(--text-muted);
+            margin-bottom: var(--spacing-sm);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .dashboard-card-value {
+            font-size: var(--font-size-3xl);
+            font-weight: var(--font-weight-bold);
+            color: var(--text-primary);
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--spacing-md);
+            margin-top: var(--spacing-xl);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <button class="mobile-menu-close" id="mobile-menu-close">×</button>
+            
+            <!-- Sidebar Header -->
+            <div class="sidebar-header">
+                <div class="sidebar-logo">JeetOWin</div>
+            </div>
+
+            <!-- Sidebar Profile Section -->
+            <div class="sidebar-profile">
+                <div class="sidebar-profile-greeting">Hi,</div>
+                <div class="sidebar-profile-name" id="sidebar-user-name">User</div>
+                <div class="sidebar-profile-balance">My Balance: <span id="sidebar-balance">Rs. 0.00</span></div>
+                <div class="sidebar-actions">
+                    <a href="/frontend/client/transactions.html?tab=deposit" class="btn btn-success" style="text-decoration: none; width: 100%;">Deposit</a>
+                    <a href="/frontend/client/transactions.html?tab=withdraw" class="btn btn-warning" style="text-decoration: none; width: 100%; background: var(--warning);">Withdraw</a>
+                </div>
+            </div>
+
+            <!-- Sidebar Menu -->
+            <nav class="sidebar-menu">
+                <a href="/frontend/client/accounts.html" class="menu-item" data-href="/frontend/client/accounts.html">
+                    <span class="menu-item-icon">👤</span>
+                    <span>Accounts</span>
+                </a>
+                <a href="/frontend/client/wallets.html" class="menu-item" data-href="/frontend/client/wallets.html">
+                    <span class="menu-item-icon">💰</span>
+                    <span>My Wallets</span>
+                </a>
+                <a href="/frontend/client/promotions.html" class="menu-item" data-href="/frontend/client/promotions.html">
+                    <span class="menu-item-icon">🎁</span>
+                    <span>Promotions</span>
+                </a>
+                <a href="/frontend/client/referral.html" class="menu-item" data-href="/frontend/client/referral.html">
+                    <span class="menu-item-icon">🔗</span>
+                    <span>Referral Program</span>
+                </a>
+                <a href="/frontend/client/notifications.html" class="menu-item" data-href="/frontend/client/notifications.html">
+                    <span class="menu-item-icon">🔔</span>
+                    <span>Notifications</span>
+                </a>
+                <a href="/frontend/client/contact.html" class="menu-item" data-href="/frontend/client/contact.html">
+                    <span class="menu-item-icon">📞</span>
+                    <span>Contact Us</span>
+                </a>
+                <a href="#" class="menu-item" onclick="logout(); return false;">
+                    <span class="menu-item-icon">🚪</span>
+                    <span>Logout</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <button class="mobile-menu-toggle" id="mobile-menu-toggle">☰</button>
+                    <h1 class="header-title">JeetOWin</h1>
+                </div>
+                <div class="header-right">
+                    <div class="header-balance" id="header-balance">
+                        Rs. 0.00
+                        <span class="header-balance-icon">+</span>
+                    </div>
+                    <button class="theme-toggle" id="theme-toggle">🌓</button>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <main class="content">
+                <h2 style="margin-bottom: var(--spacing-xl);">Dashboard</h2>
+
+                <!-- Balance Cards -->
+                <div class="dashboard-grid">
+                    <div class="dashboard-card">
+                        <div class="dashboard-card-title">Account Balance</div>
+                        <div class="dashboard-card-value" id="balance-value">Rs. 0.00</div>
+                    </div>
+                    <div class="dashboard-card">
+                        <div class="dashboard-card-title">Total Profit/Loss</div>
+                        <div class="dashboard-card-value" id="pnl-value">Rs. 0.00</div>
+                    </div>
+                    <div class="dashboard-card">
+                        <div class="dashboard-card-title">Status</div>
+                        <div class="dashboard-card-value" style="font-size: var(--font-size-lg);" id="status-value">Active</div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <a href="/frontend/client/transactions.html?tab=deposit" class="btn btn-primary" style="text-decoration: none;">
+                        Deposit
+                    </a>
+                    <a href="/frontend/client/transactions.html?tab=withdraw" class="btn btn-secondary" style="text-decoration: none;">
+                        Withdraw
+                    </a>
+                </div>
+
+                <!-- Recent Transactions -->
+                <div class="card" style="margin-top: var(--spacing-xl);">
+                    <div class="card-header">
+                        <h3 class="card-title">Recent Transactions</h3>
+                    </div>
+                    <div id="recent-transactions">
+                        <p class="text-muted text-center">Loading transactions...</p>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- tawk.to Chat Widget (placeholder) -->
+    <script type="text/javascript">
+        var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+        (function(){
+            var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+            s1.async=true;
+            s1.src='https://embed.tawk.to/YOUR_PROPERTY_ID/YOUR_WIDGET_ID';
+            s1.charset='UTF-8';
+            s1.setAttribute('crossorigin','*');
+            s0.parentNode.insertBefore(s1,s0);
+        })();
+    </script>
+
+    <script src="/frontend/js/api.js"></script>
+    <script src="/frontend/js/auth.js"></script>
+    <script src="/frontend/js/dark-mode.js"></script>
+    <script src="/frontend/js/app.js"></script>
+    <script src="/frontend/js/utils.js"></script>
+    <script>
+        // Load dashboard data
+        async function loadDashboard() {
+            try {
+                const data = await apiRequest('/client/dashboard', 'GET');
+                
+                // Update balance
+                const balanceEl = document.getElementById('balance-value');
+                if (balanceEl) {
+                    balanceEl.textContent = `Rs. ${formatCurrency(data.balance || 0)}`;
+                }
+
+                // Update header balance
+                const headerBalanceEl = document.getElementById('header-balance');
+                if (headerBalanceEl) {
+                    headerBalanceEl.innerHTML = `Rs. ${formatCurrency(data.balance || 0)} <span class="header-balance-icon">+</span>`;
+                }
+
+                // Update sidebar balance
+                const sidebarBalanceEl = document.getElementById('sidebar-balance');
+                if (sidebarBalanceEl) {
+                    sidebarBalanceEl.textContent = `Rs. ${formatCurrency(data.balance || 0)}`;
+                }
+
+                // Update status
+                const statusEl = document.getElementById('status-value');
+                if (statusEl) {
+                    statusEl.textContent = data.status || 'Active';
+                    statusEl.className = data.status === 'active' ? 'text-success' : 'text-error';
+                }
+
+                // Load recent transactions
+                loadRecentTransactions();
+            } catch (error) {
+                console.error('Failed to load dashboard:', error);
+            }
+        }
+
+        async function loadRecentTransactions() {
+            try {
+                const data = await apiRequest('/client/transactions', 'GET');
+                const container = document.getElementById('recent-transactions');
+                
+                if (!data.transactions || data.transactions.length === 0) {
+                    container.innerHTML = '<p class="text-muted text-center">No transactions yet</p>';
+                    return;
+                }
+
+                const recent = data.transactions.slice(0, 5);
+                container.innerHTML = `
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Balance After</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${recent.map(t => `
+                                <tr>
+                                    <td><span class="badge badge-${t.type === 'deposit' ? 'success' : t.type === 'withdrawal' ? 'error' : 'info'}">${t.type}</span></td>
+                                    <td>Rs. ${formatCurrency(t.amount)}</td>
+                                    <td>Rs. ${formatCurrency(t.balance_after)}</td>
+                                    <td>${new Date(t.created_at).toLocaleDateString()}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } catch (error) {
+                console.error('Failed to load transactions:', error);
+                document.getElementById('recent-transactions').innerHTML = '<p class="text-error">Failed to load transactions</p>';
+            }
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-IN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(amount);
+        }
+
+        // Load dashboard when page loads
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadDashboard);
+        } else {
+            loadDashboard();
+        }
+    </script>
+</body>
+</html>
