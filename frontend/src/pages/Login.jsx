@@ -1,5 +1,5 @@
 // frontend/src/pages/Login.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { login as loginApi } from "../services/authService";
 import {
@@ -20,6 +20,17 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Auto-redirect if user is already logged in
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const role = localStorage.getItem("role");
+
+    // If token exists and user is a client, redirect to dashboard
+    if (token && role === "client") {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [navigate]);
 
   async function handleSubmit(e) {
     e.preventDefault();

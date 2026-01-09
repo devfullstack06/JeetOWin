@@ -60,3 +60,14 @@ export async function login({ email, password }) {
   console.log("[authService] Login successful, returning data");
   return data;
 }
+
+/**
+ * Logout user by clearing authentication data from localStorage
+ * Removes token and role from localStorage
+ */
+export function logout() {
+  console.log("[authService] Logging out user");
+  localStorage.removeItem("token");
+  localStorage.removeItem("role");
+  console.log("[authService] Token and role removed from localStorage");
+}
