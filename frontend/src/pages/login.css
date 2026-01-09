@@ -1,332 +1,260 @@
 /* frontend/src/pages/login.css */
-/* Client Login page styles matching the design screenshot */
 
-/* Main Screen Container */
-.jw-screen {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: linear-gradient(180deg, #0b2a6d 0%, #0b4aa0 60%, #0b2a6d 100%);
-  color: #fff;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-  padding-bottom: 56px; /* Space for bottom nav */
+:root {
+  --header-h: 56px;
+  --footer-h: 56px;
+  --nav-w: 210px;
 }
 
-/* Top White Header */
-.jw-topbar {
-  height: 56px;
+/* Whole page */
+.jw-page {
+  min-height: 100vh;
+  background: #e9e9e9;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  color: #0b2a6d;
+}
+
+/* HEADER */
+.jw-header {
+  height: var(--header-h);
+  background: #fff;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 16px;
-  background: #ffffff;
-  color: #0b2a6d;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 0 14px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
-.jw-brand {
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  font-size: 20px;
-  color: #0b2a6d;
-}
-
-.jw-iconbtn {
-  border: 0;
-  background: transparent;
-  color: #0b2a6d;
-  cursor: pointer;
-  padding: 8px;
+.jw-headerLeft {
   display: flex;
   align-items: center;
+  gap: 10px;
+}
+
+.jw-logo {
+  font-weight: 800;
+  font-size: 20px;
+  letter-spacing: 0.3px;
+  color: #0b2a6d;
+}
+
+.jw-iconBtn {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  color: #0b2a6d;
+  padding: 8px;
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
-  border-radius: 4px;
-  transition: background 0.2s;
+  border-radius: 8px;
 }
 
-.jw-iconbtn:hover {
-  background: rgba(11, 42, 109, 0.1);
+.jw-iconBtn:hover {
+  background: rgba(11,42,109,0.08);
 }
 
-.jw-iconbtn:active {
-  background: rgba(11, 42, 109, 0.2);
+/* BODY wrapper */
+.jw-body {
+  display: flex;
+  background: #e9e9e9;
+  min-height: calc(100vh - var(--header-h) - var(--footer-h));
 }
 
-/* Banner Image Section */
-.jw-banner {
-  height: 180px;
-  width: 100%;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+/* Desktop left nav */
+.jw-leftNav {
+  width: var(--nav-w);
+  background: #0a1f4f;
+  display: none;
+}
+
+/* Main area */
+.jw-mainArea {
+  flex: 1;
   position: relative;
-  background-color: #0b2a6d;
+  overflow: hidden;
+  background: #e9e9e9;
 }
 
-.jw-bannerOverlay {
+/* Banner stage */
+.jw-bannerStage {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(0, 0, 0, 0.15) 0%,
-    rgba(11, 42, 109, 0.25) 100%
-  );
-}
-
-/* Tabs Row */
-.jw-tabs {
   display: flex;
-  padding: 12px 18px 0;
-  gap: 24px;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.25);
-  background: #0b2a6d;
-}
-
-.jw-tab {
-  padding: 10px 0;
-  color: rgba(255, 255, 255, 0.8);
-  text-decoration: none;
-  font-size: 14px;
-  font-weight: 500;
-  position: relative;
-  background: none;
-  border: none;
-  cursor: pointer;
-  transition: color 0.2s;
-}
-
-.jw-tab:hover {
-  color: rgba(255, 255, 255, 0.95);
-}
-
-.jw-tabActive {
-  color: #fff;
-  font-weight: 600;
-}
-
-.jw-tabActive::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: -2px;
-  width: 76px;
-  height: 2px;
-  background: #fff;
-  border-radius: 1px;
-}
-
-/* Main Content Area */
-.jw-main {
-  flex: 1;
-  display: flex;
+  align-items: stretch;
   justify-content: center;
-  align-items: flex-start;
-  padding: 26px 18px;
-  background: #0b2a6d;
 }
 
-.jw-form {
+/* =========================
+   MOBILE IMAGE (DEFAULT)
+   ========================= */
+.jw-bannerImg {
+  content: url("/banner-login-mobile.jpg");
   width: 100%;
-  max-width: 360px;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
-/* Form Fields */
-.jw-field {
-  display: block;
-  margin-bottom: 16px;
+/* Login panel */
+.jw-loginPanel {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(420px, calc(100% - 32px));
+  padding: 18px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.20);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.35);
+  box-shadow: 0 18px 40px rgba(0,0,0,0.18);
 }
+
+/* FORM */
+.jw-form { width: 100%; }
+
+.jw-field { margin-bottom: 12px; }
 
 .jw-input {
   width: 100%;
-  padding: 14px 16px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(4px);
-  color: #fff;
-  font-size: 16px;
-  outline: none;
-  transition: all 0.2s;
-  box-sizing: border-box;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,0.2);
+  background: rgba(255,255,255,0.35);
 }
 
-.jw-input:focus {
-  border-color: rgba(255, 255, 255, 0.5);
-  background: rgba(255, 255, 255, 0.2);
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
-}
-
-.jw-input::placeholder {
-  color: rgba(255, 255, 255, 0.75);
-}
-
-.jw-input:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* Forgot Password Link */
-.jw-link {
-  width: 100%;
-  background: transparent;
-  border: 0;
-  color: rgba(255, 255, 255, 0.85);
-  text-decoration: underline;
-  cursor: pointer;
+.jw-forgot {
+  margin: 6px 0 14px;
   font-size: 12px;
-  margin: 8px 0 20px;
-  text-align: left;
-  padding: 0;
-  transition: color 0.2s;
+  background: none;
+  border: none;
+  text-decoration: underline;
 }
 
-.jw-link:hover {
-  color: rgba(255, 255, 255, 1);
-}
-
-.jw-link:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* Error Message */
-.jw-error {
-  background: rgba(255, 60, 60, 0.2);
-  border: 1px solid rgba(255, 60, 60, 0.5);
-  padding: 12px 16px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  font-size: 13px;
-  color: #ffcccc;
-  text-align: center;
-}
-
-/* Action Buttons */
 .jw-actions {
   display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  margin-top: 40px;
+  gap: 12px;
+  margin-top: 18px;
 }
 
 .jw-btn {
   flex: 1;
-  min-width: 110px;
-  padding: 14px 20px;
-  border-radius: 10px;
-  border: 0;
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
   color: #fff;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
-  transition: all 0.2s;
-  text-align: center;
+  font-weight: 700;
 }
 
-.jw-btn:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
-}
+.jw-btnCancel { background: #c5352f; }
+.jw-btnLogin { background: #2fa64a; }
 
-.jw-btn:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.jw-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.jw-btnCancel {
-  background: #c5352f;
-}
-
-.jw-btnCancel:hover:not(:disabled) {
-  background: #b02e28;
-}
-
-.jw-btnLogin {
-  background: #2fa64a;
-}
-
-.jw-btnLogin:hover:not(:disabled) {
-  background: #25903e;
-}
-
-/* Bottom Fixed Navigation Bar */
-.jw-bottomnav {
-  height: 56px;
+/* FOOTER (mobile only) */
+.jw-footerNav {
+  height: var(--footer-h);
   background: #0a1f4f;
   display: flex;
-  align-items: center;
   justify-content: space-around;
   position: fixed;
-  left: 0;
-  right: 0;
   bottom: 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  z-index: 1000;
+  width: 100%;
 }
 
+/* ✅ Mobile bottom nav buttons: no background + white icons */
+.jw-footerNav button,
 .jw-bottomItem {
+  background: transparent !important;
   border: 0;
-  background: transparent;
-  color: #fff;
-  cursor: pointer;
-  opacity: 0.85;
-  padding: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-  transition: all 0.2s;
-}
-
-.jw-bottomItem:hover {
+  color: #fff !important;
   opacity: 1;
-  background: rgba(255, 255, 255, 0.1);
+  padding: 8px;
+  border-radius: 10px;
 }
 
-.jw-bottomItem:active {
-  transform: scale(0.95);
+.jw-footerNav button:hover,
+.jw-bottomItem:hover {
+  background: transparent !important; /* no hover background */
 }
 
-/* Mobile Responsive Adjustments */
-@media (max-width: 480px) {
-  .jw-topbar {
-    padding: 0 14px;
+/* MOBILE */
+@media (max-width: 768px) {
+  .jw-loginPanel {
+    top: auto;
+    bottom: 70px;
+    min-height: 450px;
+    display: flex;
   }
 
-  .jw-brand {
-    font-size: 18px;
-  }
-
-  .jw-banner {
-    height: 160px;
-  }
-
-  .jw-tabs {
-    padding: 10px 16px 0;
-  }
-
-  .jw-main {
-    padding: 24px 16px;
-  }
-
-  .jw-input {
-    padding: 12px 14px;
-    font-size: 16px; /* Prevents zoom on iOS */
+  .jw-form {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
   }
 
   .jw-actions {
-    margin-top: 32px;
-    gap: 12px;
+    margin-top: auto;
+  }
+}
+
+/* =========================
+   DESKTOP IMAGE + LAYOUT
+   ========================= */
+@media (min-width: 769px) {
+  .jw-footerNav { display: none; }
+
+  /* ✅ Desktop: remove reserved footer space so content reaches bottom */
+  .jw-body {
+    min-height: calc(100vh - var(--header-h));
   }
 
-  .jw-btn {
-    padding: 12px 16px;
-    font-size: 15px;
+  .jw-leftNav {
+    display: block;
+    width: var(--nav-w);
+  }
+
+  /* Blur background */
+  .jw-bannerStage::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("/banner-login-desktop.jpg");
+    background-size: cover;
+    background-position: center;
+    filter: blur(18px);
+    transform: scale(1.08);
+    opacity: 0.6;
+  }
+
+  /* Desktop image */
+  .jw-bannerImg {
+    content: url("/banner-login-desktop.jpg");
+    position: relative;
+    z-index: 1;
+    width: min(1100px, 100%);
+    height: 100%;
+    object-fit: contain;
+  }
+
+  /* Desktop login panel SAME as mobile */
+  .jw-loginPanel {
+    bottom: 70px;
+    top: auto;
+    min-height: 450px;
+    display: flex;
+    z-index: 2;
+  }
+
+  .jw-form {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+
+  .jw-actions {
+    margin-top: auto;
   }
 }

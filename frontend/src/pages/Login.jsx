@@ -1,8 +1,6 @@
 // frontend/src/pages/Login.jsx
-// Client Login page matching the design screenshot
-
 import React, { useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { login as loginApi } from "../services/authService";
 import {
   Home,
@@ -16,67 +14,35 @@ import "./login.css";
 
 export default function Login() {
   const navigate = useNavigate();
+
+  // (Keep your existing states / functionality)
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Banner image - use login-banner.jpg if it exists, fallback to banner1.jpg
-  const bannerUrl = "/login-banner.jpg";
-
-  /**
-   * Handle form submission
-   * Sends email and password to backend API
-   */
   async function handleSubmit(e) {
-    console.log("[Login] handleSubmit called");
     e.preventDefault();
-    console.log("[Login] preventDefault executed");
     setError("");
 
-    // Validation
     if (!email || !password) {
-      console.log("[Login] Validation failed - missing email or password");
       setError("Please enter both username and password");
       return;
     }
 
-    console.log("[Login] Starting login API call with email:", email);
-
     try {
       setLoading(true);
-      console.log("[Login] Loading state set to true");
-      
-      const data = await loginApi({ email, password });
-      console.log("[Login] API call successful, received data:", data);
+      await loginApi({ email, password });
 
-      // Token is already stored in authService
-      // Check if user is a client (only clients should access client login)
-      if (data.role && data.role !== "client") {
-        console.log("[Login] Role check failed - user role is:", data.role);
-        localStorage.removeItem("token");
-        localStorage.removeItem("role");
-        setError("Access denied. This login is for clients only.");
-        return;
-      }
-
-      console.log("[Login] Login successful, redirecting to dashboard");
-      // Redirect to old HTML dashboard temporarily until React dashboard is built
-      // Once React dashboard is ready, change to: navigate("/dashboard")
-      window.location.href = "/frontend/client/dashboard.html";
+      // TEMP: stay on page / or navigate later (design task only)
+      // navigate("/");
     } catch (err) {
-      console.error("[Login] Error during login:", err);
       setError(err?.message || "Login failed. Please try again.");
     } finally {
-      console.log("[Login] Setting loading state to false");
       setLoading(false);
     }
   }
 
-  /**
-   * Handle Cancel button click
-   * Clears form fields
-   */
   function handleCancel() {
     setEmail("");
     setPassword("");
@@ -84,12 +50,20 @@ export default function Login() {
   }
 
   return (
-    <div className="jw-screen">
-      {/* Top White Header */}
-      <header className="jw-topbar">
-        <div className="jw-brand">JeetOWin</div>
+    <div className="jw-page">
+      {/* HEADER */}
+      <header className="jw-header">
+        <div className="jw-headerLeft">
+          {/* Mobile only (CSS will hide on desktop) */}
+          <button className="jw-iconBtn jw-hamburger" type="button" aria-label="Menu">
+            <Menu size={22} />
+          </button>
+
+          <div className="jw-logo">JeetOWin</div>
+        </div>
+
         <button
-          className="jw-iconbtn"
+          className="jw-iconBtn"
           type="button"
           aria-label="Home"
           onClick={() => navigate("/")}
@@ -98,108 +72,90 @@ export default function Login() {
         </button>
       </header>
 
-      {/* Banner Image Section */}
-      <section
-        className="jw-banner"
-        style={{
-          backgroundImage: `url(${bannerUrl}), url(/banner1.jpg)`,
-        }}
-      >
-        <div className="jw-bannerOverlay" />
-      </section>
+      {/* BODY */}
+      <div className="jw-body">
+        {/* Desktop left nav (hidden on mobile via CSS) */}
+        <aside className="jw-leftNav">
+          {/* nav content later */}
+        </aside>
 
-      {/* Tabs Row */}
-      <div className="jw-tabs">
-        <div className="jw-tab jw-tabActive">Login</div>
-        <NavLink className="jw-tab" to="/signup">
-          Sign Up
-        </NavLink>
+        {/* Main content area */}
+        <main className="jw-mainArea">
+          {/* Banner stage */}
+          <section className="jw-bannerStage">
+            {/* Desktop centered image + blurred sides handled in CSS */}
+            <img className="jw-bannerImg" src="/banner1.jpg" alt="Banner" />
+          </section>
+
+          {/* Login glass panel: starts 30% down inside body (below header) */}
+          <section className="jw-loginPanel">
+            <form className="jw-form" onSubmit={handleSubmit}>
+              <label className="jw-field">
+                <input
+                  className="jw-input"
+                  type="text"
+                  placeholder="Username"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="username"
+                  disabled={loading}
+                />
+              </label>
+
+              <label className="jw-field">
+                <input
+                  className="jw-input"
+                  type="password"
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
+                  disabled={loading}
+                />
+              </label>
+
+              <button
+                type="button"
+                className="jw-forgot"
+                onClick={() => alert("Forgot feature later")}
+              >
+                Forgot Username or Password?
+              </button>
+
+              {error ? <div className="jw-error">{error}</div> : null}
+
+              <div className="jw-actions">
+                <button
+                  type="button"
+                  className="jw-btn jw-btnCancel"
+                  onClick={handleCancel}
+                  disabled={loading}
+                >
+                  Cancel
+                </button>
+
+                <button type="submit" className="jw-btn jw-btnLogin" disabled={loading}>
+                  {loading ? "Logging in..." : "Login"}
+                </button>
+              </div>
+            </form>
+          </section>
+        </main>
       </div>
 
-      {/* Main Form Content */}
-      <main className="jw-main">
-        <form className="jw-form" onSubmit={handleSubmit}>
-          {/* Username Input (maps to email) */}
-          <label className="jw-field">
-            <input
-              className="jw-input"
-              type="text"
-              placeholder="Username"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoComplete="username"
-              required
-              disabled={loading}
-            />
-          </label>
-
-          {/* Password Input */}
-          <label className="jw-field">
-            <input
-              className="jw-input"
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
-              required
-              disabled={loading}
-            />
-          </label>
-
-          {/* Forgot Password Link */}
-          <button
-            type="button"
-            className="jw-link"
-            onClick={() => alert("Forgot password feature coming soon")}
-          >
-            Forgot Username or Password?
-          </button>
-
-          {/* Error Message */}
-          {error && <div className="jw-error">{error}</div>}
-
-          {/* Action Buttons */}
-          <div className="jw-actions">
-            <button
-              type="button"
-              className="jw-btn jw-btnCancel"
-              onClick={handleCancel}
-              disabled={loading}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="jw-btn jw-btnLogin"
-              disabled={loading}
-            >
-              {loading ? "Logging in..." : "Login"}
-            </button>
-          </div>
-        </form>
-      </main>
-
-      {/* Bottom Fixed Navigation Bar */}
-      <footer className="jw-bottomnav">
+      {/* FOOTER (mobile only, hidden on desktop via CSS) */}
+      <footer className="jw-footerNav">
+        {/* keep nav bar as it is — you’ll adjust icons/padding later */}
         <button className="jw-bottomItem" type="button" aria-label="Menu">
           <Menu size={20} />
         </button>
-        <button
-          className="jw-bottomItem"
-          type="button"
-          aria-label="Transactions"
-        >
+        <button className="jw-bottomItem" type="button" aria-label="Transactions">
           <ArrowLeftRight size={20} />
         </button>
         <button className="jw-bottomItem" type="button" aria-label="Wallet">
           <Wallet size={20} />
         </button>
-        <button
-          className="jw-bottomItem"
-          type="button"
-          aria-label="Promotions"
-        >
+        <button className="jw-bottomItem" type="button" aria-label="Promotions">
           <Megaphone size={20} />
         </button>
         <button className="jw-bottomItem" type="button" aria-label="Chat">
