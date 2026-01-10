@@ -1,4 +1,5 @@
 // frontend/src/pages/Login.jsx
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { login as loginApi } from "../services/authService";
@@ -10,23 +11,21 @@ import {
   Megaphone,
   MessageCircle,
 } from "lucide-react";
+import AuthTabs from "../components/AuthTabs";
 import "./login.css";
 
 export default function Login() {
   const navigate = useNavigate();
 
-  // (Keep your existing states / functionality)
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Auto-redirect if user is already logged in
+  // Auto-redirect if already logged in (client)
   useEffect(() => {
     const token = localStorage.getItem("token");
     const role = localStorage.getItem("role");
-
-    // If token exists and user is a client, redirect to dashboard
     if (token && role === "client") {
       navigate("/dashboard", { replace: true });
     }
@@ -45,7 +44,6 @@ export default function Login() {
       setLoading(true);
       const data = await loginApi({ email, password });
 
-      // Check if user is a client (only clients should access client login)
       if (data.role && data.role !== "client") {
         localStorage.removeItem("token");
         localStorage.removeItem("role");
@@ -53,7 +51,6 @@ export default function Login() {
         return;
       }
 
-      // Navigate to dashboard after successful login
       navigate("/dashboard");
     } catch (err) {
       setError(err?.message || "Login failed. Please try again.");
@@ -73,8 +70,11 @@ export default function Login() {
       {/* HEADER */}
       <header className="jw-header">
         <div className="jw-headerLeft">
-          {/* Mobile only (CSS will hide on desktop) */}
-          <button className="jw-iconBtn jw-hamburger" type="button" aria-label="Menu">
+          <button
+            className="jw-iconBtn jw-hamburger"
+            type="button"
+            aria-label="Menu"
+          >
             <Menu size={22} />
           </button>
 
@@ -93,21 +93,18 @@ export default function Login() {
 
       {/* BODY */}
       <div className="jw-body">
-        {/* Desktop left nav (hidden on mobile via CSS) */}
-        <aside className="jw-leftNav">
-          {/* nav content later */}
-        </aside>
+        <aside className="jw-leftNav">{/* later */}</aside>
 
-        {/* Main content area */}
         <main className="jw-mainArea">
-          {/* Banner stage */}
           <section className="jw-bannerStage">
-            {/* Desktop centered image + blurred sides handled in CSS */}
             <img className="jw-bannerImg" src="/banner1.jpg" alt="Banner" />
           </section>
 
-          {/* Login glass panel: starts 30% down inside body (below header) */}
           <section className="jw-loginPanel">
+            {/* Tabs */}
+            <AuthTabs />
+
+            {/* Form */}
             <form className="jw-form" onSubmit={handleSubmit}>
               <label className="jw-field">
                 <input
@@ -153,7 +150,11 @@ export default function Login() {
                   Cancel
                 </button>
 
-                <button type="submit" className="jw-btn jw-btnLogin" disabled={loading}>
+                <button
+                  type="submit"
+                  className="jw-btn jw-btnLogin"
+                  disabled={loading}
+                >
                   {loading ? "Logging in..." : "Login"}
                 </button>
               </div>
@@ -162,19 +163,26 @@ export default function Login() {
         </main>
       </div>
 
-      {/* FOOTER (mobile only, hidden on desktop via CSS) */}
+      {/* FOOTER (mobile only) */}
       <footer className="jw-footerNav">
-        {/* keep nav bar as it is — you’ll adjust icons/padding later */}
         <button className="jw-bottomItem" type="button" aria-label="Menu">
           <Menu size={20} />
         </button>
-        <button className="jw-bottomItem" type="button" aria-label="Transactions">
+        <button
+          className="jw-bottomItem"
+          type="button"
+          aria-label="Transactions"
+        >
           <ArrowLeftRight size={20} />
         </button>
         <button className="jw-bottomItem" type="button" aria-label="Wallet">
           <Wallet size={20} />
         </button>
-        <button className="jw-bottomItem" type="button" aria-label="Promotions">
+        <button
+          className="jw-bottomItem"
+          type="button"
+          aria-label="Promotions"
+        >
           <Megaphone size={20} />
         </button>
         <button className="jw-bottomItem" type="button" aria-label="Chat">
