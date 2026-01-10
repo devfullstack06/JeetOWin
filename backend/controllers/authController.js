@@ -74,9 +74,10 @@ async function register(req, res) {
 
     try {
       // Insert into users table (username is used for authentication)
+      // Explicitly set status to 'active' (schema has DEFAULT, but being explicit is safer)
       const [userResult] = await connection.query(
-        `INSERT INTO users (username, password_hash, role_id) 
-         VALUES (?, ?, ?)`,
+        `INSERT INTO users (username, password_hash, role_id, status) 
+         VALUES (?, ?, ?, 'active')`,
         [username.trim(), passwordHash, roleId]
       );
 
@@ -141,15 +142,93 @@ async function register(req, res) {
 
     } catch (error) {
       // If anything fails, rollback the transaction
-      await connection.rollback();
+      try {
+        await connection.rollback();
+      } catch (rollbackError) {
+        console.error('Rollback error:', rollbackError);
+      }
       connection.release();
+      // Re-throw the original error so outer catch can handle it
       throw error;
     }
 
   } catch (error) {
-    console.error('Registration error:', error);
+    // Log full error details for debugging
+    console.error('Registration error details:');
+    console.error('  Error code:', error.code);
+    console.error('  SQL Message:', error.sqlMessage);
+    console.error('  SQL State:', error.sqlState);
+    console.error('  Error message:', error.message);
+    console.error('  Full error:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
+    
+    // If this is a known validation/error response, it was already sent, don't send again
+    if (res.headersSent) {
+      return;
+    }
+    
+    // Extract meaningful error message from database errors
+    let errorMessage = 'Registration failed. Please try again.';
+    
+    // MySQL2 uses errno (numeric) and sometimes code (string or numeric)
+    // Common MySQL error codes: 1062=ER_DUP_ENTRY, 1054=ER_BAD_FIELD_ERROR, 1048=ER_BAD_NULL_ERROR
+    const errno = error.errno || (typeof error.code === 'number' ? error.code : null);
+    const errorCode = error.code;
+    
+    // Check for MySQL error codes (both string and numeric formats)
+    if (errorCode === 'ER_DUP_ENTRY' || errno === 1062) {
+      // Duplicate entry (e.g., username already exists - though we check this earlier)
+      errorMessage = 'Username already registered. Please choose a different username.';
+    } else if (errorCode === 'ER_NO_REFERENCED_ROW_2' || errorCode === 'ER_NO_REFERENCED_ROW' || errno === 1452) {
+      // Foreign key constraint violation
+      errorMessage = 'Invalid data provided. Please check your information and try again.';
+    } else if (errorCode === 'ER_BAD_NULL_ERROR' || errno === 1048) {
+      // Required field is null
+      errorMessage = 'Required fields are missing. Please check your information and try again.';
+    } else if (errorCode === 'ER_BAD_FIELD_ERROR' || errno === 1054) {
+      // Unknown column error - schema mismatch
+      errorMessage = `Database schema error: ${error.sqlMessage || 'Missing required columns. Please run database migrations.'}`;
+    } else if (error.message && error.message.includes('ECONNREFUSED')) {
+      // Database connection error
+      errorMessage = 'Database connection failed. Please try again later.';
+    }
+    
+    // Priority: Always try to show sqlMessage first (most specific MySQL error)
+    if (error.sqlMessage) {
+      errorMessage = `Registration error: ${error.sqlMessage}`;
+    } 
+    // Then check for error.message (should catch most other errors)
+    else if (error.message && !error.message.includes('Registration failed')) {
+      errorMessage = error.message;
+    }
+    // If we have errno/code but no message, show that
+    else if (errno || errorCode) {
+      errorMessage = `Database error (code: ${errno || errorCode}). Check server logs for details.`;
+    }
+    
+    // Final fallback: if we still have generic message, try to extract ANY info
+    if (errorMessage === 'Registration failed. Please try again.') {
+      // For debugging: try to get any useful info from the error
+      const errorStr = error.toString();
+      if (errorStr && errorStr !== '[object Object]') {
+        errorMessage = `Registration failed: ${errorStr}`;
+      } else {
+        // Include error properties for debugging (temporarily)
+        const errorInfo = {
+          hasCode: !!error.code,
+          hasErrno: !!error.errno,
+          hasSqlMessage: !!error.sqlMessage,
+          hasMessage: !!error.message,
+          codeValue: error.code,
+          errnoValue: error.errno,
+          messageValue: error.message?.substring(0, 100),
+          sqlMessageValue: error.sqlMessage?.substring(0, 100)
+        };
+        errorMessage = `Registration failed. Debug info: ${JSON.stringify(errorInfo)}. Check server console for full error.`;
+      }
+    }
+    
     res.status(500).json({ 
-      error: 'Registration failed. Please try again.' 
+      error: errorMessage 
     });
   }
 }
@@ -223,8 +302,25 @@ async function login(req, res) {
 
   } catch (error) {
     console.error('Login error:', error);
+    
+    // If response was already sent (e.g., validation error), don't send again
+    if (res.headersSent) {
+      return;
+    }
+    
+    // Extract meaningful error message
+    let errorMessage = 'Login failed. Please try again.';
+    
+    if (error.code === 'ECONNREFUSED') {
+      errorMessage = 'Database connection failed. Please try again later.';
+    } else if (error.sqlMessage) {
+      errorMessage = `Login error: ${error.sqlMessage}`;
+    } else if (error.message && !error.message.includes('Login failed')) {
+      errorMessage = error.message;
+    }
+    
     res.status(500).json({ 
-      error: 'Login failed. Please try again.' 
+      error: errorMessage 
     });
   }
 }

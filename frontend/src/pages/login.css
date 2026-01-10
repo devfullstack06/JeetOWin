@@ -190,10 +190,11 @@
 
 .jw-checkboxText {
   flex: 1;
+  color: #0b2a6d;
 }
 
 .jw-termsLink {
-  color: #fff;
+  color: #0b2a6d;
   text-decoration: underline;
   font-weight: 600;
 }
