@@ -1,0 +1,72 @@
+/* frontend/src/components/authTabs.css */
+/* Figma-like tabs styling */
+
+.authTabs {
+    align-self: stretch;
+    padding: 10px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    font-family: "SF Pro", system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+  }
+  
+  .authTabsRow {
+    align-self: stretch;
+    padding: 6px 10px;
+    overflow: hidden;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  
+  .authTab {
+    width: 150px;
+    text-align: center;
+    justify-content: center;
+    display: flex;
+    flex-direction: column;
+  
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 16px;
+    font-weight: 510;
+    text-decoration: none;
+    word-wrap: break-word;
+  
+    text-shadow: 0px 4px 4px rgba(0, 0, 0, 0.8);
+  }
+  
+  .authTab.isActive {
+    color: #ffffff;
+  }
+  
+  .authDivider {
+    width: 10px;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    user-select: none;
+    text-shadow: 0px 4px 4px rgba(0, 0, 0, 0.8);
+  }
+  
+  /* thin full-width line */
+  .authRule {
+    align-self: stretch;
+    height: 0;
+    border-top: 2px solid rgba(255, 255, 255, 0.5);
+  }
+  
+  /* active underline */
+  .authActiveLine {
+    height: 0;
+    width: min(200px, 50%);
+    border-top: 3px solid #ffffff;
+    margin-top: -2px;
+  }
+  
+  .authActiveLine.login {
+    align-self: flex-start;
+  }
+  
+  .authActiveLine.signup {
+    align-self: flex-end;
+  }
+  
