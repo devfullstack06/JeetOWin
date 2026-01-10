@@ -28,6 +28,7 @@ CREATE TABLE users (
     username VARCHAR(150) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     role_id INT NOT NULL,
+    status ENUM('active', 'suspended') DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (role_id) REFERENCES roles(id)
 );
@@ -51,6 +52,8 @@ CREATE TABLE clients (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     partner_id INT NULL,
+    full_name VARCHAR(150) NULL,
+    mobile VARCHAR(20) NULL,
     balance DECIMAL(15,2) DEFAULT 0.00,
     status ENUM('active', 'suspended') DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

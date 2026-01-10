@@ -93,11 +93,11 @@ async function register(req, res) {
         if (partners.length > 0) {
           partnerId = partners[0].id;
 
-          // Create client with partner_id
+          // Create client with partner_id, full_name, and mobile
           await connection.query(
-            `INSERT INTO clients (user_id, partner_id, balance, status) 
-             VALUES (?, ?, 0.00, 'active')`,
-            [userId, partnerId]
+            `INSERT INTO clients (user_id, partner_id, full_name, mobile, balance, status) 
+             VALUES (?, ?, ?, ?, 0.00, 'active')`,
+            [userId, partnerId, fullName?.trim() || null, mobile || null]
           );
 
           // Get the client_id we just created
@@ -117,17 +117,17 @@ async function register(req, res) {
           // Referral code invalid, but we'll still create the client
           // (you might want to reject registration instead - your choice)
           await connection.query(
-            `INSERT INTO clients (user_id, partner_id, balance, status) 
-             VALUES (?, NULL, 0.00, 'active')`,
-            [userId]
+            `INSERT INTO clients (user_id, partner_id, full_name, mobile, balance, status) 
+             VALUES (?, NULL, ?, ?, 0.00, 'active')`,
+            [userId, fullName?.trim() || null, mobile || null]
           );
         }
       } else {
         // No referral code, create client without partner
         await connection.query(
-          `INSERT INTO clients (user_id, partner_id, balance, status) 
-           VALUES (?, NULL, 0.00, 'active')`,
-          [userId]
+          `INSERT INTO clients (user_id, partner_id, full_name, mobile, balance, status) 
+           VALUES (?, NULL, ?, ?, 0.00, 'active')`,
+          [userId, fullName?.trim() || null, mobile || null]
         );
       }
 

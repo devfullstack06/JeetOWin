@@ -231,6 +231,10 @@
   margin-top: 18px;
 }
 
+.jw-actionsColumn {
+  flex-direction: column;
+}
+
 .jw-btn {
   flex: 1;
   padding: 12px;
@@ -238,6 +242,12 @@
   border: none;
   color: #fff;
   font-weight: 700;
+}
+
+.jw-btnFull {
+  width: 100%;
+  margin-top: 12px;
+  flex: none;
 }
 
 .jw-btnCancel {

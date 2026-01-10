@@ -88,10 +88,11 @@ export async function login({ username, password }) {
  * @param {string} userData.username - User's username
  * @param {string} userData.mobile - Mobile number in E.164 format (e.g., "+923001234567")
  * @param {string} userData.password - User's password
+ * @param {string} [userData.referral_code] - Optional referral code
  * @returns {Promise<object>} - Response data from server
  * @throws {Error} - Throws error with readable message if registration fails
  */
-export async function register({ fullName, username, mobile, password }) {
+export async function register({ fullName, username, mobile, password, referral_code }) {
   let res;
   let responseText;
 
@@ -100,7 +101,7 @@ export async function register({ fullName, username, mobile, password }) {
     res = await fetch("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fullName, username, mobile, password }),
+      body: JSON.stringify({ fullName, username, mobile, password, referral_code }),
     });
   } catch (networkError) {
     // Handle network errors (server not reachable, CORS, etc.)

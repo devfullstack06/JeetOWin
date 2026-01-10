@@ -23,6 +23,7 @@ export default function Signup() {
   const [mobile, setMobile] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [referralCode, setReferralCode] = useState("");
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -114,12 +115,13 @@ export default function Signup() {
       // Format mobile to E.164: "+92" + 10digits
       const mobileE164 = `+92${mobile}`;
 
-      // Call register API
+      // Call register API (referral_code is optional, send only if provided)
       const data = await registerApi({
         fullName: fullName.trim(),
         username: username.trim(),
         mobile: mobileE164,
         password,
+        referral_code: referralCode.trim() || undefined,
       });
 
       // Show success message
@@ -136,16 +138,6 @@ export default function Signup() {
     }
   }
 
-  function handleCancel() {
-    setFullName("");
-    setUsername("");
-    setMobile("");
-    setPassword("");
-    setConfirmPassword("");
-    setAgreeToTerms(false);
-    setError("");
-    setSuccess("");
-  }
 
   return (
     <div className="jw-page">
@@ -225,10 +217,24 @@ export default function Signup() {
                     value={mobile}
                     onChange={handleMobileChange}
                     autoComplete="tel"
+                    inputMode="numeric"
                     disabled={loading}
                     maxLength={10}
                   />
                 </div>
+              </label>
+
+              {/* Referral Code (Optional) */}
+              <label className="jw-field">
+                <input
+                  className="jw-input"
+                  type="text"
+                  placeholder="Referral Code (Optional)"
+                  value={referralCode}
+                  onChange={(e) => setReferralCode(e.target.value)}
+                  autoComplete="off"
+                  disabled={loading}
+                />
               </label>
 
               {/* Password */}
@@ -283,21 +289,11 @@ export default function Signup() {
               {success ? <div className="jw-success">{success}</div> : null}
 
               {/* Submit button (full width) */}
-              <div className="jw-actions" style={{ flexDirection: "column" }}>
-                <button
-                  type="button"
-                  className="jw-btn jw-btnCancel"
-                  onClick={handleCancel}
-                  disabled={loading}
-                >
-                  Cancel
-                </button>
-
+              <div className="jw-actions jw-actionsColumn">
                 <button
                   type="submit"
-                  className="jw-btn jw-btnLogin"
+                  className="jw-btn jw-btnLogin jw-btnFull"
                   disabled={loading}
-                  style={{ width: "100%", marginTop: "12px" }}
                 >
                   {loading ? "Signing up..." : "Sign Up"}
                 </button>
