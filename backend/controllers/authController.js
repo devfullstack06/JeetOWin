@@ -10,16 +10,24 @@ const { pool } = require('../config/database');
 /**
  * REGISTER - Create a new client account
  * POST /api/auth/register
- * Body: { email, password, referral_code? }
+ * Body: { username, password, referral_code? }
+ * Note: Also accepts fullName and mobile from frontend, but they are stored separately if needed
  */
 async function register(req, res) {
   try {
-    const { email, password, referral_code } = req.body;
+    const { username, password, referral_code, fullName, mobile } = req.body;
 
     // Validation: Check required fields
-    if (!email || !password) {
+    if (!username || !password) {
       return res.status(400).json({ 
-        error: 'Email and password are required' 
+        error: 'Username and password are required' 
+      });
+    }
+
+    // Validation: Username minimum length
+    if (username.trim().length < 3) {
+      return res.status(400).json({ 
+        error: 'Username must be at least 3 characters' 
       });
     }
 
@@ -30,15 +38,15 @@ async function register(req, res) {
       });
     }
 
-    // Check if email already exists
+    // Check if username already exists
     const [existingUsers] = await pool.query(
-      'SELECT id FROM users WHERE email = ?',
-      [email]
+      'SELECT id FROM users WHERE username = ?',
+      [username.trim()]
     );
 
     if (existingUsers.length > 0) {
       return res.status(400).json({ 
-        error: 'Email already registered' 
+        error: 'Username already registered' 
       });
     }
 
@@ -65,11 +73,11 @@ async function register(req, res) {
     await connection.beginTransaction();
 
     try {
-      // Insert into users table
+      // Insert into users table (username is used for authentication)
       const [userResult] = await connection.query(
-        `INSERT INTO users (email, password_hash, role_id, status) 
-         VALUES (?, ?, ?, 'active')`,
-        [email, passwordHash, roleId]
+        `INSERT INTO users (username, password_hash, role_id) 
+         VALUES (?, ?, ?)`,
+        [username.trim(), passwordHash, roleId]
       );
 
       const userId = userResult.insertId;
@@ -149,32 +157,32 @@ async function register(req, res) {
 /**
  * LOGIN - Authenticate user and return JWT token
  * POST /api/auth/login
- * Body: { email, password }
+ * Body: { username, password }
  */
 async function login(req, res) {
   try {
-    const { email, password } = req.body;
+    const { username, password } = req.body;
 
     // Validation: Check required fields
-    if (!email || !password) {
+    if (!username || !password) {
       return res.status(400).json({ 
-        error: 'Email and password are required' 
+        error: 'Username and password are required' 
       });
     }
 
-    // Find user by email (join with roles to get role name)
+    // Find user by username (join with roles to get role name)
     const [users] = await pool.query(
-      `SELECT u.id, u.email, u.password_hash, u.status, r.name as role_name
+      `SELECT u.id, u.username, u.password_hash, u.status, r.name as role_name
        FROM users u
        JOIN roles r ON u.role_id = r.id
-       WHERE u.email = ?`,
-      [email]
+       WHERE u.username = ?`,
+      [username.trim()]
     );
 
     // Check if user exists
     if (users.length === 0) {
       return res.status(401).json({ 
-        error: 'Invalid email or password' 
+        error: 'Invalid username or password' 
       });
     }
 
@@ -192,7 +200,7 @@ async function login(req, res) {
 
     if (!passwordMatch) {
       return res.status(401).json({ 
-        error: 'Invalid email or password' 
+        error: 'Invalid username or password' 
       });
     }
 

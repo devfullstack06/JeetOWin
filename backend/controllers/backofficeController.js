@@ -17,14 +17,14 @@ async function getAllClients(req, res) {
     // Query database to get all clients
     // We join multiple tables:
     // - clients c: main client data (balance, status)
-    // - users u: client email address
+    // - users u: client username
     // - partners p: referral code (LEFT JOIN because not all clients have a partner)
     // 
     // LEFT JOIN partners: Returns clients even if they don't have a partner
     // ORDER BY c.created_at DESC: Newest clients first
     // LIMIT 200: Maximum 200 clients per request
     const [clientRows] = await pool.query(
-      `SELECT c.id AS client_id, u.email, c.status, c.balance,
+      `SELECT c.id AS client_id, u.username, c.status, c.balance,
               p.referral_code
        FROM clients c
        JOIN users u ON u.id = c.user_id
@@ -39,7 +39,7 @@ async function getAllClients(req, res) {
     // referral_code can be NULL if client wasn't referred by a partner
     const clients = clientRows.map(client => ({
       client_id: client.client_id,
-      email: client.email,
+      username: client.username,
       status: client.status, // 'active' or 'suspended'
       balance: parseFloat(client.balance),
       referral_code: client.referral_code || null // null if no partner

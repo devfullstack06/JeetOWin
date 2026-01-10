@@ -35,12 +35,12 @@ async function getReferredClients(req, res) {
     const partnerId = partnerRows[0].id;
 
     // Step 2: Find all clients referred by this partner
-    // We join clients with users to get client email
+    // We join clients with users to get client username
     // WHERE c.partner_id = ? ensures we only get THIS partner's clients
     // ORDER BY c.created_at DESC = newest clients first
     // LIMIT 200 = return maximum 200 clients
     const [clientRows] = await pool.query(
-      `SELECT c.id as client_id, u.email, c.balance, c.status, c.created_at
+      `SELECT c.id as client_id, u.username, c.balance, c.status, c.created_at
        FROM clients c
        JOIN users u ON u.id = c.user_id
        WHERE c.partner_id = ?
@@ -53,7 +53,7 @@ async function getReferredClients(req, res) {
     // MySQL returns DECIMAL as strings, so we parse them to numbers
     const clients = clientRows.map(client => ({
       client_id: client.client_id,
-      email: client.email,
+      username: client.username,
       balance: parseFloat(client.balance),
       status: client.status, // 'active' or 'suspended'
       created_at: client.created_at // MySQL TIMESTAMP

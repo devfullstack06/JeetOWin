@@ -1,8 +1,9 @@
 // frontend/src/pages/Signup.jsx
-// Design placeholder (form will be added next)
+// Sign Up page with full form implementation
 
-import React from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { register as registerApi } from "../services/authService";
 import {
   Home,
   Menu,
@@ -16,6 +17,135 @@ import "./login.css";
 
 export default function Signup() {
   const navigate = useNavigate();
+
+  const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState("");
+  const [mobile, setMobile] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [agreeToTerms, setAgreeToTerms] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  // Auto-redirect if already logged in (client)
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const role = localStorage.getItem("role");
+    if (token && role === "client") {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [navigate]);
+
+  // Handle mobile input: strip non-digits, limit to 10 chars, must start with "3"
+  function handleMobileChange(e) {
+    const value = e.target.value;
+    // Strip all non-digit characters
+    const digitsOnly = value.replace(/\D/g, "");
+    // Limit to 10 digits
+    const limited = digitsOnly.slice(0, 10);
+    setMobile(limited);
+  }
+
+  // Client-side validation
+  function validateForm() {
+    setError("");
+
+    // Full Name validation: >= 3 chars
+    if (!fullName || fullName.trim().length < 3) {
+      setError("Full name must be at least 3 characters");
+      return false;
+    }
+
+    // Username validation: >= 3 chars
+    if (!username || username.trim().length < 3) {
+      setError("Username must be at least 3 characters");
+      return false;
+    }
+
+    // Mobile validation: exactly 10 digits, numeric only, must start with "3"
+    if (!mobile || mobile.length !== 10) {
+      setError("Mobile number must be exactly 10 digits");
+      return false;
+    }
+    if (!/^3/.test(mobile)) {
+      setError("Mobile number must start with 3");
+      return false;
+    }
+    if (!/^\d{10}$/.test(mobile)) {
+      setError("Mobile number must contain only digits");
+      return false;
+    }
+
+    // Password validation: >= 6 chars
+    if (!password || password.length < 6) {
+      setError("Password must be at least 6 characters");
+      return false;
+    }
+
+    // Confirm Password must match
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return false;
+    }
+
+    // Checkbox must be checked
+    if (!agreeToTerms) {
+      setError("Please agree to the Terms & Conditions");
+      return false;
+    }
+
+    return true;
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+
+    // Validate form
+    if (!validateForm()) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // Format mobile to E.164: "+92" + 10digits
+      const mobileE164 = `+92${mobile}`;
+
+      // Call register API
+      const data = await registerApi({
+        fullName: fullName.trim(),
+        username: username.trim(),
+        mobile: mobileE164,
+        password,
+      });
+
+      // Show success message
+      setSuccess(data?.message || "Registration successful! Redirecting to login...");
+
+      // Redirect to login after 2 seconds
+      setTimeout(() => {
+        navigate("/login", { replace: true });
+      }, 2000);
+    } catch (err) {
+      setError(err?.message || "Registration failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handleCancel() {
+    setFullName("");
+    setUsername("");
+    setMobile("");
+    setPassword("");
+    setConfirmPassword("");
+    setAgreeToTerms(false);
+    setError("");
+    setSuccess("");
+  }
 
   return (
     <div className="jw-page">
@@ -53,13 +183,126 @@ export default function Signup() {
           </section>
 
           <section className="jw-loginPanel">
+            {/* Tabs */}
             <AuthTabs />
 
-            <div className="jw-form" style={{ paddingTop: 20 }}>
-              <p style={{ color: "#fff", textAlign: "center", opacity: 0.9 }}>
-                Sign Up form coming next
-              </p>
-            </div>
+            {/* Form */}
+            <form className="jw-form" onSubmit={handleSubmit}>
+              {/* Full Name */}
+              <label className="jw-field">
+                <input
+                  className="jw-input"
+                  type="text"
+                  placeholder="Full Name"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  autoComplete="name"
+                  disabled={loading}
+                />
+              </label>
+
+              {/* Username */}
+              <label className="jw-field">
+                <input
+                  className="jw-input"
+                  type="text"
+                  placeholder="Username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  autoComplete="username"
+                  disabled={loading}
+                />
+              </label>
+
+              {/* Mobile with +92 prefix */}
+              <label className="jw-field">
+                <div className="jw-mobileWrapper">
+                  <span className="jw-mobilePrefix">+92</span>
+                  <input
+                    className="jw-input jw-mobileInput"
+                    type="tel"
+                    placeholder="3XXXXXXXXX"
+                    value={mobile}
+                    onChange={handleMobileChange}
+                    autoComplete="tel"
+                    disabled={loading}
+                    maxLength={10}
+                  />
+                </div>
+              </label>
+
+              {/* Password */}
+              <label className="jw-field">
+                <input
+                  className="jw-input"
+                  type="password"
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="new-password"
+                  disabled={loading}
+                />
+              </label>
+
+              {/* Confirm Password */}
+              <label className="jw-field">
+                <input
+                  className="jw-input"
+                  type="password"
+                  placeholder="Confirm Password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  autoComplete="new-password"
+                  disabled={loading}
+                />
+              </label>
+
+              {/* Terms & Conditions Checkbox */}
+              <div className="jw-checkboxWrapper">
+                <label className="jw-checkboxLabel">
+                  <input
+                    type="checkbox"
+                    checked={agreeToTerms}
+                    onChange={(e) => setAgreeToTerms(e.target.checked)}
+                    disabled={loading}
+                    className="jw-checkbox"
+                  />
+                  <span className="jw-checkboxText">
+                    I confirm I'm 18+ and agree to the{" "}
+                    <Link to="/terms" className="jw-termsLink">
+                      Terms & Conditions
+                    </Link>
+                  </span>
+                </label>
+              </div>
+
+              {/* Error message */}
+              {error ? <div className="jw-error">{error}</div> : null}
+
+              {/* Success message */}
+              {success ? <div className="jw-success">{success}</div> : null}
+
+              {/* Submit button (full width) */}
+              <div className="jw-actions" style={{ flexDirection: "column" }}>
+                <button
+                  type="button"
+                  className="jw-btn jw-btnCancel"
+                  onClick={handleCancel}
+                  disabled={loading}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="jw-btn jw-btnLogin"
+                  disabled={loading}
+                  style={{ width: "100%", marginTop: "12px" }}
+                >
+                  {loading ? "Signing up..." : "Sign Up"}
+                </button>
+              </div>
+            </form>
           </section>
         </main>
       </div>

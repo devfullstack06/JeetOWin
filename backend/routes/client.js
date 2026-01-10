@@ -9,7 +9,7 @@ const { getDashboard, getTransactions } = require('../controllers/clientControll
 
 /**
  * GET /api/client/dashboard
- * Get client dashboard data (email, status, balance)
+ * Get client dashboard data (username, status, balance)
  * 
  * Middleware chain:
  * 1. authenticateToken - Verifies JWT token, sets req.user = { userId, role }

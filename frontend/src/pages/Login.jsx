@@ -17,7 +17,7 @@ import "./login.css";
 export default function Login() {
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -35,14 +35,14 @@ export default function Login() {
     e.preventDefault();
     setError("");
 
-    if (!email || !password) {
+    if (!username || !password) {
       setError("Please enter both username and password");
       return;
     }
 
     try {
       setLoading(true);
-      const data = await loginApi({ email, password });
+      const data = await loginApi({ username, password });
 
       if (data.role && data.role !== "client") {
         localStorage.removeItem("token");
@@ -60,7 +60,7 @@ export default function Login() {
   }
 
   function handleCancel() {
-    setEmail("");
+    setUsername("");
     setPassword("");
     setError("");
   }
@@ -111,8 +111,8 @@ export default function Login() {
                   className="jw-input"
                   type="text"
                   placeholder="Username"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   autoComplete="username"
                   disabled={loading}
                 />

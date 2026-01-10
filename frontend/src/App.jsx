@@ -39,6 +39,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
+import Terms from "./pages/Terms";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 export default function App() {
@@ -47,6 +48,7 @@ export default function App() {
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+      <Route path="/terms" element={<Terms />} />
       <Route
         path="/dashboard"
         element={

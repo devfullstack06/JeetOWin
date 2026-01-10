@@ -8,7 +8,7 @@ const { pool } = require('../config/database');
  * GET DASHBOARD - Get client dashboard data
  * GET /api/client/dashboard
  * 
- * Returns client's email, status, and balance from the database
+ * Returns client's username, status, and balance from the database
  * Uses req.user.userId (set by authenticateToken middleware)
  */
 async function getDashboard(req, res) {
@@ -17,9 +17,9 @@ async function getDashboard(req, res) {
     const userId = req.user.userId;
 
     // Query database: Join users and clients tables
-    // We join to get email from users and status/balance from clients
+    // We join to get username from users and status/balance from clients
     const [rows] = await pool.query(
-      `SELECT u.email, c.status, c.balance
+      `SELECT u.username, c.status, c.balance
        FROM users u
        JOIN clients c ON c.user_id = u.id
        WHERE u.id = ?`,
@@ -38,7 +38,7 @@ async function getDashboard(req, res) {
 
     // Return client dashboard data
     res.json({
-      email: clientData.email,
+      username: clientData.username,
       status: clientData.status,
       balance: parseFloat(clientData.balance) // Convert DECIMAL to number for JSON
     });
