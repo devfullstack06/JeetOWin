@@ -41,6 +41,7 @@ import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import Terms from "./pages/Terms";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Home from "./pages/Home";
 
 export default function App() {
   return (
@@ -49,6 +50,7 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/terms" element={<Terms />} />
+      <Route path="/home" element={<Home />} />
       <Route
         path="/dashboard"
         element={
