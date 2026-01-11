@@ -1,0 +1,148 @@
+.jw-landingHeader {
+    width: 100%;
+    background: #fff;
+    color: #071336;
+    padding: 14px 20px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+
+.jw-landingTop {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+/* Left logo */
+.jw-landingLogo {
+    font-weight: 800;
+    font-size: 22px;
+    letter-spacing: 0.3px;
+    color: #071336;
+    cursor: pointer;
+    user-select: none;
+}
+
+/* CTA (right) */
+.jw-landingCta {
+    border: 0;
+    cursor: pointer;
+    background: #071336;
+    color: #E6E9FB;
+
+    height: 34px;
+    width: 96px;
+    /* ✅ FIXED WIDTH */
+    padding: 0;
+    /* remove horizontal padding */
+
+    border-radius: 17px;
+    font-weight: 700;
+    font-size: 14px;
+    white-space: nowrap;
+
+    display: inline-flex;
+    /* center text */
+    align-items: center;
+    justify-content: center;
+}
+
+
+/* Ticker pill */
+.jw-landingTicker {
+    flex: 1;
+    max-width: 932px;
+    /* matches desktop svg feel */
+    height: 30px;
+    border-radius: 8px;
+    background: rgba(182, 191, 245, 0.5);
+    border: 0.5px solid #B6BFF5;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+}
+
+/* Scrolling ticker track */
+.jw-landingTickerTrack {
+    display: inline-flex;
+    gap: 40px;
+    align-items: center;
+    white-space: nowrap;
+    will-change: transform;
+    animation: jw-ticker 18s linear infinite;
+}
+
+.jw-landingTickerText {
+    color: #071336;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.jw-landingTickerTextDup {
+    opacity: 1;
+}
+
+/* Desktop vs Mobile ticker visibility */
+.jw-landingTickerDesktop {
+    display: flex;
+}
+
+.jw-landingTickerMobile {
+    display: none;
+    margin-top: 12px;
+    height: 21px;
+}
+
+/* Animation */
+@keyframes jw-ticker {
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .jw-landingTickerTrack {
+        animation: none;
+    }
+}
+
+/* Mobile layout */
+@media (max-width: 768px) {
+    .jw-landingHeader {
+        padding: 14px 16px;
+    }
+
+    .jw-landingTickerDesktop {
+        display: none;
+    }
+
+    .jw-landingTickerMobile {
+        display: flex;
+    }
+
+    .jw-landingCta {
+        height: 28px;
+        width: 82px;
+        /* ✅ FIXED WIDTH (mobile) */
+        border-radius: 14px;
+        font-size: 13px;
+    }
+
+    .jw-landingTicker {
+        max-width: 100%;
+        padding: 0 10px;
+    }
+
+    .jw-landingTickerText {
+        font-size: 12px;
+    }
+}
