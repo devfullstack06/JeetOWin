@@ -1,148 +1,244 @@
-.jw-landingHeader {
-    width: 100%;
-    background: #fff;
-    color: #071336;
-    padding: 14px 20px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-    position: sticky;
-    top: 0;
-    z-index: 50;
+:root {
+  /* keep same variable name as your Home page */
+  --jw-header-h: 62px;
 }
 
+.jw-landingHeader {
+  width: 100%;
+  background: #fff;
+  color: #071336;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+
+  /* ✅ sticky behavior */
+  position: sticky;
+  top: 0;
+  z-index: 9999; /* ✅ ensure it stays above nav + content */
+
+  /* ✅ fixed header height */
+  height: var(--jw-header-h);
+
+  /* ✅ IMPORTANT: don’t use padding here anymore */
+  padding: 0;
+}
+
+/* This wrapper holds your actual layout + padding */
 .jw-landingTop {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  padding: 0 20px; /* ✅ padding moved here */
 }
 
 /* Left logo */
 .jw-landingLogo {
-    font-weight: 800;
-    font-size: 22px;
-    letter-spacing: 0.3px;
-    color: #071336;
-    cursor: pointer;
-    user-select: none;
+  font-weight: 800;
+  font-size: 22px;
+  letter-spacing: 0.3px;
+  color: #071336;
+  cursor: pointer;
+  user-select: none;
 }
 
 /* CTA (right) */
 .jw-landingCta {
-    border: 0;
-    cursor: pointer;
-    background: #071336;
-    color: #E6E9FB;
+  border: 0;
+  cursor: pointer;
+  background: #071336;
+  color: #E6E9FB;
 
-    height: 34px;
-    width: 96px;
-    /* ✅ FIXED WIDTH */
-    padding: 0;
-    /* remove horizontal padding */
+  height: 34px;
+  width: 96px; /* ✅ fixed width */
+  padding: 0;
 
-    border-radius: 17px;
-    font-weight: 700;
-    font-size: 14px;
-    white-space: nowrap;
+  border-radius: 17px;
+  font-weight: 700;
+  font-size: 14px;
+  white-space: nowrap;
 
-    display: inline-flex;
-    /* center text */
-    align-items: center;
-    justify-content: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
+/* ===========================
+   Logged-in Balance Widget
+   =========================== */
+
+.jw-headerBalance {
+  height: 32px;
+  background: #071336;
+  border-radius: 1000px;
+  display: inline-flex;
+  align-items: stretch;
+  overflow: hidden;
+}
+
+.jw-headerBalanceMain {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 6px;
+}
+
+.jw-headerBalanceIcon {
+  border: 0;
+  background: transparent;
+  color: #ffffff;
+  cursor: pointer;
+  padding: 0;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* refresh rotate */
+.jw-headerBalanceIcon.is-rotating svg {
+  animation: jwHeaderSpin 650ms linear;
+}
+@keyframes jwHeaderSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.jw-headerBalanceText {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  white-space: nowrap;
+  color: #e6e9fb;
+  line-height: 20px;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-weight: 400;
+}
+
+.jw-headerBalanceRs {
+  font-size: 15px;
+}
+
+.jw-headerBalanceAmt {
+  font-size: 18px;
+}
+
+/* green plus segment */
+.jw-headerBalancePlus {
+  width: 36px;
+  border: 0;
+  background: #00ca52;
+  color: #071336;
+  cursor: pointer;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-top-right-radius: 30px;
+  border-bottom-right-radius: 30px;
+}
 
 /* Ticker pill */
 .jw-landingTicker {
-    flex: 1;
-    max-width: 932px;
-    /* matches desktop svg feel */
-    height: 30px;
-    border-radius: 8px;
-    background: rgba(182, 191, 245, 0.5);
-    border: 0.5px solid #B6BFF5;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    padding: 0 12px;
+  flex: 1;
+  max-width: 932px;
+  height: 30px;
+  border-radius: 8px;
+  background: rgba(182, 191, 245, 0.5);
+  border: 0.5px solid #B6BFF5;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
 }
 
-/* Scrolling ticker track */
 .jw-landingTickerTrack {
-    display: inline-flex;
-    gap: 40px;
-    align-items: center;
-    white-space: nowrap;
-    will-change: transform;
-    animation: jw-ticker 18s linear infinite;
+  display: inline-flex;
+  gap: 40px;
+  align-items: center;
+  white-space: nowrap;
+  will-change: transform;
+  animation: jw-ticker 18s linear infinite;
 }
 
 .jw-landingTickerText {
-    color: #071336;
-    font-weight: 600;
-    font-size: 14px;
+  color: #071336;
+  font-weight: 600;
+  font-size: 14px;
 }
 
-.jw-landingTickerTextDup {
-    opacity: 1;
-}
-
-/* Desktop vs Mobile ticker visibility */
 .jw-landingTickerDesktop {
-    display: flex;
+  display: flex;
 }
 
+/* Mobile ticker should NOT increase header height.
+   It should appear as a 2nd row ONLY on mobile,
+   so we’ll handle it by giving header auto height on mobile. */
 .jw-landingTickerMobile {
-    display: none;
-    margin-top: 12px;
-    height: 21px;
+  display: none;
 }
 
 /* Animation */
 @keyframes jw-ticker {
-    0% {
-        transform: translateX(0);
-    }
-
-    100% {
-        transform: translateX(-50%);
-    }
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
 
-/* Respect reduced motion */
 @media (prefers-reduced-motion: reduce) {
-    .jw-landingTickerTrack {
-        animation: none;
-    }
+  .jw-landingTickerTrack {
+    animation: none;
+  }
 }
 
 /* Mobile layout */
 @media (max-width: 768px) {
-    .jw-landingHeader {
-        padding: 14px 16px;
-    }
+  /* ✅ allow header to grow because mobile has 2 rows (top + ticker) */
+  .jw-landingHeader {
+    height: auto;
+    padding: 14px 16px; /* ✅ mobile padding at header level */
+  }
 
-    .jw-landingTickerDesktop {
-        display: none;
-    }
+  /* top row spacing in mobile */
+  .jw-landingTop {
+    padding: 0; /* header already padded */
+    height: auto;
+  }
 
-    .jw-landingTickerMobile {
-        display: flex;
-    }
+  .jw-landingTickerDesktop {
+    display: none;
+  }
 
-    .jw-landingCta {
-        height: 28px;
-        width: 82px;
-        /* ✅ FIXED WIDTH (mobile) */
-        border-radius: 14px;
-        font-size: 13px;
-    }
+  .jw-landingTickerMobile {
+    display: flex;
+    margin-top: 10px;
+    height: 21px;
+    max-width: 100%;
+    padding: 0 10px;
+  }
 
-    .jw-landingTicker {
-        max-width: 100%;
-        padding: 0 10px;
-    }
+  .jw-landingCta {
+    height: 28px;
+    width: 82px;
+    border-radius: 14px;
+    font-size: 13px;
+  }
 
-    .jw-landingTickerText {
-        font-size: 12px;
-    }
+  /* keep balance widget proportionate on mobile */
+  .jw-headerBalance {
+    height: 28px;
+  }
+  .jw-headerBalancePlus {
+    width: 32px;
+  }
+  .jw-headerBalanceRs {
+    font-size: 13px;
+  }
+  .jw-headerBalanceAmt {
+    font-size: 16px;
+  }
+
+  .jw-landingTickerText {
+    font-size: 12px;
+  }
 }

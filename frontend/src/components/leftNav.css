@@ -1,0 +1,319 @@
+/* Desktop wrapper */
+.jw-leftNavDesktop {
+  width: 100%;
+  height: 100%;
+}
+
+/* Panel */
+.jw-leftNavPanel {
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+  left: 6px;
+
+  /* closer to SVG look */
+  background: radial-gradient(circle at 25% 10%, #0f2b6f 0%, #071a3d 55%, #061433 100%);
+  color: #ffffff;
+
+  /* ✅ padding L/R 20px */
+  padding: 18px 20px;
+  position: relative;
+
+  /* ✅ allow footer to stick to bottom */
+  display: flex;
+  flex-direction: column;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.jw-leftNavPanel::-webkit-scrollbar {
+  display: none;
+}
+
+/* Close button (drawer only) */
+.jw-leftNavClose {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.92);
+  cursor: pointer;
+
+  padding: 6px;
+  border-radius: 10px;
+  display: none;
+}
+
+/* ---------- Main/Header structure ---------- */
+.jw-leftNavMain {
+  width: 100%;                 /* ✅ ensure main area spans full sidebar width */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* Header (gap 40 to menu) */
+.jw-leftNavHeader {
+  width: 100%;                 /* ✅ important for balance full width */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+/* Username block */
+.jw-leftNavName {
+  padding: 6px 0;
+}
+.jw-leftNavHi {
+  font-size: 12px;
+  font-weight: 400;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  opacity: 0.98;
+}
+.jw-leftNavUser {
+  margin-top: 4px;
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+/* Balance block */
+.jw-leftNavBalance {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* Balance: padding top/bottom 10, gap 10 */
+.jw-leftNavBalanceBlock {
+  width: 100%;
+  padding: 4px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.jw-leftNavBalanceRow {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* gap auto */
+}
+
+.jw-leftNavBalanceLabel {
+  font-size: 16px;
+  font-weight: 500;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  opacity: 0.98;
+}
+
+/* icons group: gap 10, padding L/R 6 */
+.jw-leftNavBalanceActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 6px;
+}
+
+.jw-leftNavIconBtn {
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.92);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 8px;
+}
+.jw-leftNavIconBtn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* refresh rotate */
+.jw-leftNavIconBtn.is-rotating svg {
+  animation: jw-rotate 650ms linear;
+}
+@keyframes jw-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.jw-leftNavBalanceValue {
+  width: 100%;                 /* ✅ ensures the value line uses full sidebar width */
+  font-size: 24px;
+  font-weight: 600;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  letter-spacing: 0.2px;
+}
+
+/* Buttons row: padding 10, each 100x40 */
+.jw-leftNavCtas {
+  width: 100%;                 /* ✅ important: ctas row spans full width */
+  padding: 10px 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.jw-leftNavBtnDeposit,
+.jw-leftNavBtnWithdraw {
+  width: 100px;
+  height: 40px;
+  border-radius: 10px;
+  border: 0;
+  cursor: pointer;
+
+  font-size: 18px;
+  font-weight: 600;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+.jw-leftNavBtnDeposit {
+  background: #00ca52;
+  color: #000000;
+}
+.jw-leftNavBtnWithdraw {
+  background: #ffc503;
+  color: #000000;
+}
+
+/* ---------- Menu lists ---------- */
+.jw-leftNavList {
+  width: 100%;
+  padding: 10px 10px 10px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.jw-leftNavItem {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.98);
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 6px 0;
+  border-radius: 12px;
+  position: relative;
+  text-align: left;
+}
+
+.jw-leftNavItemLabel {
+  font-size: 16px;
+  font-weight: 500;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+.jw-leftNavItemIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.95;
+}
+
+/* Active item highlight */
+.jw-leftNavItem.is-active {
+  background: rgba(255, 255, 255, 0.14);
+  padding-left: 12px;
+  padding-right: 12px;
+}
+.jw-leftNavItem.is-active::before {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+/* ✅ this creates the "auto gap" between main and footer */
+.jw-leftNavGrow {
+  flex: 1;
+  min-height: 2px;
+}
+
+/* Footer wrapper (kept simple; list styles apply inside) */
+.jw-leftNavFooter {
+  width: 100%;
+}
+
+/* ---------- Drawer (mobile only) ---------- */
+.jw-leftNavDrawer {
+  display: none;
+}
+.jw-leftNavOverlay {
+  display: none;
+}
+.jw-leftNavDrawerPanel {
+  display: none;
+}
+
+/* Desktop: close hidden */
+@media (min-width: 769px) {
+  .jw-leftNavClose { display: none; }
+}
+
+/* Mobile drawer mode: between header and bottom nav */
+@media (max-width: 768px) {
+  .jw-leftNavDrawer {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    pointer-events: none;
+  }
+  .jw-leftNavDrawer.is-open {
+    pointer-events: auto;
+  }
+
+  .jw-leftNavOverlay {
+    display: block;
+    position: absolute;
+    inset: 0;
+    border: 0;
+    background: rgba(0, 0, 0, 0.35);
+    opacity: 0;
+    transition: opacity 180ms ease;
+  }
+  .jw-leftNavOverlay.is-open {
+    opacity: 1;
+  }
+
+  .jw-leftNavDrawerPanel {
+    display: block;
+    position: absolute;
+
+    /* ✅ between header and bottom nav */
+    top: calc(var(--jw-header-h) - 15px);
+    bottom: calc(var(--jw-mobile-footer-h) + 8px);
+    left: 10px;
+
+    width: min(320px, calc(100vw - 80px));
+    transform: translateX(-110%);
+    transition: transform 220ms ease;
+
+    border-radius: 22px;
+    overflow: hidden;
+  }
+  .jw-leftNavDrawerPanel.is-open {
+    transform: translateX(0);
+  }
+
+  .jw-leftNavClose {
+    display: inline-flex;
+  }
+}

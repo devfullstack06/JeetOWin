@@ -1,0 +1,139 @@
+:root {
+  --jw-nav-w: 300px;
+  --jw-mobile-footer-h: 56px;
+  --jw-header-h: 62px;
+  --jw-body-max-w: 1200px;
+}
+
+.jw-loggedPage,
+.jw-loggedPage * {
+  box-sizing: border-box;
+}
+
+.jw-loggedPage {
+  background: #e9e9e9;
+  min-height: 100vh;
+}
+
+/* Under header */
+.jw-loggedGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Desktop left nav */
+.jw-loggedNav {
+  display: none;
+  background: transparent;
+}
+.jw-loggedNavInner {
+  padding: 0;
+}
+
+/* Body */
+.jw-loggedBody {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  padding: 12px 12px calc(var(--jw-mobile-footer-h) + 12px);
+}
+
+/* Mobile bottom nav */
+.jw-loggedBottomNav {
+  height: var(--jw-mobile-footer-h);
+  background: #0a1f4f;
+  display: flex;
+  justify-content: space-around;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 50;
+}
+
+.jw-loggedBottomNav button,
+.jw-bottomItem {
+  background: transparent !important;
+  border: 0;
+  color: #fff !important;
+  opacity: 1;
+  padding: 8px;
+  border-radius: 10px;
+}
+
+/* =========================
+   MOBILE: true full-height layout
+   header(auto) + grid(flex) + bottomnav(fixed)
+   ========================= */
+@media (max-width: 768px) {
+  .jw-loggedPage {
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* ✅ prevents page scroll/grey gaps */
+  }
+
+  /* middle area under header */
+  .jw-loggedGrid {
+    flex: 1;
+    min-height: 0;
+
+    /* override grid to make height predictable */
+    display: flex;
+    flex-direction: column;
+  }
+
+  .jw-loggedBody {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+
+    /* IMPORTANT:
+       don't use padding-bottom "footer buffer" here because we want true fill.
+       bottom nav is fixed and outside the flow.
+    */
+    padding: 12px;
+  }
+}
+
+/* =========================
+   DESKTOP
+   ========================= */
+@media (min-width: 769px) {
+  .jw-loggedGrid {
+    min-height: calc(100vh - var(--jw-header-h));
+  }
+
+  .jw-loggedNav {
+    display: block;
+    position: fixed;
+    left: 0;
+    top: var(--jw-header-h);
+    width: var(--jw-nav-w);
+    height: calc(100vh - var(--jw-header-h));
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .jw-loggedNavInner {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .jw-loggedBody {
+    width: calc(100% - var(--jw-nav-w));
+    max-width: var(--jw-body-max-w);
+    margin-left: var(--jw-nav-w);
+    margin-right: auto;
+    padding: 12px;
+  }
+
+  .jw-loggedBottomNav {
+    display: none;
+  }
+}

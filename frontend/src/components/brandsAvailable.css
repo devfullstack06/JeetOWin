@@ -1,0 +1,106 @@
+.jw-brands {
+    width: 100%;
+    max-width: 100%;
+}
+
+.jw-brandsHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.jw-brandsTitle {
+    color: #0b2a6d;
+    font-weight: 800;
+    font-size: 16px;
+    letter-spacing: 0.2px;
+}
+
+.jw-brandsControls {
+    display: inline-flex;
+    gap: 10px;
+}
+
+.jw-brandsBtn {
+    width: 34px;
+    height: 30px;
+    border-radius: 10px;
+    border: 1px solid rgba(11, 42, 109, 0.18);
+    background: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    font-weight: 900;
+    line-height: 1;
+    color: #0b2a6d;
+}
+
+.jw-brandsScroller {
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 6px;
+  
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  
+    scrollbar-width: none;        /* ✅ Firefox */
+    -ms-overflow-style: none;     /* ✅ IE/Edge legacy */
+  }
+  
+  .jw-brandsScroller::-webkit-scrollbar {
+    display: none;                /* ✅ Chrome/Safari */
+  }
+  
+
+/* TILE */
+.jw-brandsTile {
+    flex: 0 0 auto;
+
+    width: 80px;
+    height: 80px;
+
+    border-radius: 0;
+    border: 0;
+    background: transparent;
+    /* ✅ was #fff */
+    cursor: pointer;
+    margin: 0 14px;
+    padding: 0;
+    /* ✅ remove padding */
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    scroll-snap-align: start;
+}
+
+.jw-brandsImg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: contain;      /* ✅ keep logos fully visible */
+    object-position: center;
+  }
+
+/* MOBILE */
+@media (max-width: 768px) {
+    .jw-brandsTile {
+        width: 80px;
+        height: 80px;
+        margin: 0 12px;
+        padding: 0;
+        border-radius: 0;
+    }
+
+    .jw-brandsTitle {
+        font-size: 15px;
+    }
+
+    .jw-brandsBtn {
+        width: 32px;
+        height: 28px;
+    }
+}

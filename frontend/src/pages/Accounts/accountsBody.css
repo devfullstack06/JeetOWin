@@ -1,0 +1,342 @@
+.jw-accountsPage {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+}
+
+.jw-accountsCard {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+
+  padding: 10px;
+  border-radius: 15px;
+  background: linear-gradient(360deg, #14379c 22%, #071336 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  color: #fff;
+}
+
+/* HEADER */
+.jw-accountsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 10px;
+}
+
+.jw-accountsHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.jw-accountsIcon {
+  display: inline-flex;
+  color: #ffffff;
+}
+
+.jw-accountsTitle {
+  font-size: 24px;
+  font-weight: 510;
+  margin: 0;
+}
+
+.jw-accountsClose {
+  background: transparent;
+  border: 0;
+  color: #fff;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+/* SECTION LABEL */
+.jw-accountsSectionLabel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+}
+
+.jw-accountsLine {
+  flex: 1;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.jw-accountsLabelText {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.75);
+  text-shadow: 0px 4px 4px rgba(0, 0, 0, 0.8);
+}
+
+/* STEP 1: CREATE NEW (centered horizontally) */
+.jw-accountsCreateNewWrap {
+  display: flex;
+  justify-content: center;
+  padding: 0 10px;
+}
+
+.jw-accountsCreateNew {
+  max-width: 300px;
+  width: 100%;
+  margin: 0 50px;
+  padding: 20px 50px;
+  border-radius: 10px;
+  background: #00ca52;
+  border: 0;
+
+  color: #fff;
+  font-size: 20px;
+  font-weight: 510;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+
+  cursor: pointer;
+}
+
+/* ACCOUNTS LIST */
+.jw-accountsList {
+  padding: 20px 10px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.jw-accountsListHeader {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  opacity: 0.9;
+  padding: 0 10px;
+}
+
+.jw-accountsRow {
+  background: #071336;
+  border-radius: 10px;
+  padding: 6px 10px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  font-size: 12px;
+}
+
+.jw-accountsBrand {
+  font-weight: 700;
+}
+
+.jw-accountsUpdate {
+  background: #ecbd8f;
+  border: 0;
+  border-radius: 10px;
+  padding: 2px 8px;
+
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* =========================
+   STEP 2: ACCOUNT CREATION FORM
+   ========================= */
+
+.jw-accountsFormOuter {
+  padding: 10px;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.jw-accountsFormPanel {
+  width: 100%;
+  background: #071336;
+  border-radius: 10px;
+  padding: 30px 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.jw-accountsFormIntro {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 12px;
+  font-weight: 510;
+  padding: 4px;
+}
+
+.jw-accountsForm {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+
+  padding: 10px;
+}
+
+.jw-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: 10px;
+}
+
+.jw-fieldUsername {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: 100px;
+}
+
+/* Select */
+.jw-selectWrap {
+  position: relative;
+  width: 100%;
+}
+
+.jw-select {
+  width: 100%;
+  min-height: 40px;
+  padding: 10px 40px 10px 10px;
+
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
+  border: 0.5px solid rgba(255, 255, 255, 0.75);
+  outline: none;
+
+  font-size: 12px;
+  font-weight: 510;
+
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.jw-select:invalid {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.jw-selectIcon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Input */
+.jw-input {
+  width: 100%;
+  min-height: 40px;
+  padding: 10px;
+
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
+  border: 0.5px solid rgba(255, 255, 255, 0.75);
+  outline: none;
+
+  font-size: 12px;
+  font-weight: 510;
+}
+
+.jw-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.jw-fieldHint {
+  font-size: 11px;
+  opacity: 0.75;
+}
+
+.jw-fieldError {
+  font-size: 12px;
+  color: #ffb3b3;
+}
+
+/* Actions row (Cancel / Submit) */
+.jw-accountsFormActions {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+
+  padding: 10px;
+  display: flex;
+
+  align-items: center;
+
+  gap: 30px;
+  /* ✅ */
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* Shared button style */
+.jw-btn {
+  width: 150px;
+  height: 50px;
+  border-radius: 12px;
+  border: 0;
+  cursor: pointer;
+
+  font-size: 18px;
+  font-weight: 600;
+  color: #000;
+
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.8);
+  max-width: 150px;
+}
+
+.jw-btnCancel {
+  background: #be3838;
+}
+
+.jw-btnSubmit {
+  background: #00ca52;
+}
+
+/* =========================
+   STEP 3: WAITING PLACEHOLDER
+   ========================= */
+.jw-waitingOuter {
+  flex: 1;
+  min-height: 0;
+  padding: 10px;
+  display: flex;
+}
+
+.jw-waitingPanel {
+  width: 100%;
+  background: #071336;
+  border-radius: 10px;
+  padding: 30px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.jw-waitingTitle {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.jw-waitingText {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.75);
+  max-width: 480px;
+}

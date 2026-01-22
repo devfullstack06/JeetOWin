@@ -1,0 +1,183 @@
+.jw-footer {
+    width: 100%;
+    margin-top: 16px;
+  }
+  
+  .jw-footerPanel {
+    width: 100%;
+    border-radius: 22px;
+    background: #0a1f4f;
+    color: #eaf0ff;
+  
+    padding: 18px 16px;
+    box-shadow: 0 18px 45px rgba(10, 31, 79, 0.22);
+  
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  
+  .jw-footerBlock {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 10px;
+  }
+  
+  .jw-footerBlockTitle {
+    font-weight: 800;
+    font-size: 14px;
+    letter-spacing: 0.2px;
+  }
+  
+  .jw-footerLogos {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  
+  /* Mobile (default) */
+  .jw-footerLogo {
+    height: 28px;
+    width: auto;
+    display: block;
+    object-fit: contain;
+  }
+  
+  .jw-footerDivider {
+    height: 1px;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.14);
+  }
+  
+  /* ✅ allow wrapping (up to 2 lines on small widths) */
+  .jw-footerOneLineWrap {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    max-width: 100%;
+  }
+  
+  .jw-footerText {
+    font-size: 12px;
+    opacity: 0.95;
+  }
+  
+  .jw-footerLink {
+    font-size: 12px;
+    font-weight: 800;
+    color: #eaf0ff;
+    text-decoration: underline;
+  }
+  
+  /* ✅ allow wrapping (up to 2 lines on small widths) */
+  .jw-footerLinks {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    max-width: 100%;
+  }
+  
+  .jw-footerNavLink {
+    color: #eaf0ff;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    opacity: 0.95;
+  }
+  
+  .jw-footerNavLink:hover {
+    text-decoration: underline;
+  }
+  
+  .jw-footerDot {
+    opacity: 0.6;
+  }
+  
+  /* Social row: wrap allowed */
+  .jw-footerSocial {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    max-width: 100%;
+  }
+  
+  /* ✅ Icon-only (transparent), no circle/background */
+  .jw-footerIcon {
+    width: 30px;  /* ✅ mobile */
+    height: 30px; /* ✅ mobile */
+  
+    background: transparent;
+    border: 0;
+    padding: 0;
+  
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  
+    text-decoration: none;
+  }
+  
+  .jw-footerIconImg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: contain;
+    object-position: center;
+  }
+  
+  .jw-footerCopy {
+    text-align: center;
+    font-size: 12px;
+    opacity: 0.95;
+  }
+  
+  /* ✅ clamp to 2 lines on tight screens (best-effort) */
+  @media (max-width: 420px) {
+    .jw-footerOneLineWrap,
+    .jw-footerLinks {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      overflow: hidden;
+    }
+  }
+  
+  /* Desktop polish */
+  @media (min-width: 769px) {
+    .jw-footerPanel {
+      padding: 24px 22px;
+      border-radius: 26px;
+    }
+  
+    .jw-footerBlockTitle {
+      font-size: 15px;
+    }
+  
+    .jw-footerText,
+    .jw-footerLink,
+    .jw-footerNavLink,
+    .jw-footerCopy {
+      font-size: 13px;
+    }
+  
+    .jw-footerLogo {
+      height: 50px; /* ✅ desktop */
+    }
+  
+    .jw-footerIcon {
+      width: 50px;  /* ✅ desktop */
+      height: 50px; /* ✅ desktop */
+    }
+  }
+  

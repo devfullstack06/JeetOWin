@@ -1,0 +1,135 @@
+.jw-offers {
+    width: 100%;
+  }
+  
+  .jw-offersHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  
+  .jw-offersTitle {
+    font-weight: 800;
+    font-size: 16px;
+    color: #0b2a6d;
+  }
+  
+  .jw-offersControls {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .jw-offersBtn {
+    width: 34px;
+    height: 30px;
+    border-radius: 10px;
+    border: 1px solid rgba(11, 42, 109, 0.18);
+    background: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    font-weight: 900;
+    color: #0b2a6d;
+  }
+  
+  /* ✅ Viewport: horizontal scroll, snap, hide scrollbar */
+  .jw-offersViewport {
+    overflow-x: auto;
+    overflow-y: hidden;
+  
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .jw-offersViewport::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* ✅ Track: lays cards in a row (fixes vertical stacking) */
+  .jw-offersTrack {
+    display: flex;
+    gap: 14px;
+    align-items: stretch;
+  }
+  
+  /* PROMO CARD: one card per slide */
+  .jw-offerCard {
+    flex: 0 0 100%;
+    width: 100%;
+    scroll-snap-align: start;
+  
+    display: grid;
+    grid-template-columns: 1fr 110px;
+    /* gap: 16px; */
+  
+    padding: 4px 10px;
+    border-radius: 10px;
+  
+    background: linear-gradient(135deg, #213743, #213743);
+    /* box-shadow: 0 10px 30px rgba(11, 42, 109, 0.25); */
+  
+    color: #fff;
+  }
+  
+  .jw-offerContent {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 4px 0;
+  }
+  
+  .jw-offerTag {
+    color:rgba(7, 19, 54, 1);
+    align-self: flex-start;
+    padding: 0 6px;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 4px;
+    background: rgba(230, 233, 251);
+  }
+  
+  .jw-offerHeading {
+    font-size: 18px;
+    font-weight: 800;
+  }
+  
+  .jw-offerSub {
+    font-size: 14px;
+    opacity: 0.9;
+  }
+  
+  .jw-offerLink {
+    margin-top: auto;
+    font-weight: 700;
+    font-size: 14px;
+    color: #e6ecff;
+    text-decoration: underline;
+  }
+  
+  /* IMAGE: always 120x120 (desktop + mobile) */
+  .jw-offerImgWrap {
+    width: 110px;
+    height: 110px;
+    flex-shrink: 0;
+    align-items: center;
+  }
+  
+  .jw-offerImgWrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+  
+  /* MOBILE: keep image 120x120, only adjust typography/padding if needed */
+  @media (max-width: 768px) {
+    .jw-offerCard {
+      /* padding: 16px; */
+    }
+  
+    .jw-offerHeading {
+      font-size: 16px;
+    }
+  }
+  

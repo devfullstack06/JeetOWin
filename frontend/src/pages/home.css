@@ -1,143 +1,210 @@
 :root {
-    --jw-nav-w: 300px;
-    --jw-mobile-footer-h: 56px;
-    --jw-header-h: 62px;
-    /* adjust if your header height differs */
+  --jw-nav-w: 300px;
+  --jw-mobile-footer-h: 56px;
+
+  /* Keep this in ONE place so header + nav positioning stays consistent */
+  --jw-header-h: 62px;
+  --jw-body-max-w: 1200px;
+}
+
+/* ✅ IMPORTANT: make width math predictable everywhere */
+.jw-homePage,
+.jw-homePage * {
+  box-sizing: border-box;
 }
 
 .jw-homePage {
-    min-height: 100vh;
-    background: #e9e9e9;
+  min-height: 100vh;
+  background: #e9e9e9;
 }
 
 /* Overall grid under header */
 .jw-homeGrid {
-    display: grid;
-    grid-template-columns: 1fr;
+  display: grid;
+  grid-template-columns: 1fr;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 /* Desktop left nav (hidden on mobile) */
 .jw-homeNav {
-    display: none;
-    background: #0a1f4f;
-    min-height: calc(100vh - 84px);
-    /* approximate; header already sticky */
+  display: none;
+  background: transparent; /* ✅ LeftNav handles its own bg */
 }
 
 .jw-homeNavInner {
-    padding: 18px;
-    color: #fff;
-}
-
-.jw-homeNavTitle {
-    font-weight: 800;
-    letter-spacing: 0.2px;
+  padding: 0; /* ✅ remove extra padding (SVG has tight edges) */
 }
 
 /* Right body */
 .jw-homeBody {
-    padding: 18px 16px calc(var(--jw-mobile-footer-h) + 18px);
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin-left: 0;
+
+  padding: 18px 16px calc(var(--jw-mobile-footer-h) + 18px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 /* Row 1: becomes 2 columns on desktop */
 .jw-homeRow1 {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 16px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
 }
 
+/* ✅ min-width:0 prevents children from overflowing their grid columns */
 .jw-homeBannerCol,
 .jw-homeRightCol {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-/* Placeholder section styling (temporary) */
-.jw-homeSection {
-    width: 100%;
-    border-radius: 14px;
-    background: rgba(255, 255, 255, 0.6);
-    border: 1px dashed rgba(11, 42, 109, 0.35);
-    min-height: 120px;
+/* ✅ ensure HomeBanner can stretch inside the column */
+.jw-homeBannerCol > * {
+  height: 100%;
 }
 
-.jw-homeSectionInner {
-    padding: 16px;
-}
-
-.jw-homeSectionTitle {
-    color: #0b2a6d;
-    font-weight: 800;
-    font-size: 14px;
-    letter-spacing: 0.2px;
-}
-
-/* Mobile bottom nav (same behavior as login) */
+/* Mobile bottom nav */
 .jw-homeBottomNav {
-    height: var(--jw-mobile-footer-h);
-    background: #0a1f4f;
-    display: flex;
-    justify-content: space-around;
-    position: fixed;
-    bottom: 0;
-    width: 100%;
+  height: var(--jw-mobile-footer-h);
+  background: #0a1f4f;
+  display: flex;
+  justify-content: space-around;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 50;
 }
 
-/* reuse same bottom item style as login (keeps consistent) */
 .jw-homeBottomNav button,
 .jw-bottomItem {
-    background: transparent !important;
-    border: 0;
-    color: #fff !important;
-    opacity: 1;
-    padding: 8px;
-    border-radius: 10px;
+  background: transparent !important;
+  border: 0;
+  color: #fff !important;
+  opacity: 1;
+  padding: 8px;
+  border-radius: 10px;
+}
+
+/* =========================
+   MOBILE: fixed banner height
+   ========================= */
+@media (max-width: 768px) {
+  .jw-homeBannerCol {
+    height: 400px;
+  }
+
+  .jw-homeBannerCol > * {
+    height: 100%;
+  }
+
+  /* ✅ KEY FIX:
+     Make page a vertical flex layout:
+     header (auto) + content (flex) + bottom nav (fixed)
+  */
+  .jw-homePage {
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* ✅ prevents white scroll area */
+  }
+
+  /* Under header container becomes flex, not grid */
+  .jw-homeGrid {
+    flex: 1;
+    min-height: 0;
+    display: flex;          /* ✅ override grid */
+    flex-direction: column; /* ✅ */
+  }
+
+  /* Default body can still scroll for dashboard etc. */
+  .jw-homeBody {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Full pages like Accounts should NOT scroll */
+  .jw-homeBody.jw-homeBody--full {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    padding: 12px;
+    gap: 0;
+  }
 }
 
 /* =========================
      DESKTOP LAYOUT
      ========================= */
 @media (min-width: 769px) {
-    .jw-homeGrid {
-        /* grid-template-columns: var(--jw-nav-w) 1fr;  */
-        /* align-items: start; */
-        grid-template-columns: 1fr;
-        /* content column only; nav will be fixed */
-    }
+  /* ✅ important: give the page area under header a real height */
+  .jw-homeGrid {
+    min-height: calc(100vh - var(--jw-header-h));
+  }
 
-    .jw-homeNav {
-        display: block;
-        position: fixed;
-        left: 0;
-        top: 0;
-        /* ✅ no guessing */
-        width: var(--jw-nav-w);
-        height: 100vh;
-        /* ✅ always full height */
-        background: #0a1f4f;
-        z-index: 10;
-        padding-top: 70px;
-        /* ✅ space for sticky header */
-    }
+  .jw-homeNav {
+    display: block;
 
-    .jw-homeBody {
-        padding: 22px 22px 22px;
-        margin-left: var(--jw-nav-w);
-        /* ✅ keep body beside fixed nav */
-    }
+    /* ✅ between header and bottom of viewport, fixed while scroll */
+    position: fixed;
+    left: 0;
+    top: var(--jw-header-h);
+    width: var(--jw-nav-w);
+    height: calc(100vh - var(--jw-header-h));
+    z-index: 200;
 
-    /* Desktop: Row 1 has two columns: 60% + 40% */
-    .jw-homeRow1 {
-        grid-template-columns: 60% 40%;
-        align-items: start;
-    }
+    /* ✅ allow child to stretch full height */
+    display: flex;
+    flex-direction: column;
+  }
 
-    /* Bottom nav hidden on desktop */
-    .jw-homeBottomNav {
-        display: none;
-    }
+  /* ✅ the missing piece: inner MUST be 100% height */
+  .jw-homeNavInner {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .jw-homeBody {
+    padding: 12px;
+
+    width: calc(100% - var(--jw-nav-w));
+    max-width: var(--jw-body-max-w);
+
+    margin-left: var(--jw-nav-w);
+    margin-right: auto;
+  }
+
+  .jw-homeRow1 {
+    grid-template-columns: 60% 40%;
+    align-items: stretch;
+  }
+
+  .jw-homeBottomNav {
+    display: none;
+  }
+
+  /* Desktop full pages: fixed height under header */
+  .jw-homeBody.jw-homeBody--full {
+    padding: 12px;
+    gap: 0;
+    height: calc(100vh - var(--jw-header-h));
+    overflow: hidden;
+  }
 }
