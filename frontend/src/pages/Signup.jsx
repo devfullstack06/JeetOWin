@@ -34,7 +34,7 @@ export default function Signup() {
     const token = localStorage.getItem("token");
     const role = localStorage.getItem("role");
     if (token && role === "client") {
-      navigate("/dashboard", { replace: true });
+      navigate("/home", { replace: true });
     }
   }, [navigate]);
 

@@ -27,7 +27,7 @@ export default function Login() {
     const token = localStorage.getItem("token");
     const role = localStorage.getItem("role");
     if (token && role === "client") {
-      navigate("/dashboard", { replace: true });
+      navigate("/home", { replace: true });
     }
   }, [navigate]);
 
@@ -51,7 +51,7 @@ export default function Login() {
         return;
       }
 
-      navigate("/dashboard");
+      navigate("/home");
     } catch (err) {
       setError(err?.message || "Login failed. Please try again.");
     } finally {

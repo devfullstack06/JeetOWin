@@ -12,8 +12,8 @@ import AccountsPage from "./pages/Accounts/AccountsPage";
 export default function App() {
   return (
     <Routes>
-      {/* Entry */}
-      <Route path="/" element={<Navigate to="/login" replace />} />
+      {/* Entry - Home page is now the default landing page */}
+      <Route path="/" element={<Home />} />
 
       {/* Auth */}
       <Route path="/login" element={<Login />} />
@@ -35,7 +35,7 @@ export default function App() {
       />
 
       {/* Fallback */}
-      <Route path="*" element={<Navigate to="/login" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
