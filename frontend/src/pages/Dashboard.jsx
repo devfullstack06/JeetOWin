@@ -18,7 +18,12 @@ export default function Dashboard() {
           <button className="db-iconBtn db-hamburger" type="button" aria-label="Menu">
             <Menu size={22} />
           </button>
-          <div className="db-logo">JeetOWin</div>
+          <div 
+            className="db-logo" 
+            onClick={() => navigate("/")}
+          >
+            JeetOWin
+          </div>
         </div>
 
         <button

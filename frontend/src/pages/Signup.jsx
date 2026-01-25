@@ -144,15 +144,21 @@ export default function Signup() {
       {/* HEADER */}
       <header className="jw-header">
         <div className="jw-headerLeft">
-          <button
+          {/* <button
             className="jw-iconBtn jw-hamburger"
             type="button"
             aria-label="Menu"
           >
             <Menu size={22} />
-          </button>
+          </button> */}
 
-          <div className="jw-logo">JeetOWin</div>
+          <div 
+            className="jw-logo" 
+            onClick={() => navigate("/")}
+            style={{ cursor: "pointer" }}
+          >
+            JeetOWin
+          </div>
         </div>
 
         <button
