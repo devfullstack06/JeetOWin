@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, RotateCcw, Plus } from "lucide-react";
+import Logo from "./Logo";
 import "./landingHeader.css";
 
 export default function LandingHeader({
@@ -58,14 +59,7 @@ export default function LandingHeader({
     <header className="jw-landingHeader" role="banner">
       {/* Top row */}
       <div className="jw-landingTop">
-        <div
-          className="jw-landingLogo"
-          onClick={() => navigate("/")}
-          role="button"
-          tabIndex={0}
-        >
-          JeetOWin
-        </div>
+        <Logo />
 
         {/* Desktop ticker (hidden on mobile via CSS) */}
         <div
@@ -83,7 +77,7 @@ export default function LandingHeader({
         {/* ✅ Right: CTA OR Balance widget */}
         {!isLoggedIn ? (
           <button
-            className="jw-landingCta"
+            className={`jw-landingCta ${ctaLabel === "Sign Up" ? "jw-landingCta-signup" : "jw-landingCta-login"}`}
             type="button"
             onClick={() => navigate("/login")}
             aria-label="Go to login"

@@ -21,7 +21,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 14px;
+  padding: 15px 16px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
   position: sticky;
   top: 0;
@@ -36,9 +36,11 @@
 
 .jw-logo {
   font-weight: 800;
-  font-size: 20px;
+  font-size: 22px;
   letter-spacing: 0.3px;
-  color: #0b2a6d;
+  color: #071336;
+  cursor: pointer;
+  user-select: none;
 }
 
 .jw-iconBtn {
@@ -61,10 +63,10 @@
 .jw-body {
   display: flex;
   background: #e9e9e9;
-  min-height: calc(100vh - var(--header-h) - var(--footer-h));
+  min-height: calc(100vh - var(--header-h)); /* Footer is hidden on login/signup pages */
 }
 
-/* Desktop left nav */
+/* Desktop left nav - Hidden on login/signup pages */
 .jw-leftNav {
   width: var(--nav-w);
   background: #0a1f4f;
@@ -112,15 +114,23 @@
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.35);
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
+  display: flex;
+  flex-direction: column;
+  min-height: 400px; /* Base minimum height to match signup panel */
 }
 
 /* FORM */
 .jw-form {
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  flex: 1; /* Allow form to grow and fill available space */
+  min-height: 0; /* Allow form to shrink if needed */
+  overflow-y: auto; /* Allow scrolling if content exceeds panel height */
 }
 
 .jw-field {
-  margin-bottom: 12px;
+  margin-bottom: 0px;
 }
 
 .jw-input {
@@ -229,25 +239,30 @@
 .jw-actions {
   display: flex;
   gap: 12px;
-  margin-top: 18px;
+  margin-top: auto; /* Auto gap to push buttons to bottom */
+  justify-content: center; /* Center align buttons */
 }
 
 .jw-actionsColumn {
   flex-direction: column;
+  align-items: center; /* Center the single button */
 }
 
 .jw-btn {
   flex: 1;
   padding: 12px;
+  margin-bottom: 20px;
   border-radius: 12px;
   border: none;
-  color: #fff;
+  color: #ffffff !important; /* Ensure white font color */
   font-weight: 700;
+  max-width: 150px; /* Limit button width for better centering */
 }
 
 .jw-btnFull {
   width: 100%;
-  margin-top: 12px;
+  max-width: 150px; /* Match other buttons for consistency */
+  margin: auto auto 20px; /* Auto top margin pushes button to bottom, center horizontally */
   flex: none;
 }
 
@@ -259,11 +274,11 @@
   background: #2fa64a;
 }
 
-/* FOOTER (mobile only) */
+/* FOOTER (mobile only) - Hidden on login/signup pages */
 .jw-footerNav {
   height: var(--footer-h);
   background: #0a1f4f;
-  display: flex;
+  display: none; /* Hidden on login/signup pages */
   justify-content: space-around;
   position: fixed;
   bottom: 0;
@@ -292,18 +307,21 @@
   .jw-loginPanel {
     top: auto;
     bottom: 70px;
-    min-height: 450px;
+    min-height: 600px; /* Minimum height to match signup panel */
+    max-height: calc(100vh - 140px); /* Adjust to screen height, leaving space for header and bottom */
     display: flex;
+    flex-direction: column;
   }
 
   .jw-form {
     display: flex;
     flex-direction: column;
     flex: 1;
+    min-height: 0; /* Allow form to shrink if needed */
   }
 
   .jw-actions {
-    margin-top: auto;
+    margin-top: auto; /* Auto gap pushes buttons to bottom */
   }
 }
 
@@ -321,7 +339,7 @@
   }
 
   .jw-leftNav {
-    display: block;
+    display: none; /* Hidden on login/signup pages */
     width: var(--nav-w);
   }
 
@@ -352,8 +370,10 @@
   .jw-loginPanel {
     bottom: 70px;
     top: auto;
-    min-height: 450px;
+    min-height: 550px; /* Minimum height to match signup panel */
+    max-height: calc(100vh - 140px); /* Adjust to screen height, leaving space for header and bottom */
     display: flex;
+    flex-direction: column;
     z-index: 2;
   }
 
@@ -361,10 +381,11 @@
     display: flex;
     flex-direction: column;
     flex: 1;
+    min-height: 0; /* Allow form to shrink if needed */
   }
 
   .jw-actions {
-    margin-top: auto;
+    margin-top: auto; /* Auto gap pushes buttons to bottom */
   }
 }
 
@@ -372,4 +393,5 @@
 .jw-loginPanel {
   display: flex;
   flex-direction: column;
+  overflow: hidden; /* Prevent content overflow */
 }

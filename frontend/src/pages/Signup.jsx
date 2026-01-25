@@ -13,6 +13,7 @@ import {
   MessageCircle,
 } from "lucide-react";
 import AuthTabs from "../components/AuthTabs";
+import Logo from "../components/Logo";
 import "./login.css";
 
 export default function Signup() {
@@ -144,15 +145,15 @@ export default function Signup() {
       {/* HEADER */}
       <header className="jw-header">
         <div className="jw-headerLeft">
-          <button
+          {/* <button
             className="jw-iconBtn jw-hamburger"
             type="button"
             aria-label="Menu"
           >
             <Menu size={22} />
-          </button>
+          </button> */}
 
-          <div className="jw-logo">JeetOWin</div>
+          <Logo />
         </div>
 
         <button

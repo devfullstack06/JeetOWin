@@ -4,6 +4,7 @@
 import React from "react";
 import { Home, Menu, ArrowLeftRight, Wallet, Megaphone, MessageCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import Logo from "../components/Logo";
 import "./dashboard.css";
 
 export default function Dashboard() {
@@ -18,7 +19,7 @@ export default function Dashboard() {
           <button className="db-iconBtn db-hamburger" type="button" aria-label="Menu">
             <Menu size={22} />
           </button>
-          <div className="db-logo">JeetOWin</div>
+          <Logo />
         </div>
 
         <button

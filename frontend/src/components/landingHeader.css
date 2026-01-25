@@ -46,21 +46,29 @@
 .jw-landingCta {
   border: 0;
   cursor: pointer;
-  background: #071336;
-  color: #E6E9FB;
-
   height: 34px;
   width: 96px; /* ✅ fixed width */
   padding: 0;
-
   border-radius: 17px;
   font-weight: 700;
   font-size: 14px;
   white-space: nowrap;
-
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Login button style (default) */
+.jw-landingCta-login {
+  background: #071336;
+  color: #E6E9FB;
+}
+
+/* Sign Up button style */
+.jw-landingCta-signup {
+  background: #FFD700; /* Yellow */
+  color: #000000; /* Black */
 }
 
 /* ===========================
@@ -222,6 +230,17 @@
     width: 82px;
     border-radius: 14px;
     font-size: 13px;
+  }
+
+  /* Mobile: ensure Sign Up button styles apply */
+  .jw-landingCta-signup {
+    background: #FFD700; /* Yellow */
+    color: #000000; /* Black */
+  }
+
+  .jw-landingCta-login {
+    background: #071336;
+    color: #E6E9FB;
   }
 
   /* keep balance widget proportionate on mobile */

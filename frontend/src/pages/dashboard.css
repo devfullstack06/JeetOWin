@@ -37,9 +37,11 @@
 
 .db-logo {
   font-weight: 800;
-  font-size: 20px;
+  font-size: 22px;
   letter-spacing: 0.3px;
-  color: #0b2a6d;
+  color: #071336;
+  cursor: pointer;
+  user-select: none;
 }
 
 .db-iconBtn {
