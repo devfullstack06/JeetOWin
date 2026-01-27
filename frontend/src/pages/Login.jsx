@@ -61,9 +61,7 @@ export default function Login() {
   }
 
   function handleCancel() {
-    setUsername("");
-    setPassword("");
-    setError("");
+    navigate("/");
   }
 
   return (
