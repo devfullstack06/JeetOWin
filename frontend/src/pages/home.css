@@ -29,7 +29,7 @@
 /* Responsive adjustments for public content */
 @media (min-width: 769px) {
   .jw-publicContent {
-    padding: 24px;
+    padding: 10px 16px;
   }
 }
 
