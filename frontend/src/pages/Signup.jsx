@@ -156,13 +156,13 @@ export default function Signup() {
 
           <Logo />
 
-          <div 
+          {/* <div 
             className="jw-logo" 
             onClick={() => navigate("/")}
             style={{ cursor: "pointer" }}
           >
             JeetOWin
-          </div>
+          </div> */}
         </div>
 
         <button
