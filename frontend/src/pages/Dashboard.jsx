@@ -19,16 +19,15 @@ export default function Dashboard() {
           <button className="db-iconBtn db-hamburger" type="button" aria-label="Menu">
             <Menu size={22} />
           </button>
-<<<<<<< HEAD
+
           <Logo />
-=======
+
           <div 
             className="db-logo" 
             onClick={() => navigate("/")}
           >
             JeetOWin
           </div>
->>>>>>> 7f9520f17fdad865f9893216af73ac8d61cd2cc3
         </div>
 
         <button

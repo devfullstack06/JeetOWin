@@ -153,9 +153,9 @@ export default function Signup() {
             <Menu size={22} />
           </button> */}
 
-<<<<<<< HEAD
+
           <Logo />
-=======
+
           <div 
             className="jw-logo" 
             onClick={() => navigate("/")}
@@ -163,7 +163,6 @@ export default function Signup() {
           >
             JeetOWin
           </div>
->>>>>>> 7f9520f17fdad865f9893216af73ac8d61cd2cc3
         </div>
 
         <button
