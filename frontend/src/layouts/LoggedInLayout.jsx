@@ -1,16 +1,55 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import LandingHeader from "../components/LandingHeader";
 import LeftNav from "../components/LeftNav";
-import { Menu, ArrowLeftRight, Wallet, Megaphone, MessageCircle } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { logout as logoutUser } from "../utils/auth";
+import { startIdleLogout } from "../utils/idleLogout";
 import "./loggedInLayout.css";
 
 export default function LoggedInLayout({ activeId = "dashboard", children }) {
   const [navOpen, setNavOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
+  // swipe tracking refs
+  const touchStartRef = useRef(null);
+
+  // 🔓 LOGOUT HANDLER (single source of truth for this layout)
+  const handleLogout = () => {
+    // clear auth + notify other tabs
+    const token = localStorage.getItem("token");
+
+    // call server logout (ignore failures)
+    if (token) {
+      fetch("/api/auth/logout", {
+        method: "POST",
+        headers: { Authorization: "Bearer " + token },
+      }).catch(() => { });
+    }
+
+    // then clear local auth + notify tabs
+    logoutUser();
+
+
+    // close drawer
+    setNavOpen(false);
+
+    // sync bottom nav icon
+    window.dispatchEvent(
+      new CustomEvent("jw:leftnav:state", { detail: false })
+    );
+
+    // redirect (replace = no back)
+    navigate("/login", { replace: true });
+  };
+
+  // 🔀 route navigation (logout handled here)
   const go = (id) => {
-    // map nav ids → routes
+    if (id === "logout") {
+      handleLogout();
+      return;
+    }
+
     const map = {
       dashboard: "/home",
       accounts: "/accounts",
@@ -20,10 +59,142 @@ export default function LoggedInLayout({ activeId = "dashboard", children }) {
       notifications: "/notifications",
       contact: "/contact",
       transactions: "/transactions",
-      logout: "/logout",
     };
+
     navigate(map[id] || "/home");
   };
+
+  // 🔑 listen to bottom nav toggle (menu/close button)
+  useEffect(() => {
+    const handler = (e) => {
+      const next = e.detail === true;
+      setNavOpen(next);
+
+      // notify bottom nav of actual state
+      window.dispatchEvent(
+        new CustomEvent("jw:leftnav:state", { detail: next })
+      );
+    };
+
+    window.addEventListener("jw:leftnav:toggle", handler);
+    return () => window.removeEventListener("jw:leftnav:toggle", handler);
+  }, []);
+
+  // 🔁 keep bottom nav icon in sync whenever navOpen changes
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent("jw:leftnav:state", { detail: navOpen })
+    );
+  }, [navOpen]);
+
+  // ✅ auto-close drawer when route changes
+  useEffect(() => {
+    if (navOpen) setNavOpen(false);
+    window.dispatchEvent(
+      new CustomEvent("jw:leftnav:state", { detail: false })
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
+
+  // ✅ idle auto-logout
+  useEffect(() => {
+    const stop = startIdleLogout({
+      onLogout: () => {
+        // use same logout behavior
+        handleLogout();
+      },
+    });
+
+    return stop;
+    // handleLogout depends on navigate; safe to just use navigate as dependency
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navigate]);
+
+  // ✅ multi-tab logout sync
+  useEffect(() => {
+    const onStorage = (e) => {
+      if (e.key === "jw:logout") {
+        setNavOpen(false);
+        window.dispatchEvent(
+          new CustomEvent("jw:leftnav:state", { detail: false })
+        );
+        navigate("/login", { replace: true });
+      }
+    };
+
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [navigate]);
+
+  // ✅ swipe gesture: edge swipe right to open, swipe left to close
+  useEffect(() => {
+    const isMobile = () =>
+      window.matchMedia &&
+      window.matchMedia("(max-width: 768px)").matches;
+
+    const onTouchStart = (ev) => {
+      if (!isMobile()) return;
+      if (!ev.touches || ev.touches.length !== 1) return;
+
+      const t = ev.touches[0];
+      const startX = t.clientX;
+      const startY = t.clientY;
+
+      // ignore if started on input controls
+      const tag =
+        ev.target && ev.target.tagName
+          ? ev.target.tagName.toLowerCase()
+          : "";
+      if (
+        tag === "input" ||
+        tag === "textarea" ||
+        tag === "select" ||
+        tag === "button"
+      )
+        return;
+
+      touchStartRef.current = {
+        x: startX,
+        y: startY,
+        fromEdge: startX <= 24, // edge-swipe threshold
+      };
+    };
+
+    const onTouchEnd = (ev) => {
+      if (!isMobile()) return;
+      const start = touchStartRef.current;
+      touchStartRef.current = null;
+      if (!start) return;
+
+      const changed = ev.changedTouches && ev.changedTouches[0];
+      if (!changed) return;
+
+      const dx = changed.clientX - start.x;
+      const dy = changed.clientY - start.y;
+
+      // avoid vertical scroll gestures
+      if (Math.abs(dy) > 45) return;
+
+      // OPEN: swipe right from left edge
+      if (!navOpen && start.fromEdge && dx > 70) {
+        setNavOpen(true);
+        return;
+      }
+
+      // CLOSE: swipe left anywhere when open
+      if (navOpen && dx < -70) {
+        setNavOpen(false);
+      }
+    };
+
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchend", onTouchEnd, { passive: true });
+
+    return () => {
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchend", onTouchEnd);
+    };
+  }, [navOpen]);
 
   return (
     <div className="jw-loggedPage">
@@ -39,7 +210,7 @@ export default function LoggedInLayout({ activeId = "dashboard", children }) {
               onNavigate={go}
               onDeposit={() => go("transactions")}
               onWithdraw={() => go("transactions")}
-              onRefreshBalance={() => {}}
+              onRefreshBalance={() => { }}
             />
           </div>
         </aside>
@@ -47,54 +218,6 @@ export default function LoggedInLayout({ activeId = "dashboard", children }) {
         {/* Body */}
         <main className="jw-loggedBody">{children}</main>
       </div>
-
-      {/* Mobile Bottom Nav */}
-      <footer className="jw-loggedBottomNav" aria-label="Bottom navigation">
-        <button
-          className="jw-bottomItem"
-          type="button"
-          aria-label="Menu"
-          onClick={() => setNavOpen(true)}
-        >
-          <Menu size={20} />
-        </button>
-
-        <button
-          className="jw-bottomItem"
-          type="button"
-          aria-label="Transactions"
-          onClick={() => go("transactions")}
-        >
-          <ArrowLeftRight size={20} />
-        </button>
-
-        <button
-          className="jw-bottomItem"
-          type="button"
-          aria-label="Wallet"
-          onClick={() => go("wallets")}
-        >
-          <Wallet size={20} />
-        </button>
-
-        <button
-          className="jw-bottomItem"
-          type="button"
-          aria-label="Promotions"
-          onClick={() => go("promotions")}
-        >
-          <Megaphone size={20} />
-        </button>
-
-        <button
-          className="jw-bottomItem"
-          type="button"
-          aria-label="Chat"
-          onClick={() => go("contact")}
-        >
-          <MessageCircle size={20} />
-        </button>
-      </footer>
 
       {/* Mobile Drawer */}
       <LeftNav
@@ -114,7 +237,7 @@ export default function LoggedInLayout({ activeId = "dashboard", children }) {
           setNavOpen(false);
           go("transactions");
         }}
-        onRefreshBalance={() => {}}
+        onRefreshBalance={() => { }}
       />
     </div>
   );

@@ -27,3 +27,10 @@ body {
   width: 100%;
   min-height: 100vh;
 }
+
+/* Bottom nav layout: padding on mobile so content is not hidden behind fixed nav */
+@media (max-width: 768px) {
+  .jw-hasBottomNav {
+    padding-bottom: 0px;
+  }
+}

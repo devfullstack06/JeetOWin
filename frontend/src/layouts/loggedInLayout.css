@@ -1,6 +1,5 @@
 :root {
   --jw-nav-w: 300px;
-  --jw-mobile-footer-h: 56px;
   --jw-header-h: 62px;
   --jw-body-max-w: 1200px;
 }
@@ -37,46 +36,22 @@
   width: 100%;
   max-width: 100%;
   min-width: 0;
-
-  padding: 12px 12px calc(var(--jw-mobile-footer-h) + 12px);
-}
-
-/* Mobile bottom nav */
-.jw-loggedBottomNav {
-  height: var(--jw-mobile-footer-h);
-  background: #0a1f4f;
-  display: flex;
-  justify-content: space-around;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  z-index: 50;
-}
-
-.jw-loggedBottomNav button,
-.jw-bottomItem {
-  background: transparent !important;
-  border: 0;
-  color: #fff !important;
-  opacity: 1;
-  padding: 8px;
-  border-radius: 10px;
+  padding: 12px;
 }
 
 /* =========================
-   MOBILE: true full-height layout
-   header(auto) + grid(flex) + bottomnav(fixed)
+   MOBILE: header sticky + body scroll
    ========================= */
 @media (max-width: 768px) {
   .jw-loggedPage {
     height: 100dvh;
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* ✅ prevents page scroll/grey gaps */
+
+    /* keep outer container stable */
+    overflow: hidden;
   }
 
-  /* middle area under header */
   .jw-loggedGrid {
     flex: 1;
     min-height: 0;
@@ -84,18 +59,23 @@
     /* override grid to make height predictable */
     display: flex;
     flex-direction: column;
+
+    /* IMPORTANT: do not scroll here */
+    overflow: hidden;
   }
 
   .jw-loggedBody {
     flex: 1;
     min-height: 0;
-    overflow: hidden;
 
-    /* IMPORTANT:
-       don't use padding-bottom "footer buffer" here because we want true fill.
-       bottom nav is fixed and outside the flow.
-    */
+    /* ✅ THIS enables full scrolling */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+
     padding: 12px;
+
+    /* ✅ so last content isn't hidden behind fixed BottomNav */
+    padding-bottom: calc(12px + var(--jw-mobile-footer-h, 72px));
   }
 }
 
@@ -131,9 +111,5 @@
     margin-left: var(--jw-nav-w);
     margin-right: auto;
     padding: 12px;
-  }
-
-  .jw-loggedBottomNav {
-    display: none;
   }
 }
