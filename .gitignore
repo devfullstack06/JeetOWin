@@ -3,3 +3,16 @@ node_modules/
 .env.*
 dist/
 build/
+
+# env files
+backend/.env
+frontend/.env
+.env
+
+# dependencies
+backend/node_modules/
+frontend/node_modules/
+**/node_modules/
+
+# build output
+frontend/dist/
