@@ -15,9 +15,11 @@ import {
 import AuthTabs from "../components/AuthTabs";
 import Logo from "../components/Logo";
 import "./login.css";
+import usePageTitle from "../hooks/usePageTitle";
 
 export default function Signup() {
   const navigate = useNavigate();
+  usePageTitle("Signup");
 
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");

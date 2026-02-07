@@ -1,31 +1,49 @@
-import React, { useMemo, useState } from "react";
-import { User, ChevronDown } from "lucide-react"; // same icon as LeftNav (keep)
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+
 import "./accountsBody.css";
+
+import AccountsListStep from "./steps/AccountsListStep";
+import AccountsCreateStep from "./steps/AccountsCreateStep";
+import AccountsProcessingStep from "./steps/AccountsProcessingStep";
+import AccountsCreatedStep from "./steps/AccountsCreatedStep";
+import AccountsRejectedStep from "./steps/AccountsRejectedStep";
+import usePageTitle from "../../hooks/usePageTitle";
+
+
+import {
+  createAccountTicket,
+  fetchBrands,
+  fetchMyAccounts,
+  fetchTicketStatus,
+} from "./api/accountsApi";
 
 export default function AccountsBody() {
   const navigate = useNavigate();
 
-  // Step control:
-  // "list" -> Step 1 (Create New button / list)
-  // "create" -> Step 2 (Account Creation Form)
-  // "waiting" -> Step 3 placeholder (Ticket created / waiting screen)
-  const [step, setStep] = useState("list");
+  usePageTitle("Accounts");
 
-  // Placeholder accounts (later from backend)
-  const [accounts] = useState([]); // empty = Step 1
-  const hasAccounts = accounts.length > 0;
 
-  // Brands placeholder (later from admin/back-end)
-  const brandsAvailable = useMemo(
-    () => ["Betpro", "BrandX", "BrandY", "BrandZ"],
-    []
-  );
+  // 5-step flow
+  const [step, setStep] = useState("list"); // list | create | processing | created | rejected
+
+  // Data
+  const [accounts, setAccounts] = useState([]);
+  const [brands, setBrands] = useState([]);
+  const brandsAvailable = useMemo(() => brands, [brands]);
 
   // Form state
   const [brand, setBrand] = useState("");
   const [suggestedUsername, setSuggestedUsername] = useState("");
   const [errors, setErrors] = useState({});
+
+  // Ticket + result states
+  const [ticketId, setTicketId] = useState(null);
+  const [createdAccount, setCreatedAccount] = useState(null);
+  const [rejectedReason, setRejectedReason] = useState("");
+
+  const pollingRef = useRef(null);
 
   const resetForm = () => {
     setBrand("");
@@ -33,9 +51,21 @@ export default function AccountsBody() {
     setErrors({});
   };
 
-  const goToList = () => {
+  const goToList = async () => {
     setStep("list");
+    setTicketId(null);
+    setCreatedAccount(null);
+    setRejectedReason("");
     resetForm();
+
+    // Refresh list after any flow
+    try {
+      const data = await fetchMyAccounts();
+      setAccounts(data?.accounts ?? []);
+    } catch (e) {
+      // keep silent to avoid breaking UX; console is enough
+      console.error("[Accounts] refresh accounts failed:", e);
+    }
   };
 
   const handleClose = () => {
@@ -43,7 +73,6 @@ export default function AccountsBody() {
       navigate("/home");
       return;
     }
-    // If user is inside form/waiting, return to list screen
     goToList();
   };
 
@@ -53,12 +82,10 @@ export default function AccountsBody() {
   };
 
   const handleUsernameChange = (e) => {
-    // Only allow lowercase alphanumeric (a-z, 0-9)
     const raw = e.target.value || "";
     const cleaned = raw.toLowerCase().replace(/[^a-z0-9]/g, "");
     setSuggestedUsername(cleaned);
 
-    // Live clear username error if becomes valid
     setErrors((prev) => {
       const next = { ...prev };
       if (next.username) delete next.username;
@@ -72,7 +99,6 @@ export default function AccountsBody() {
     if (!brand) nextErrors.brand = "Please select a brand.";
 
     if (suggestedUsername && !/^[a-z0-9]+$/.test(suggestedUsername)) {
-      // (Mostly impossible due to sanitization, but keep safe)
       nextErrors.username = "Only lowercase letters and numbers are allowed.";
     }
 
@@ -80,20 +106,137 @@ export default function AccountsBody() {
     return Object.keys(nextErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const clearBrandError = () => {
+    setErrors((prev) => {
+      const next = { ...prev };
+      if (next.brand) delete next.brand;
+      return next;
+    });
+  };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     if (!validateForm()) return;
 
-    // ✅ Step 3 should appear immediately after validation passes
-    // Later: call backend to create ticket
-    setStep("waiting");
+    // Step 3 immediately after validation passes
+    setStep("processing");
+
+    try {
+      const res = await createAccountTicket({
+        brand,
+        suggestedUsername: suggestedUsername || null,
+      });
+
+      const newTicketId = res?.ticketId;
+      setTicketId(newTicketId || null);
+
+      // Start polling (admin not ready => likely remains pending)
+      // If backend instantly returns approved/rejected, we'll handle it too.
+    } catch (err) {
+      console.error("[Accounts] create ticket failed:", err);
+      // Put user back to create with a readable error
+      setStep("create");
+      setErrors((prev) => ({
+        ...prev,
+        submit: err?.message || "Failed to submit request.",
+      }));
+    }
   };
+
+  // Initial load: brands + accounts
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      try {
+        const [brandsRes, accountsRes] = await Promise.allSettled([
+          fetchBrands(),
+          fetchMyAccounts(),
+        ]);
+
+        if (cancelled) return;
+
+        if (brandsRes.status === "fulfilled") {
+          setBrands(brandsRes.value?.brands ?? []);
+        } else {
+          console.error("[Accounts] fetch brands failed:", brandsRes.reason);
+          setBrands([]); // fallback
+        }
+
+        if (accountsRes.status === "fulfilled") {
+          setAccounts(accountsRes.value?.accounts ?? []);
+        } else {
+          console.error("[Accounts] fetch accounts failed:", accountsRes.reason);
+          setAccounts([]);
+        }
+      } catch (e) {
+        console.error("[Accounts] load failed:", e);
+      }
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Poll ticket status while in processing
+  useEffect(() => {
+    // Clear any previous polling
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
+
+    if (step !== "processing" || !ticketId) return;
+
+    const poll = async () => {
+      try {
+        const data = await fetchTicketStatus(ticketId);
+
+        const status = data?.status; // pending | approved | rejected
+        if (!status || status === "pending") return;
+
+        if (status === "approved") {
+          setCreatedAccount(data?.account ?? null);
+          setStep("created");
+          return;
+        }
+
+        if (status === "rejected") {
+          setRejectedReason(data?.reason || "");
+          setStep("rejected");
+          return;
+        }
+      } catch (e) {
+        console.error("[Accounts] poll status failed:", e);
+        // keep trying; transient errors shouldn't break UX
+      }
+    };
+
+    // Poll immediately then every 4s
+    poll();
+    pollingRef.current = setInterval(poll, 4000);
+
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    };
+  }, [step, ticketId]);
+
+  const sectionLabel = useMemo(() => {
+    if (step === "list") return "My Accounts";
+    if (step === "create") return "Create New Account";
+    if (step === "processing") return "Ticket Created";
+    if (step === "created") return "Account Created";
+    if (step === "rejected") return "Rejected";
+    return "My Accounts";
+  }, [step]);
 
   return (
     <section className="jw-accountsPage" aria-label="My Accounts">
       <div className="jw-accountsCard">
-        {/* ================= HEADER ================= */}
+        {/* HEADER */}
         <div className="jw-accountsHeader">
           <div className="jw-accountsHeaderLeft">
             <span className="jw-accountsIcon" aria-hidden="true">
@@ -112,164 +255,52 @@ export default function AccountsBody() {
           </button>
         </div>
 
-        {/* ================= SECTION LABEL (line both sides) ================= */}
+        {/* SECTION LABEL */}
         <div className="jw-accountsSectionLabel" aria-hidden="true">
           <span className="jw-accountsLine" />
-          <span className="jw-accountsLabelText">
-            {step === "list" && "My Accounts"}
-            {step === "create" && "Create New Account"}
-            {step === "waiting" && "Ticket Created"}
-          </span>
+          <span className="jw-accountsLabelText">{sectionLabel}</span>
           <span className="jw-accountsLine" />
         </div>
 
-        {/* ================= STEP 1: CREATE NEW + LIST ================= */}
+        {/* Global submit error (optional) */}
+        {errors.submit && step === "create" && (
+          <div className="jw-submitError" role="alert">
+            {errors.submit}
+          </div>
+        )}
+
+        {/* STEP RENDER */}
         {step === "list" && (
-          <>
-            <div className="jw-accountsCreateNewWrap">
-              <button
-                type="button"
-                className="jw-accountsCreateNew"
-                onClick={handleCreateNew}
-              >
-                <span>Create New</span>
-                <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
-                  <path
-                    d="M15 6.25V23.75M6.25 15H23.75"
-                    stroke="white"
-                    strokeWidth="4"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            {hasAccounts && (
-              <div className="jw-accountsList">
-                <div className="jw-accountsListHeader">
-                  <span>Username</span>
-                  <span>Created</span>
-                  <span>Brand</span>
-                  <span>Password</span>
-                </div>
-
-                {accounts.map((acc, idx) => (
-                  <div key={idx} className="jw-accountsRow">
-                    <span>{acc.username}</span>
-                    <span>{acc.created}</span>
-                    <span className="jw-accountsBrand">{acc.brand}</span>
-                    <button className="jw-accountsUpdate" type="button">
-                      Update
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
+          <AccountsListStep
+            accounts={accounts}
+            onCreateNew={handleCreateNew}
+          />
         )}
 
-        {/* ================= STEP 2: ACCOUNT CREATION FORM ================= */}
         {step === "create" && (
-          <div className="jw-accountsFormOuter">
-            <div className="jw-accountsFormPanel">
-              <div className="jw-accountsFormIntro">
-                Input details below to Create your new Account
-              </div>
-
-              <form className="jw-accountsForm" onSubmit={handleSubmit}>
-                {/* Brand select */}
-                <div className="jw-field">
-                  <div className="jw-selectWrap">
-                    <select
-                      className="jw-select"
-                      value={brand}
-                      onChange={(e) => {
-                        setBrand(e.target.value);
-                        setErrors((prev) => {
-                          const next = { ...prev };
-                          if (next.brand) delete next.brand;
-                          return next;
-                        });
-                      }}
-                    >
-                      <option value="" disabled>
-                        Select Brand
-                      </option>
-                      {brandsAvailable.map((b) => (
-                        <option key={b} value={b}>
-                          {b}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown className="jw-selectIcon" size={20} />
-                  </div>
-                  {errors.brand && (
-                    <div className="jw-fieldError" role="alert">
-                      {errors.brand}
-                    </div>
-                  )}
-                </div>
-
-                {/* Username */}
-                <div className="jw-fieldUsername">
-                  <input
-                    className="jw-input"
-                    type="text"
-                    inputMode="text"
-                    autoComplete="off"
-                    spellCheck="false"
-                    placeholder="Suggest Username (Optional)"
-                    value={suggestedUsername}
-                    onChange={handleUsernameChange}
-                  />
-                  <div className="jw-fieldHint">
-                    Only small letters and numbers (a-z, 0-9)
-                  </div>
-                  {errors.username && (
-                    <div className="jw-fieldError" role="alert">
-                      {errors.username}
-                    </div>
-                  )}
-                </div>
-
-                {/* Buttons row */}
-                <div className="jw-accountsFormActions">
-                  <button
-                    type="button"
-                    className="jw-btn jw-btnCancel"
-                    onClick={goToList}
-                  >
-                    Cancel
-                  </button>
-
-                  <button type="submit" className="jw-btn jw-btnSubmit">
-                    Submit
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
+          <AccountsCreateStep
+            brand={brand}
+            setBrand={setBrand}
+            suggestedUsername={suggestedUsername}
+            onUsernameChange={handleUsernameChange}
+            errors={errors}
+            onCancel={goToList}
+            onSubmit={handleSubmit}
+            brandsAvailable={brandsAvailable}
+            clearBrandError={clearBrandError}
+          />
         )}
 
-        {/* ================= STEP 3: WAITING PLACEHOLDER ================= */}
-        {step === "waiting" && (
-          <div className="jw-waitingOuter">
-            <div className="jw-waitingPanel">
-              <div className="jw-waitingTitle">Ticket created ✅</div>
-              <div className="jw-waitingText">
-                Your request has been sent to our admin team. We’ll update your
-                ticket with the username & password soon.
-              </div>
+        {step === "processing" && (
+          <AccountsProcessingStep ticketId={ticketId} onBack={goToList} />
+        )}
 
-              <button
-                type="button"
-                className="jw-btn jw-btnCancel"
-                onClick={goToList}
-              >
-                Back
-              </button>
-            </div>
-          </div>
+        {step === "created" && (
+          <AccountsCreatedStep createdAccount={createdAccount} onGoToList={goToList} />
+        )}
+
+        {step === "rejected" && (
+          <AccountsRejectedStep reason={rejectedReason} onGoToList={goToList} />
         )}
       </div>
     </section>

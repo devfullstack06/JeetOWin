@@ -1,0 +1,208 @@
+// backend/routes/accounts.js
+const express = require("express");
+const authenticateToken = require("../middleware/auth");
+const { pool } = require("../config/database");
+
+const router = express.Router();
+
+/**
+ * Ensure client role
+ */
+function requireClient(req, res, next) {
+  if (!req.user || req.user.role !== "client") {
+    return res.status(403).json({ error: "Forbidden: client role required" });
+  }
+  next();
+}
+
+/**
+ * GET /api/accounts/brands
+ * Returns available brands. (Admin can manage later.)
+ */
+router.get("/brands", authenticateToken, requireClient, async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      "SELECT name FROM brands WHERE is_active = 1 ORDER BY name ASC"
+    );
+
+    // fallback if table empty
+    const brands = rows.map((r) => r.name);
+    return res.json({ brands });
+  } catch (e) {
+    console.error("[accounts] /brands error:", e);
+    // Safe fallback to keep UI working even if brands table not created yet
+    return res.json({ brands: ["Betpro", "BrandX", "BrandY", "BrandZ"] });
+  }
+});
+
+/**
+ * GET /api/accounts
+ * Returns client's created accounts (approved ones).
+ */
+router.get("/", authenticateToken, requireClient, async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT id, brand, username, created_at
+       FROM client_accounts
+       WHERE client_id = ?
+       ORDER BY created_at DESC`,
+      [req.user.userId]
+    );
+
+    const accounts = rows.map((r) => ({
+      id: r.id,
+      brand: r.brand,
+      username: r.username,
+      createdAt: r.created_at ? new Date(r.created_at).toISOString().slice(0, 10) : null,
+    }));
+
+    return res.json({ accounts });
+  } catch (e) {
+    console.error("[accounts] GET / error:", e);
+    return res.json({ accounts: [] });
+  }
+});
+
+/**
+ * POST /api/accounts/tickets
+ * Creates a new ticket. Status starts as 'pending'.
+ */
+router.post("/tickets", authenticateToken, requireClient, async (req, res) => {
+  const { brand, suggestedUsername } = req.body || {};
+
+  if (!brand) {
+    return res.status(400).json({ error: "brand is required" });
+  }
+
+  // suggestedUsername optional, but enforce safe format if present
+  if (suggestedUsername && !/^[a-z0-9]+$/.test(String(suggestedUsername))) {
+    return res.status(400).json({ error: "Invalid suggestedUsername format" });
+  }
+
+  try {
+    const [result] = await pool.query(
+      `INSERT INTO account_tickets
+        (client_id, brand, suggested_username, status, created_at, updated_at)
+       VALUES (?, ?, ?, 'pending', NOW(), NOW())`,
+      [req.user.userId, brand, suggestedUsername || null]
+    );
+
+    return res.json({ ticketId: result.insertId });
+  } catch (e) {
+    console.error("[accounts] POST /tickets error:", e);
+    return res.status(500).json({ error: "Failed to create ticket" });
+  }
+});
+
+/**
+ * GET /api/accounts/tickets/:id
+ * Returns ticket status. When admin exists, it will set approved/rejected and
+ * optionally attach created account credentials.
+ */
+router.get("/tickets/:id", authenticateToken, requireClient, async (req, res) => {
+  const ticketId = req.params.id;
+
+  try {
+    const [rows] = await pool.query(
+      `SELECT id, client_id, brand, status, reason, created_account_id
+       FROM account_tickets
+       WHERE id = ? LIMIT 1`,
+      [ticketId]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Ticket not found" });
+    }
+
+    const t = rows[0];
+    if (t.client_id !== req.user.userId) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
+    // If approved, try to load created account
+    if (t.status === "approved" && t.created_account_id) {
+      const [accRows] = await pool.query(
+        `SELECT id, brand, username
+         FROM client_accounts
+         WHERE id = ? AND client_id = ?
+         LIMIT 1`,
+        [t.created_account_id, req.user.userId]
+      );
+
+      const acc = accRows[0];
+      return res.json({
+        status: "approved",
+        account: acc
+          ? { id: acc.id, brand: acc.brand, username: acc.username }
+          : null,
+      });
+    }
+
+    if (t.status === "rejected") {
+      return res.json({ status: "rejected", reason: t.reason || "" });
+    }
+
+    return res.json({ status: "pending" });
+  } catch (e) {
+    console.error("[accounts] GET /tickets/:id error:", e);
+    return res.status(500).json({ error: "Failed to fetch ticket status" });
+  }
+});
+
+/**
+ * OPTIONAL DEV-ONLY endpoint to simulate approval/rejection without admin UI.
+ * PATCH /api/accounts/tickets/:id/mock?status=approved|rejected
+ * Guarded: only works when NODE_ENV !== 'production'
+ */
+router.patch("/tickets/:id/mock", authenticateToken, requireClient, async (req, res) => {
+  if (process.env.NODE_ENV === "production") {
+    return res.status(404).json({ error: "Not found" });
+  }
+
+  const ticketId = req.params.id;
+  const status = String(req.query.status || "").toLowerCase();
+
+  if (!["approved", "rejected"].includes(status)) {
+    return res.status(400).json({ error: "status must be approved or rejected" });
+  }
+
+  try {
+    // Ensure ticket belongs to the user
+    const [rows] = await pool.query(
+      "SELECT id, client_id, brand FROM account_tickets WHERE id = ? LIMIT 1",
+      [ticketId]
+    );
+    if (rows.length === 0) return res.status(404).json({ error: "Ticket not found" });
+    if (rows[0].client_id !== req.user.userId) return res.status(403).json({ error: "Forbidden" });
+
+    if (status === "rejected") {
+      await pool.query(
+        "UPDATE account_tickets SET status='rejected', reason='Rejected (dev mock)', updated_at=NOW() WHERE id=?",
+        [ticketId]
+      );
+      return res.json({ ok: true });
+    }
+
+    // approved mock: create a dummy account row
+    const dummyUsername = `jw${req.user.userId}${ticketId}`.slice(0, 16);
+    const [accResult] = await pool.query(
+      `INSERT INTO client_accounts (client_id, brand, username, created_at)
+       VALUES (?, ?, ?, NOW())`,
+      [req.user.userId, rows[0].brand, dummyUsername]
+    );
+
+    await pool.query(
+      `UPDATE account_tickets
+       SET status='approved', created_account_id=?, updated_at=NOW()
+       WHERE id=?`,
+      [accResult.insertId, ticketId]
+    );
+
+    return res.json({ ok: true });
+  } catch (e) {
+    console.error("[accounts] PATCH /tickets/:id/mock error:", e);
+    return res.status(500).json({ error: "Mock update failed" });
+  }
+});
+
+module.exports = router;

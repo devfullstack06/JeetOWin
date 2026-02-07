@@ -101,20 +101,44 @@
   cursor: pointer;
 }
 
-/* ACCOUNTS LIST */
-.jw-accountsList {
-  padding: 20px 10px 10px;
+/* ✅ STEP 1 LAYOUT WRAPPER (enables scroll area below Create New) */
+.jw-accountsListStep {
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
+/* ✅ Header fixed + rows scroll container */
+.jw-accountsListWrap {
+  flex: 1;
+  min-height: 0;
+  padding: 0 10px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ACCOUNTS LIST HEADER (fixed) */
 .jw-accountsListHeader {
   display: flex;
   justify-content: space-between;
   font-size: 10px;
   opacity: 0.9;
   padding: 0 10px;
+}
+
+/* ✅ Only rows scroll */
+.jw-accountsRows {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-right: 2px; /* small space so scrollbar doesn't touch content */
+  -webkit-overflow-scrolling: touch;
 }
 
 .jw-accountsRow {
@@ -142,6 +166,19 @@
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
+}
+
+/* ✅ Empty state under header */
+.jw-accountsEmpty {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: center;
+  padding: 14px 10px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.75);
 }
 
 /* =========================
@@ -181,9 +218,18 @@
 
   display: flex;
   flex-direction: column;
-  gap: 30px;
+  justify-content: space-between;
 
+  flex: 1;
+  min-height: 0;
   padding: 10px;
+}
+
+/* wrapper for the fields section */
+.jw-accountsFormFields {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
 }
 
 .jw-field {
@@ -197,7 +243,6 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding-bottom: 100px;
 }
 
 /* Select */
@@ -274,11 +319,9 @@
 
   padding: 10px;
   display: flex;
-
   align-items: center;
 
   gap: 30px;
-  /* ✅ */
   flex-wrap: wrap;
   justify-content: center;
 }
@@ -308,7 +351,7 @@
 }
 
 /* =========================
-   STEP 3: WAITING PLACEHOLDER
+   STEP 3+: WAITING / RESULT PANELS
    ========================= */
 .jw-waitingOuter {
   flex: 1;
@@ -322,12 +365,30 @@
   background: #071336;
   border-radius: 10px;
   padding: 30px 16px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  text-align: center;
+
+  gap: 14px;
+  flex: 1;
+  min-height: 0;
+}
+
+.jw-waitingContent {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  justify-content: center;
   align-items: center;
-  text-align: center;
+}
+
+.jw-waitingActions {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding-top: 10px;
 }
 
 .jw-waitingTitle {
@@ -339,4 +400,50 @@
   font-size: 12px;
   color: rgba(255, 255, 255, 0.75);
   max-width: 480px;
+}
+
+/* Extra info blocks */
+.jw-ticketId,
+.jw-rejectReason {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.jw-ticketIdValue,
+.jw-rejectReasonValue {
+  font-weight: 700;
+  color: #fff;
+}
+
+.jw-createdBox {
+  width: 100%;
+  max-width: 480px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.85);
+  text-align: left;
+}
+
+.jw-submitError {
+  margin: 0 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(190, 56, 56, 0.25);
+  border: 1px solid rgba(190, 56, 56, 0.55);
+  color: #ffb3b3;
+  font-size: 12px;
+}
+
+/* Fix desktop native select dropdown readability */
+.jw-select option,
+.jw-select optgroup {
+  color: #000;
+  background: #fff;
+}
+
+.jw-select option:checked {
+  background: #e6e6e6;
 }

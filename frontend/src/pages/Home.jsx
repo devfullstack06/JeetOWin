@@ -11,9 +11,14 @@ import PaymentMethods from "../components/PaymentMethods";
 import Footer from "../components/Footer";
 import LeaderBoard from "../components/LeaderBoard";
 import "./home.css";
+import usePageTitle from "../hooks/usePageTitle";
+
 
 export default function Home() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  usePageTitle("Home");
+
 
   // Check if user is logged in on mount and when localStorage changes
   useEffect(() => {

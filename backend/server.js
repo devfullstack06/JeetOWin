@@ -17,6 +17,7 @@ const authRouter = require('./routes/auth');
 const clientRouter = require('./routes/client');
 const partnerRouter = require('./routes/partner');
 const backofficeRouter = require('./routes/backoffice');
+const accountsRouter = require('./routes/accounts');
 
 const app = express();
 
@@ -38,6 +39,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/client', clientRouter);
 app.use('/api/partner', partnerRouter);
 app.use('/api/backoffice', backofficeRouter);
+app.use('/api/accounts', accountsRouter);
 
 // Choose port from environment or default to 3000
 const PORT = process.env.PORT || 3000;
