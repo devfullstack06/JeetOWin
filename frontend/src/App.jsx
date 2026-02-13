@@ -9,6 +9,7 @@ import BottomNav from "./components/BottomNav/BottomNav";
 
 import Home from "./pages/Home";
 import AccountsPage from "./pages/Accounts/AccountsPage";
+import TransfersPage from "./pages/Transfers/TransfersPage";
 
 function MobileNavLayout() {
   return (
@@ -18,6 +19,15 @@ function MobileNavLayout() {
       </div>
       <BottomNav />
     </>
+  );
+}
+
+// ✅ Global guard wrapper for all client pages
+function ClientProtectedLayout() {
+  return (
+    <ProtectedRoute allowedRole="client">
+      <Outlet />
+    </ProtectedRoute>
   );
 }
 
@@ -31,20 +41,16 @@ export default function App() {
 
       {/* Pages wrapped so BottomNav can show on mobile when logged in */}
       <Route element={<MobileNavLayout />}>
-        {/* ✅ IMPORTANT: "/" must be inside this layout */}
+        {/* Public landing */}
         <Route path="/" element={<Home />} />
 
-        <Route path="home" element={<Home />} />
-        <Route path="accounts" element={<AccountsPage />} />
-
-        <Route
-          path="dashboard"
-          element={
-            <ProtectedRoute allowedRole="client">
-              <Home />
-            </ProtectedRoute>
-          }
-        />
+        {/* ✅ Everything inside here is protected (client only) */}
+        <Route element={<ClientProtectedLayout />}>
+          <Route path="home" element={<Home />} />
+          <Route path="accounts" element={<AccountsPage />} />
+          <Route path="transfers" element={<TransfersPage />} />
+          <Route path="dashboard" element={<Home />} />
+        </Route>
       </Route>
 
       {/* Fallback */}

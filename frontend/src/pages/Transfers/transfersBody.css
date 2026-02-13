@@ -1,0 +1,517 @@
+.jw-transfersPage {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    display: flex;
+  }
+  
+  /* Match Accounts card structure + ensure same font */
+  .jw-transfersCard {
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  
+    padding: 10px;
+    border-radius: 15px;
+    background: linear-gradient(360deg, #14379c 22%, #071336 100%);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    color: #fff;
+  
+    font-family: inherit;
+  }
+  
+  /* HEADER */
+  .jw-transfersHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 10px;
+  }
+  
+  .jw-transfersHeaderLeft {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .jw-transfersIcon {
+    display: inline-flex;
+    color: #ffffff;
+  }
+  
+  .jw-transfersTitle {
+    font-size: 24px;
+    font-weight: 510;
+    margin: 0;
+  }
+  
+  .jw-transfersClose {
+    background: transparent;
+    border: 0;
+    color: #fff;
+    font-size: 28px;
+    cursor: pointer;
+  }
+  
+  /* SECTION LABEL */
+  .jw-transfersSectionLabel {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 10px;
+  }
+  
+  .jw-transfersLine {
+    flex: 1;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.5);
+  }
+  
+  .jw-transfersLabelText {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.75);
+    text-shadow: 0px 4px 4px rgba(0, 0, 0, 0.8);
+  }
+  
+  /* STEP 1: Create New (same concept as Accounts, tuned to mock) */
+  .jw-transfersCreateNewWrap {
+    display: flex;
+    justify-content: center;
+    padding: 0 10px;
+  }
+  
+  .jw-transfersCreateNew {
+    max-width: 260px;
+    width: 100%;
+    margin: 0 50px;
+    padding: 18px 24px;
+    border-radius: 10px;
+    background: #00ca52;
+    border: 0;
+  
+    color: #fff;
+    font-size: 20px;
+    font-weight: 510;
+  
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  
+    cursor: pointer;
+  }
+  
+  .jw-transfersCreatePlus {
+    font-size: 30px;
+    line-height: 1;
+    font-weight: 700;
+  }
+  
+  /* ✅ Step 1 wrapper = allows fixed header + scroll rows */
+  .jw-transfersHistoryStep {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .jw-transfersListWrap {
+    flex: 1;
+    min-height: 0;
+    padding: 0 10px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  /* Header row fixed */
+  .jw-transfersListHeader {
+    display: grid;
+    grid-template-columns: 1.2fr 1.2fr 1fr 0.9fr;
+    gap: 10px;
+    font-size: 10px;
+    opacity: 0.9;
+    padding: 0 10px;
+  }
+  
+  /* Only rows scroll */
+  .jw-transfersRows {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-right: 2px;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .jw-transferRowBtn {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    text-align: left;
+  }
+  
+  .jw-transferRow {
+    border-radius: 10px;
+    padding: 8px 10px;
+  
+    display: grid;
+    grid-template-columns: 1.2fr 1.2fr 1fr 0.9fr;
+    gap: 10px;
+  
+    font-size: 12px;
+    color: #000;
+  }
+  
+  .jw-transferBrand {
+    font-weight: 800;
+  }
+  
+  .jw-transferAmount {
+    text-align: right;
+    font-weight: 800;
+  }
+  
+  /* status colors */
+  .jw-transferRow.is-green {
+    background: #00ca52;
+  }
+  .jw-transferRow.is-yellow {
+    background: #f1c400;
+  }
+  .jw-transferRow.is-red {
+    background: #d83a3a;
+  }
+  
+  .jw-transfersEmpty {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    text-align: center;
+    padding: 14px 10px;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.75);
+  }
+  
+/* =========================
+   STEP 2: Create Transfer UI (mock-like)
+   ========================= */
+
+   .jw-transferBrandsHead {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 2px 2px 0;
+  }
+  
+  .jw-transferBrandsTitle {
+    font-size: 18px;
+    font-weight: 700;
+  }
+  
+  .jw-transferBrandsSub {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.75);
+  }
+  
+  .jw-transferBrandRow {
+    display: flex;
+    gap: 12px;
+    overflow: auto;
+    padding: 10px 2px;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .jw-transferBrandTile {
+    min-width: 92px;
+    border: 0;
+    border-radius: 14px;
+    padding: 10px 10px 12px;
+    cursor: pointer;
+  
+    background: rgba(0, 0, 0, 0.22);
+    color: #fff;
+  
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .jw-transferBrandTile.is-active {
+    outline: 1px solid rgba(255, 255, 255, 0.55);
+    background: rgba(0, 0, 0, 0.32);
+  }
+  
+  .jw-transferBrandLogo {
+    width: 54px;
+    height: 54px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    background: rgba(255, 255, 255, 0.08);
+  }
+  
+  .jw-transferBrandLabel {
+    font-size: 11px;
+    opacity: 0.9;
+  }
+  
+  /* header row: Username | Action */
+  .jw-transferTableHeader {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 6px;
+    font-size: 11px;
+    opacity: 0.9;
+  }
+  
+  .jw-transferTableHeaderRight {
+    text-align: right;
+  }
+  
+  /* list wrapper (scroll if needed) */
+  .jw-transferCreateList {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-right: 2px;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* each account row */
+  .jw-transferAccountRow {
+    background: rgba(0, 0, 0, 0.18);
+    border-radius: 12px;
+    padding: 10px;
+  }
+  
+  .jw-transferAccountTop {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  
+  .jw-transferUsername {
+    font-size: 13px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.9);
+  }
+  
+  .jw-transferActionBtns {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .jw-transferBtnIn,
+  .jw-transferBtnOut {
+    min-width: 56px;
+    height: 28px;
+    border: 0;
+    border-radius: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    color: #000;
+  }
+  
+  .jw-transferBtnIn {
+    background: #00ca52;
+  }
+  
+  .jw-transferBtnOut {
+    background: #f1c400;
+  }
+  
+  .jw-transferActionActive {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .jw-transferActionText {
+    font-size: 12px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.85);
+  }
+  
+  .jw-transferRowClose {
+    width: 26px;
+    height: 26px;
+    border-radius: 9px;
+    border: 0;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    font-size: 18px;
+    line-height: 1;
+  }
+  
+  /* expanded area: input + submit */
+  .jw-transferAccountBottom {
+    margin-top: 10px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    align-items: center;
+  }
+  
+  .jw-transferAmountInput {
+    width: 100%;
+    height: 34px;
+    border-radius: 8px;
+    padding: 8px 10px;
+  
+    background: transparent;
+    color: rgba(255, 255, 255, 0.85);
+    border: 0.5px solid rgba(255, 255, 255, 0.55);
+    outline: none;
+  
+    font-size: 12px;
+    font-weight: 510;
+  }
+  
+  .jw-transferAmountInput::placeholder {
+    color: rgba(255, 255, 255, 0.45);
+  }
+  
+  .jw-transferSubmitBtn {
+    height: 34px;
+    padding: 0 16px;
+    border-radius: 12px;
+    border: 0;
+    cursor: pointer;
+    background: #00ca52;
+    color: #000;
+    font-weight: 900;
+  }
+  
+  .jw-transferInlineError {
+    grid-column: 1 / -1;
+    font-size: 12px;
+    color: #ffb3b3;
+    margin-top: 2px;
+  }
+  
+  .jw-transferCreateActions {
+    display: flex;
+    justify-content: center;
+    padding-top: 6px;
+  }
+  
+  /* =========================
+     STEP 3+: Waiting panels (copied from Accounts for consistency)
+     ========================= */
+  .jw-waitingOuter {
+    flex: 1;
+    min-height: 0;
+    padding: 10px;
+    display: flex;
+  }
+  
+  .jw-waitingPanel {
+    width: 100%;
+    background: #071336;
+    border-radius: 10px;
+    padding: 30px 16px;
+  
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    text-align: center;
+  
+    gap: 14px;
+    flex: 1;
+    min-height: 0;
+  }
+  
+  .jw-waitingContent {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    align-items: center;
+  }
+  
+  .jw-waitingActions {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding-top: 10px;
+  }
+  
+  .jw-waitingTitle {
+    font-size: 18px;
+    font-weight: 700;
+  }
+  
+  .jw-waitingText {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.75);
+    max-width: 480px;
+  }
+  
+  /* ticket details rows */
+  .jw-transferDetails {
+    width: 100%;
+    max-width: 520px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 6px;
+  }
+  
+  .jw-transferDetailRow {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.75);
+  }
+  
+  .jw-transferDetailValue {
+    color: #fff;
+    font-weight: 700;
+    text-align: right;
+  }
+  
+  /* Buttons (reuse Accounts sizes) */
+  .jw-btn {
+    width: 150px;
+    height: 50px;
+    border-radius: 12px;
+    border: 0;
+    cursor: pointer;
+  
+    font-size: 18px;
+    font-weight: 600;
+    color: #000;
+  
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.8);
+    max-width: 150px;
+  }
+  
+  .jw-btnCancel {
+    background: #be3838;
+  }
+  
+  .jw-btnSubmit {
+    background: #00ca52;
+  }
+  
+  /* If you later use selects/inputs, Accounts global classes are reused:
+     .jw-input, .jw-select, .jw-fieldError etc. */
+  

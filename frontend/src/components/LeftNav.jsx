@@ -12,6 +12,7 @@ import {
   EyeOff,
   RotateCcw,
   X,
+  ArrowUpDown,
 } from "lucide-react";
 import "./leftNav.css";
 
@@ -43,6 +44,7 @@ export default function LeftNav({
     () => [
       { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard size={20} /> },
       { id: "accounts", label: "Accounts", icon: <User size={20} /> },
+      { id: "transfers", label: "Transfers", icon: <ArrowUpDown size={20} /> },
       { id: "wallets", label: "My Wallets", icon: <Wallet size={20} /> },
       { id: "promotions", label: "Promotions", icon: <Megaphone size={20} /> },
       { id: "referral", label: "Referral Program", icon: <Users size={20} /> },

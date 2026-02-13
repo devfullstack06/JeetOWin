@@ -5,13 +5,13 @@ import "./bottomNav.css";
 
 import iconMenu from "../../assets/bottomnav/Menu Icon.svg";
 import iconClose from "../../assets/bottomnav/Close.svg";
-import iconSort from "../../assets/bottomnav/Sort.svg";
+import iconTransfers from "../../assets/bottomnav/Transfers.svg";
 import iconFileUser from "../../assets/bottomnav/File-user.svg";
 import iconBullhorn from "../../assets/bottomnav/Bullhorn.svg";
 import iconComment from "../../assets/bottomnav/Comment.svg";
 
 const NAV_ITEMS = [
-  { key: "sort", to: "/dashboard", icon: iconSort, aria: "Dashboard" },
+  { key: "transfers", to: "/transfers", icon: iconTransfers, aria: "Transfers" },
   { key: "accounts", to: "/accounts", icon: iconFileUser, aria: "Accounts" },
   { key: "announcements", to: "/accounts", icon: iconBullhorn, aria: "Announcements" },
   { key: "chat", to: "/accounts", icon: iconComment, aria: "Chat" },

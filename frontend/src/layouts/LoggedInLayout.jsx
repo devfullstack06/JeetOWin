@@ -53,6 +53,7 @@ export default function LoggedInLayout({ activeId = "dashboard", children }) {
     const map = {
       dashboard: "/home",
       accounts: "/accounts",
+      transfers: "/transfers",
       wallets: "/wallets",
       promotions: "/promotions",
       referral: "/referral",
