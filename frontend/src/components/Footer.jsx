@@ -23,53 +23,61 @@ const DEFAULT_REGULATIONS = {
   ],
 };
 
+// const DEFAULT_SOCIAL = {
+//   title: "Social Media:",
+//   items: [
+//     {
+//       id: "instagram",
+//       label: "Instagram",
+//       href: "#",
+//       iconSrc: "/social-icons/instagram.svg",
+//     },
+//     {
+//       id: "pinterest",
+//       label: "Pinterest",
+//       href: "#",
+//       iconSrc: "/social-icons/pinterest.svg",
+//     },
+//     {
+//       id: "telegram",
+//       label: "Telegram",
+//       href: "#",
+//       iconSrc: "/social-icons/telegram.svg",
+//     },
+//     {
+//       id: "whatsapp",
+//       label: "WhatsApp",
+//       href: "#",
+//       iconSrc: "/social-icons/whatsapp.svg",
+//     },
+//     {
+//       id: "x",
+//       label: "X",
+//       href: "#",
+//       iconSrc: "/social-icons/x.svg",
+//     },
+//     {
+//       id: "youtube",
+//       label: "YouTube",
+//       href: "#",
+//       iconSrc: "/social-icons/youtube.svg",
+//     },
+//     {
+//       id: "facebook",
+//       label: "Facebook",
+//       href: "#",
+//       iconSrc: "/social-icons/facebook.svg",
+//     },
+//   ],
+// };
+
+import { SOCIAL_LINKS_DEFAULT } from "../config/socialLinks";
+
 const DEFAULT_SOCIAL = {
   title: "Social Media:",
-  items: [
-    {
-      id: "instagram",
-      label: "Instagram",
-      href: "#",
-      iconSrc: "/social-icons/instagram.svg",
-    },
-    {
-      id: "pinterest",
-      label: "Pinterest",
-      href: "#",
-      iconSrc: "/social-icons/pinterest.svg",
-    },
-    {
-      id: "telegram",
-      label: "Telegram",
-      href: "#",
-      iconSrc: "/social-icons/telegram.svg",
-    },
-    {
-      id: "whatsapp",
-      label: "WhatsApp",
-      href: "#",
-      iconSrc: "/social-icons/whatsapp.svg",
-    },
-    {
-      id: "x",
-      label: "X",
-      href: "#",
-      iconSrc: "/social-icons/x.svg",
-    },
-    {
-      id: "youtube",
-      label: "YouTube",
-      href: "#",
-      iconSrc: "/social-icons/youtube.svg",
-    },
-    {
-      id: "facebook",
-      label: "Facebook",
-      href: "#",
-      iconSrc: "/social-icons/facebook.svg",
-    },
-  ],
+  items: SOCIAL_LINKS_DEFAULT.filter((x) => x.type !== "chat"),
 };
+
 
 export default function Footer({
   responsible = DEFAULT_RESPONSIBLE,

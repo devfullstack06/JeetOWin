@@ -11,6 +11,7 @@ import Home from "./pages/Home";
 import AccountsPage from "./pages/Accounts/AccountsPage";
 import TransfersPage from "./pages/Transfers/TransfersPage";
 import WalletsPage from "./pages/Wallets/WalletsPage";
+import ContactUsPage from "./pages/contactUs/ContactUsPage";
 
 function MobileNavLayout() {
   return (
@@ -52,7 +53,7 @@ export default function App() {
           <Route path="transfers" element={<TransfersPage />} />
           <Route path="wallets" element={<WalletsPage />} />
           <Route path="dashboard" element={<Home />} />
-          
+          <Route path="contact" element={<ContactUsPage />} />
         </Route>
       </Route>
 
