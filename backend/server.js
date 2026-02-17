@@ -20,6 +20,8 @@ const partnerRouter = require("./routes/partner");
 const backofficeRouter = require("./routes/backoffice");
 const accountsRouter = require("./routes/accounts");
 const transfersRouter = require("./routes/transfers");
+const walletsRouter = require("./routes/wallets");
+
 
 const app = express();
 
@@ -46,6 +48,7 @@ app.use("/api/partner", partnerRouter);
 app.use("/api/backoffice", backofficeRouter);
 app.use("/api/accounts", accountsRouter);
 app.use("/api/transfers", transfersRouter);
+app.use("/api/wallets", walletsRouter);
 // Choose port from environment or default to 3000
 const PORT = process.env.PORT || 3000;
 

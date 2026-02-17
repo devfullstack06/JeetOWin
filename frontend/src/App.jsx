@@ -10,6 +10,7 @@ import BottomNav from "./components/BottomNav/BottomNav";
 import Home from "./pages/Home";
 import AccountsPage from "./pages/Accounts/AccountsPage";
 import TransfersPage from "./pages/Transfers/TransfersPage";
+import WalletsPage from "./pages/Wallets/WalletsPage";
 
 function MobileNavLayout() {
   return (
@@ -49,7 +50,9 @@ export default function App() {
           <Route path="home" element={<Home />} />
           <Route path="accounts" element={<AccountsPage />} />
           <Route path="transfers" element={<TransfersPage />} />
+          <Route path="wallets" element={<WalletsPage />} />
           <Route path="dashboard" element={<Home />} />
+          
         </Route>
       </Route>
 
