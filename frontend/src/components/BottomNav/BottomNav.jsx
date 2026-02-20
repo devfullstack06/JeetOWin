@@ -13,7 +13,7 @@ import iconComment from "../../assets/bottomnav/Comment.svg";
 const NAV_ITEMS = [
   { key: "transfers", to: "/transfers", icon: iconTransfers, aria: "Transfers" },
   { key: "accounts", to: "/accounts", icon: iconFileUser, aria: "Accounts" },
-  { key: "announcements", to: "/accounts", icon: iconBullhorn, aria: "Announcements" },
+  { key: "promotions", to: "/promotions", icon: iconBullhorn, aria: "Promotions" },
   { key: "chat", to: "/accounts", icon: iconComment, aria: "Chat" },
 ];
 
