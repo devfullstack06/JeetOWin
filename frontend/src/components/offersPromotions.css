@@ -53,6 +53,7 @@
     align-items: stretch;
   }
   
+  
   /* PROMO CARD: one card per slide */
   .jw-offerCard {
     flex: 0 0 100%;
@@ -125,7 +126,7 @@
   /* MOBILE: keep image 120x120, only adjust typography/padding if needed */
   @media (max-width: 768px) {
     .jw-offerCard {
-      /* padding: 16px; */
+      padding: 0px;
     }
   
     .jw-offerHeading {

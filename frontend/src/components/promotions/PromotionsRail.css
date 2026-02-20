@@ -1,0 +1,59 @@
+.jw-promoRail {
+    width: 100%;
+  }
+  
+  .jw-promoRailHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  
+  .jw-promoRailTitle {
+    font-weight: 800;
+    font-size: 16px;
+    color: #0b2a6d;
+  }
+  
+  .jw-promoRailControls {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .jw-promoRailBtn {
+    width: 34px;
+    height: 30px;
+    border-radius: 10px;
+    border: 1px solid rgba(11, 42, 109, 0.18);
+    background: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    font-weight: 900;
+    color: #0b2a6d;
+  }
+  
+  .jw-promoRailViewport {
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .jw-promoRailViewport::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .jw-promoRailTrack {
+    display: flex;
+    gap: 14px;
+    align-items: stretch;
+  }
+  
+  /* one card per slide */
+  .jw-promoRailCard {
+    flex: 0 0 100%;
+    width: 100%;
+    scroll-snap-align: start;
+  }
+  
