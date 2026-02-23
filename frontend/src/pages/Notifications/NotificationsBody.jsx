@@ -160,11 +160,11 @@ export default function NotificationsBody() {
         </div>
 
         {/* SECTION LABEL (same pattern as Accounts) */}
-        <div className="jw-notifSectionLabel" aria-hidden="true">
+        {/* <div className="jw-notifSectionLabel" aria-hidden="true">
           <span className="jw-notifLine" />
           <span className="jw-notifLabelText">{sectionLabel}</span>
           <span className="jw-notifLine" />
-        </div>
+        </div> */}
 
         {/* Tabs */}
         <NotificationsTabs

@@ -60,6 +60,8 @@ export default function LoggedInLayout({ activeId = "dashboard", children }) {
       notifications: "/notifications",
       contact: "/contact",
       transactions: "/transactions",
+      deposit: "/deposit",
+      withdraw: "/withdraw",
     };
 
     navigate(map[id] || "/home");
@@ -209,8 +211,8 @@ export default function LoggedInLayout({ activeId = "dashboard", children }) {
               variant="sidebar"
               activeId={activeId}
               onNavigate={go}
-              onDeposit={() => go("transactions")}
-              onWithdraw={() => go("transactions")}
+              onDeposit={() => go("deposit")}
+              onWithdraw={() => go("withdraw")}
               onRefreshBalance={() => { }}
             />
           </div>
@@ -232,11 +234,11 @@ export default function LoggedInLayout({ activeId = "dashboard", children }) {
         }}
         onDeposit={() => {
           setNavOpen(false);
-          go("transactions");
+          go("deposit");
         }}
         onWithdraw={() => {
           setNavOpen(false);
-          go("transactions");
+          go("withdraw");
         }}
         onRefreshBalance={() => { }}
       />

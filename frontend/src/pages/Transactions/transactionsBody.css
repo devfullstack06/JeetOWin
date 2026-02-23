@@ -1,0 +1,738 @@
+.jw-transactionsPage {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+}
+
+.jw-transactionsCard {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+
+  padding: 10px;
+  border-radius: 15px;
+  background: linear-gradient(360deg, #14379c 22%, #071336 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: #fff;
+}
+
+/* HEADER */
+.jw-transactionsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 10px;
+}
+
+.jw-transactionsHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.jw-transactionsTitle {
+  font-size: 24px;
+  font-weight: 510;
+  margin: 0;
+}
+
+.jw-transactionsClose {
+  background: transparent;
+  border: 0;
+  color: #fff;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+/* Tabs */
+.jw-txTabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  padding: 0 10px;
+}
+
+/* .jw-txTabsWrap { padding: 0 0 6px; } */
+
+.jw-txTab {
+  background: transparent;
+  border: 0;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 16px;
+  padding: 10px 6px 12px;
+  cursor: pointer;
+  position: relative;
+}
+
+.jw-txTab.is-active {
+  color: #fff;
+  font-weight: 700;
+}
+
+/* .jw-txTab.is-active.is-deposit::after {
+    content: "";
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    bottom: -1px;
+    height: 3px;
+    border-radius: 10px;
+    background: #10d36b;
+    z-index: 2;
+  }
+  
+  .jw-txTab.is-active.is-withdraw::after {
+    content: "";
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    bottom: -1px;
+    height: 3px;
+    border-radius: 10px;
+    background: #ffcc00;
+    z-index: 2;
+  } */
+
+/* Section label divider */
+.jw-transactionsSectionLabel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  margin-top: 2px;
+}
+
+.jw-transactionsLine {
+  flex: 1;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.jw-transactionsLabelText {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.75);
+  text-shadow: 0px 4px 4px rgba(0, 0, 0, 0.8);
+}
+
+/* body scroll */
+.jw-txBodyScroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 0 10px 10px;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Step base */
+.jw-txStep {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.jw-txStepTitle {
+  font-size: 18px;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.jw-txStepTitle.is-deposit {
+  color: #10d36b;
+}
+.jw-txStepTitle.is-withdraw {
+  color: #ffcc00;
+}
+
+.jw-txStepSub {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* Tiles row (payment company / wallet company) */
+.jw-txTilesRow {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  padding: 8px 0 6px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.jw-txTile {
+  min-width: 86px;
+  height: 86px;
+  border-radius: 16px;
+  background: #071336;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  color: #fff;
+}
+
+.jw-txTile.is-active {
+  border-color: rgba(255, 255, 255, 0.55);
+}
+
+.jw-txTileIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 12px;
+}
+
+.jw-txTileLabel {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.85);
+  text-align: center;
+  line-height: 1.1;
+}
+
+/* Deposit wallet panel */
+.jw-txWalletPanel {
+  display: grid;
+  grid-template-columns: 1fr 90px;
+  gap: 12px;
+  background: rgba(7, 19, 54, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.jw-txWalletName {
+  font-weight: 800;
+  font-size: 14px;
+}
+
+.jw-txWalletNumberRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.jw-txWalletNumber {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.jw-txCopyBtn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border-radius: 10px;
+  padding: 6px 8px;
+  cursor: pointer;
+}
+.jw-txCopyBtn.is-done {
+  border-color: rgba(16, 211, 107, 0.8);
+}
+
+.jw-txWalletQR {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.jw-txQRBox {
+  width: 84px;
+  height: 84px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+/* Amount row */
+.jw-txAmountRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+  background: rgba(7, 19, 54, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 10px;
+}
+
+.jw-txAmountInput {
+  background: transparent;
+  border: 0;
+  outline: none;
+  color: #fff;
+  font-size: 13px;
+}
+
+.jw-txAmountInput::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.jw-txMinText {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+/* Quick buttons */
+.jw-txQuickRow {
+  display: flex;
+  gap: 12px;
+}
+
+.jw-txQuickBtn {
+  flex: 1;
+  height: 34px;
+  border-radius: 10px;
+  background: #071336;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Slip attach box */
+.jw-txSlipBox {
+  border-radius: 12px;
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+  background: rgba(7, 19, 54, 0.25);
+  padding: 16px;
+}
+
+.jw-txSlipInner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 90px;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.jw-txAttachChip {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(7, 19, 54, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.jw-txFileInput {
+  display: none;
+}
+
+.jw-txSlipMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+
+.jw-txSlipName {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.75);
+  text-align: center;
+}
+
+.jw-txSlipThumb {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Actions */
+.jw-txActions {
+  /* display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    padding-top: 8px; */
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+
+  padding: 10px;
+  display: flex;
+  align-items: center;
+
+  gap: 30px;
+  flex-wrap: nowrap;
+  justify-content: center;
+}
+
+.jw-txActionsCenter {
+  display: flex;
+  justify-content: center;
+  padding-top: 10px;
+}
+
+.jw-txBtn {
+  /* min-width: 120px;
+  height: 42px;
+  border-radius: 12px;
+  border: 0;
+  cursor: pointer;
+  font-weight: 800; */
+  width: 150px;
+  height: 50px;
+  border-radius: 12px;
+  border: 0;
+  cursor: pointer;
+  margin-bottom: 20px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #000;
+
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.8);
+  max-width: 150px;
+}
+
+.jw-txBtn.is-cancel {
+  background: #be3838;
+  color: #ffffff;
+  /* box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3); */
+}
+
+.jw-txBtn.is-submit.is-green {
+  background: #10d36b;
+  color: #ffffff;
+  /* box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3); */
+}
+
+.jw-txBtn.is-submit.is-yellow {
+  background: #ffcc00;
+  color: #000000;
+  /* box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3); */
+} 
+
+.jw-txBtn.is-close {
+  background: #b34242;
+  color: #ffffff;
+  /* box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3); */
+}
+
+/* Errors */
+.jw-txErr {
+  font-size: 12px;
+  color: #ffb3b3;
+  background: rgba(190, 56, 56, 0.22);
+  border: 1px solid rgba(190, 56, 56, 0.45);
+  border-radius: 10px;
+  padding: 8px 10px;
+}
+
+/* Withdraw user wallets grid */
+.jw-txWalletGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.jw-txUserWalletTile {
+  background: rgba(7, 19, 54, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 12px;
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.jw-txUserWalletTile.is-active {
+  border-color: rgba(255, 204, 0, 0.85);
+}
+
+.jw-txUserWalletName {
+  font-weight: 900;
+  font-size: 13px;
+}
+
+.jw-txUserWalletNumber {
+  margin-top: 6px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.jw-txEmpty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 10px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Ticket UI */
+.jw-txTicketWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* .jw-txCenterLabel {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+  } */
+
+/* .jw-txLine {
+    flex: 1;
+    height: 2px;
+    background: rgba(255,255,255,0.35);
+  } */
+
+/* .jw-txCenterText {
+    font-size: 14px;
+    color: rgba(255,255,255,0.80);
+  } */
+
+.jw-txTicketPanel {
+  background: rgba(7, 19, 54, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 18px 14px;
+}
+
+.jw-txTicketTop {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.jw-txTicketStatusTitle {
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.jw-txTicketStatusText {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 8px;
+  line-height: 1.4;
+}
+
+.jw-txTicketRows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.jw-txTicketRow {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 10px;
+  align-items: center;
+}
+
+.jw-txTicketKey {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.jw-txTicketVal {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.88);
+  text-align: right;
+}
+
+.jw-txSlipBtn {
+  width: 140px;
+  height: 34px;
+  border-radius: 12px;
+  background: rgba(7, 19, 54, 0.25);
+  border: 1px dashed rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+}
+
+/* Modal */
+.jw-txModalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+}
+
+.jw-txModalBackdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  border: 0;
+}
+
+.jw-txModalCard {
+  position: relative;
+  width: min(92vw, 520px);
+  max-height: 82vh;
+  background: #071336;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.jw-txModalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.jw-txModalTitle {
+  font-weight: 500;
+  color: #fff;
+}
+
+.jw-txModalX {
+  background: transparent;
+  border: 0;
+  color: #fff;
+  font-size: 26px;
+  cursor: pointer;
+}
+
+.jw-txModalBody {
+  padding: 12px;
+  overflow: auto;
+}
+
+.jw-txSlipImg {
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.jw-txModalEmpty {
+  padding: 18px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* .jw-txTabsSeparator {
+    width: calc(100% - 20px);
+    margin: 6px 10px 0;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.45);
+    border-radius: 2px;
+    position: relative;
+    z-index: 1;
+  } */
+
+/* Tabs (match Notifications: thin line + thick active indicator) */
+.jw-txTabs {
+  position: relative;
+  padding: 0 0px;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.jw-txTab {
+  flex: 1;
+  background: transparent;
+  border: 0;
+  font-size: 16px;
+  font-weight: 510;
+  padding: 6px 0 10px;
+  cursor: pointer;
+  opacity: 0.75;
+}
+
+/* ✅ Always colored like screenshot */
+.jw-txTab.is-deposit {
+  color: #10d36b; /* green always */
+}
+
+.jw-txTab.is-withdraw {
+  color: #ffcc00; /* yellow always */
+}
+
+.jw-txTab.is-active {
+  opacity: 1;
+  text-shadow: 0px 2px 10px rgba(0, 0, 0, 0.55);
+}
+
+/* thin line */
+.jw-txTabLine {
+  position: absolute;
+  left: 0px;
+  right: 0px;
+  bottom: 2px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 2px;
+}
+
+/* thick indicator */
+.jw-txTabIndicator {
+  position: absolute;
+  bottom: 2px;
+  height: 3px;
+  width: calc(50%);
+  border-radius: 2px;
+  transition: transform 180ms ease;
+  left: 0px;
+}
+
+/* ✅ indicator color depends on active tab */
+.jw-txTabIndicator.is-left {
+  background: #10d36b;
+}
+
+.jw-txTabIndicator.is-right {
+  background: #ffcc00;
+  transform: translateX(100%);
+}
+
+.jw-transactionsIconImg {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  display: block;
+}
+
+.jw-txStepTitleContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.jw-txStepContent {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.jw-txStepContentWithButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.jw-txStepContainer {
+  display: flex;
+  flex-direction: column;
+  gap: auto;
+}
