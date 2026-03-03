@@ -11,6 +11,13 @@ export default function LoggedInLayout({ activeId = "dashboard", children }) {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const fullName = (localStorage.getItem("jw:fullName") || "").trim();
+  const username = (localStorage.getItem("jw:username") || "").trim();
+
+  // Prefer first name from fullName, fallback to username, fallback to "User"
+  const firstName =
+    fullName.split(" ").filter(Boolean)[0] || username || "User";
+
   // swipe tracking refs
   const touchStartRef = useRef(null);
 
@@ -24,19 +31,21 @@ export default function LoggedInLayout({ activeId = "dashboard", children }) {
       fetch("/api/auth/logout", {
         method: "POST",
         headers: { Authorization: "Bearer " + token },
-      }).catch(() => { });
+      }).catch(() => {});
     }
 
     // then clear local auth + notify tabs
     logoutUser();
 
+    localStorage.removeItem("jw:fullName");
+    localStorage.removeItem("jw:username");
 
     // close drawer
     setNavOpen(false);
 
     // sync bottom nav icon
     window.dispatchEvent(
-      new CustomEvent("jw:leftnav:state", { detail: false })
+      new CustomEvent("jw:leftnav:state", { detail: false }),
     );
 
     // redirect (replace = no back)
@@ -75,7 +84,7 @@ export default function LoggedInLayout({ activeId = "dashboard", children }) {
 
       // notify bottom nav of actual state
       window.dispatchEvent(
-        new CustomEvent("jw:leftnav:state", { detail: next })
+        new CustomEvent("jw:leftnav:state", { detail: next }),
       );
     };
 
@@ -86,7 +95,7 @@ export default function LoggedInLayout({ activeId = "dashboard", children }) {
   // 🔁 keep bottom nav icon in sync whenever navOpen changes
   useEffect(() => {
     window.dispatchEvent(
-      new CustomEvent("jw:leftnav:state", { detail: navOpen })
+      new CustomEvent("jw:leftnav:state", { detail: navOpen }),
     );
   }, [navOpen]);
 
@@ -94,7 +103,7 @@ export default function LoggedInLayout({ activeId = "dashboard", children }) {
   useEffect(() => {
     if (navOpen) setNavOpen(false);
     window.dispatchEvent(
-      new CustomEvent("jw:leftnav:state", { detail: false })
+      new CustomEvent("jw:leftnav:state", { detail: false }),
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
@@ -119,7 +128,7 @@ export default function LoggedInLayout({ activeId = "dashboard", children }) {
       if (e.key === "jw:logout") {
         setNavOpen(false);
         window.dispatchEvent(
-          new CustomEvent("jw:leftnav:state", { detail: false })
+          new CustomEvent("jw:leftnav:state", { detail: false }),
         );
         navigate("/login", { replace: true });
       }
@@ -132,8 +141,7 @@ export default function LoggedInLayout({ activeId = "dashboard", children }) {
   // ✅ swipe gesture: edge swipe right to open, swipe left to close
   useEffect(() => {
     const isMobile = () =>
-      window.matchMedia &&
-      window.matchMedia("(max-width: 768px)").matches;
+      window.matchMedia && window.matchMedia("(max-width: 768px)").matches;
 
     const onTouchStart = (ev) => {
       if (!isMobile()) return;
@@ -145,9 +153,7 @@ export default function LoggedInLayout({ activeId = "dashboard", children }) {
 
       // ignore if started on input controls
       const tag =
-        ev.target && ev.target.tagName
-          ? ev.target.tagName.toLowerCase()
-          : "";
+        ev.target && ev.target.tagName ? ev.target.tagName.toLowerCase() : "";
       if (
         tag === "input" ||
         tag === "textarea" ||
@@ -209,11 +215,12 @@ export default function LoggedInLayout({ activeId = "dashboard", children }) {
           <div className="jw-loggedNavInner">
             <LeftNav
               variant="sidebar"
+              userName={firstName}
               activeId={activeId}
               onNavigate={go}
               onDeposit={() => go("deposit")}
               onWithdraw={() => go("withdraw")}
-              onRefreshBalance={() => { }}
+              onRefreshBalance={() => {}}
             />
           </div>
         </aside>
@@ -225,6 +232,7 @@ export default function LoggedInLayout({ activeId = "dashboard", children }) {
       {/* Mobile Drawer */}
       <LeftNav
         variant="drawer"
+        userName={firstName}
         isOpen={navOpen}
         onClose={() => setNavOpen(false)}
         activeId={activeId}
@@ -240,7 +248,7 @@ export default function LoggedInLayout({ activeId = "dashboard", children }) {
           setNavOpen(false);
           go("withdraw");
         }}
-        onRefreshBalance={() => { }}
+        onRefreshBalance={() => {}}
       />
     </div>
   );

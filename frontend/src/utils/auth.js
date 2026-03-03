@@ -13,7 +13,10 @@ export function isAuthenticated() {
 export function logout() {
   localStorage.removeItem("token");
   localStorage.removeItem("role");
+  localStorage.removeItem("jw:fullName");
+  localStorage.removeItem("jw:username");
 
   // 🔔 notify other tabs
   localStorage.setItem("jw:logout", Date.now().toString());
 }
+

@@ -50,9 +50,15 @@ export default function Login() {
       if (data.role && data.role !== "client") {
         localStorage.removeItem("token");
         localStorage.removeItem("role");
+        localStorage.removeItem("jw:fullName");
+        localStorage.removeItem("jw:username");
         setError("Access denied. This login is for clients only.");
         return;
       }
+
+      // ✅ store profile for LeftNav greeting
+      localStorage.setItem("jw:fullName", (data.fullName || "").trim());
+      localStorage.setItem("jw:username", (data.username || "").trim());
 
       navigate("/home");
     } catch (err) {
@@ -78,7 +84,6 @@ export default function Login() {
           >
             <Menu size={22} />
           </button> */}
-
 
           <Logo />
 
@@ -188,11 +193,7 @@ export default function Login() {
         <button className="jw-bottomItem" type="button" aria-label="Wallet">
           <Wallet size={20} />
         </button>
-        <button
-          className="jw-bottomItem"
-          type="button"
-          aria-label="Promotions"
-        >
+        <button className="jw-bottomItem" type="button" aria-label="Promotions">
           <Megaphone size={20} />
         </button>
         <button className="jw-bottomItem" type="button" aria-label="Chat">
