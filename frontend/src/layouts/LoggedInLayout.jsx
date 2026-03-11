@@ -1,13 +1,32 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import LandingHeader from "../components/LandingHeader";
 import LeftNav from "../components/LeftNav";
 import { useNavigate, useLocation } from "react-router-dom";
 import { logout as logoutUser } from "../utils/auth";
 import { startIdleLogout } from "../utils/idleLogout";
+import { apiFetch } from "../services/api";
 import "./loggedInLayout.css";
+
+function formatBalance(num) {
+  if (num == null || Number.isNaN(Number(num))) return "Rs. 0";
+  return (
+    "Rs. " +
+    Number(num).toLocaleString("en-PK", {
+      maximumFractionDigits: 0,
+    })
+  );
+}
+
+function formatBalanceAmount(num) {
+  if (num == null || Number.isNaN(Number(num))) return "0";
+  return Number(num).toLocaleString("en-PK", {
+    maximumFractionDigits: 0,
+  });
+}
 
 export default function LoggedInLayout({ activeId = "dashboard", children }) {
   const [navOpen, setNavOpen] = useState(false);
+  const [balance, setBalance] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -17,6 +36,14 @@ export default function LoggedInLayout({ activeId = "dashboard", children }) {
   // Prefer first name from fullName, fallback to username, fallback to "User"
   const firstName =
     fullName.split(" ").filter(Boolean)[0] || username || "User";
+
+  // Fetch balance from database
+  const fetchBalance = useCallback(() => {
+    if (localStorage.getItem("role") !== "client") return;
+    apiFetch("/api/client/dashboard")
+      .then((data) => setBalance(data?.balance ?? 0))
+      .catch(() => setBalance(0));
+  }, []);
 
   // swipe tracking refs
   const touchStartRef = useRef(null);
@@ -107,6 +134,17 @@ export default function LoggedInLayout({ activeId = "dashboard", children }) {
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
+
+  // ✅ session check on mount and every navigation: if client is suspended, apiFetch gets 401 and forces logout + redirect
+  useEffect(() => {
+    if (localStorage.getItem("role") !== "client") return;
+    apiFetch("/api/auth/me").catch(() => {});
+  }, [location.pathname]);
+
+  // ✅ fetch balance on mount when client
+  useEffect(() => {
+    fetchBalance();
+  }, [fetchBalance]);
 
   // ✅ idle auto-logout
   useEffect(() => {
@@ -205,9 +243,18 @@ export default function LoggedInLayout({ activeId = "dashboard", children }) {
     };
   }, [navOpen]);
 
+  const balanceDisplay = formatBalance(balance);
+  const balanceAmountDisplay = formatBalanceAmount(balance);
+
   return (
     <div className="jw-loggedPage">
-      <LandingHeader isLoggedIn />
+      <LandingHeader
+        isLoggedIn
+        balanceCurrency="Rs."
+        balanceAmount={balanceAmountDisplay}
+        onDeposit={() => go("deposit")}
+        onRefreshBalance={fetchBalance}
+      />
 
       <div className="jw-loggedGrid">
         {/* Desktop Left Nav */}
@@ -216,11 +263,12 @@ export default function LoggedInLayout({ activeId = "dashboard", children }) {
             <LeftNav
               variant="sidebar"
               userName={firstName}
+              balanceValue={balanceDisplay}
               activeId={activeId}
               onNavigate={go}
               onDeposit={() => go("deposit")}
               onWithdraw={() => go("withdraw")}
-              onRefreshBalance={() => {}}
+              onRefreshBalance={fetchBalance}
             />
           </div>
         </aside>
@@ -233,6 +281,7 @@ export default function LoggedInLayout({ activeId = "dashboard", children }) {
       <LeftNav
         variant="drawer"
         userName={firstName}
+        balanceValue={balanceDisplay}
         isOpen={navOpen}
         onClose={() => setNavOpen(false)}
         activeId={activeId}
@@ -248,7 +297,7 @@ export default function LoggedInLayout({ activeId = "dashboard", children }) {
           setNavOpen(false);
           go("withdraw");
         }}
-        onRefreshBalance={() => {}}
+        onRefreshBalance={fetchBalance}
       />
     </div>
   );

@@ -1,0 +1,100 @@
+/* Admin date range component styles */
+
+.jw-adminDateRange {
+  position: relative;
+  width: 100%;
+}
+
+.jw-adminDateRange__field {
+  width: 100%;
+  height: 40px; /* match text inputs */
+  border-radius: 8px;
+  border: 1px solid #dcdcdc; /* same border as jw-adminInput */
+  background: #ffffff;
+  padding: 0 12px; /* same padding as jw-adminInput */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  font-size: 14px; /* match text input font size */
+}
+
+.jw-adminDateRange__text {
+  color: #9a9a9a; /* same placeholder color as jw-adminInput */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.jw-adminDateRange__text.has {
+  color: #111111;
+}
+
+.jw-adminDateRange__chev {
+  font-size: 10px;
+  color: #555555;
+  margin-left: 6px;
+}
+
+.jw-adminDateRange__pop {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 260px;
+  background: #ffffff;
+  border-radius: 10px;
+  border: 1px solid #dedede;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.14);
+  padding: 10px 10px 12px;
+  z-index: 1000;
+}
+
+.jw-adminDateRange__row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.jw-adminDateRange__lbl {
+  font-size: 12px;
+  color: #555555;
+}
+
+.jw-adminDateRange__input {
+  width: 100%;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid #cfcfcf;
+  padding: 0 8px;
+  font-size: 13px;
+}
+
+.jw-adminDateRange__error {
+  font-size: 12px;
+  color: #c53d3d;
+  margin: 4px 0 6px;
+}
+
+.jw-adminDateRange__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.jw-adminDateRange__miniBtn {
+  min-width: 60px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid #d0d0d0;
+  background: #ffffff;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.jw-adminDateRange__miniBtn.is-ok {
+  border-color: #2fa64a;
+  background: #2fa64a;
+  color: #ffffff;
+}

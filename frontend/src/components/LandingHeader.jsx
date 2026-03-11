@@ -46,7 +46,7 @@ export default function LandingHeader({
 
   const handleDeposit = () => {
     if (typeof onDeposit === "function") return onDeposit();
-    // later: navigate("/deposit");
+    navigate("/deposit");
   };
 
   const handleRefresh = () => {

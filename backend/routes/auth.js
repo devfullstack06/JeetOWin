@@ -18,6 +18,19 @@ router.post('/register', register);
 router.post('/login', login);
 
 /**
+ * GET /api/auth/me
+ * Session check: valid token and, for clients, not suspended.
+ * Used by client layout to force logout when status is suspended.
+ */
+router.get("/me", authenticateToken, (req, res) => {
+  return res.json({
+    ok: true,
+    userId: req.user.userId,
+    role: req.user.role,
+  });
+});
+
+/**
  * POST /api/auth/logout
  * Requires valid JWT
  */

@@ -1,0 +1,35 @@
+.jw-adminPageShell {
+    width: 100%;
+    min-height: 100%;
+    padding: 18px 18px 14px;
+  }
+  
+  .jw-adminPageShell__title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #111;
+    margin-bottom: 10px;
+  }
+  
+  .jw-adminPageShell__tabs {
+    margin-bottom: 0px;
+  }
+  
+  .jw-adminPageShell__filters {
+    margin-bottom: 14px;
+  }
+  
+  .jw-adminPageShell__table {
+    background: #fff;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid #e5e5e5;
+  }
+  
+  .jw-adminPageShell__pagination {
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-top: none;
+    border-radius: 0 0 6px 6px;
+    padding: 10px 12px;
+  }

@@ -1,0 +1,67 @@
+.jw-adminPagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  
+  .jw-adminPagination__left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .jw-adminPagerBtn {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: 1px solid #e2e2e2;
+    background: #fff;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+  }
+  
+  .jw-adminPagerBtn:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+  
+  .jw-adminPagination__range {
+    font-size: 13px;
+    color: #333;
+    min-width: 110px;
+    text-align: center;
+  }
+  
+  .jw-adminPagination__pageSelect,
+  .jw-adminPagination__rowsSelect {
+    height: 34px;
+    border-radius: 8px;
+    border: 1px solid #e2e2e2;
+    padding: 0 10px;
+    font-size: 13px;
+    background: #fff;
+  }
+  
+  .jw-adminPagination__right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .jw-adminPagination__rowsLbl {
+    font-size: 13px;
+    color: #333;
+  }
+  
+  @media (max-width: 720px) {
+    .jw-adminPagination {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .jw-adminPagination__left,
+    .jw-adminPagination__right {
+      justify-content: space-between;
+    }
+  }

@@ -1,0 +1,125 @@
+.jw-adminLoggedPage,
+.jw-adminLoggedPage * {
+  box-sizing: border-box;
+}
+
+/* fixed header height */
+:root {
+  --jw-admin-header-h: 62px;
+  --jw-admin-nav-w: 300px;
+}
+
+.jw-adminLoggedPage {
+  background: #e9e9e9;
+  min-height: 100vh;
+}
+
+/* fixed below header:
+   desktop: 2 columns
+   mobile: nav hidden + body full */
+.jw-adminLoggedGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  width: 100%;
+  padding-top: var(--jw-admin-header-h);
+}
+
+/* Desktop nav column */
+.jw-adminLoggedNav {
+  display: none;
+  position: fixed;
+  top: var(--jw-admin-header-h);
+  left: 0;
+  width: var(--jw-admin-nav-w);
+  height: calc(100vh - var(--jw-admin-header-h));
+  overflow-y: auto;
+  background: linear-gradient(360deg, #14379c 22%, #071336 100%);
+}
+
+/* inner padding */
+.jw-adminLoggedNavInner {
+  padding: 16px 12px;
+}
+
+/* Body column is fixed area with its own scroll */
+.jw-adminLoggedBody {
+  position: fixed;
+  top: var(--jw-admin-header-h);
+  left: 0;
+  width: 100%;
+  height: calc(100vh - var(--jw-admin-header-h));
+  overflow-y: auto;
+  padding: 14px 14px 22px;
+}
+
+/* Desktop layout */
+@media (min-width: 769px) {
+  .jw-adminLoggedNav {
+    display: block;
+  }
+
+  .jw-adminLoggedBody {
+    left: var(--jw-admin-nav-w);
+    width: calc(100% - var(--jw-admin-nav-w));
+    padding: 16px 18px 26px;
+  }
+}
+
+/* ============================
+   FADE-IN DESKTOP SCROLLBAR
+   (shows on hover OR while scrolling)
+   ============================ */
+@media (min-width: 769px) {
+  .jw-adminLoggedBody,
+  .jw-adminLoggedNav {
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: transparent transparent;
+  }
+
+  /* Chrome / Edge / Safari */
+  .jw-adminLoggedBody::-webkit-scrollbar,
+  .jw-adminLoggedNav::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .jw-adminLoggedBody::-webkit-scrollbar-track,
+  .jw-adminLoggedNav::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  /* hidden by default */
+  .jw-adminLoggedBody::-webkit-scrollbar-thumb,
+  .jw-adminLoggedNav::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0);
+    border-radius: 999px;
+    transition: background 0.2s ease;
+  }
+
+  /* show on hover */
+  .jw-adminLoggedBody:hover::-webkit-scrollbar-thumb,
+  .jw-adminLoggedNav:hover::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.35);
+  }
+
+  /* show while scrolling (JS adds jw-adminScrolling) */
+  .jw-adminLoggedBody.jw-adminScrolling::-webkit-scrollbar-thumb,
+  .jw-adminLoggedNav.jw-adminScrolling::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.35);
+  }
+
+  /* brighter on thumb hover */
+  .jw-adminLoggedBody:hover::-webkit-scrollbar-thumb:hover,
+  .jw-adminLoggedNav:hover::-webkit-scrollbar-thumb:hover,
+  .jw-adminLoggedBody.jw-adminScrolling::-webkit-scrollbar-thumb:hover,
+  .jw-adminLoggedNav.jw-adminScrolling::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.55);
+  }
+
+  /* Firefox hover/scrolling */
+  .jw-adminLoggedBody:hover,
+  .jw-adminLoggedNav:hover,
+  .jw-adminLoggedBody.jw-adminScrolling,
+  .jw-adminLoggedNav.jw-adminScrolling {
+    scrollbar-color: rgba(255, 255, 255, 0.35) transparent;
+  }
+}

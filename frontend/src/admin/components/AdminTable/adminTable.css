@@ -1,0 +1,148 @@
+.jw-adminTableWrap {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+.jw-adminTable {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 860px;
+}
+
+/* HEADER */
+
+.jw-adminTable thead th {
+  position: sticky;
+  top: 0;
+  background: #f2f2f2;
+  color: #444;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  padding: 14px 14px;
+  border-bottom: 1px solid #e2e2e2;
+  border-right: 1px solid #e7e7e7;
+  user-select: none;
+  z-index: 2;
+}
+
+.jw-adminTable thead th:last-child {
+  border-right: none;
+}
+
+.jw-adminThInner {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.jw-adminSortIcon {
+  display: inline-flex;
+  align-items: center;
+  transform: translateY(1px);
+}
+
+/* ROWS */
+
+.jw-adminTable tbody td {
+  padding: 14px 14px;
+  font-size: 14px;
+  color: #111;
+  border-bottom: 1px solid #ededed;
+  background: #fff;
+}
+
+.jw-adminTable tbody tr:hover td {
+  background: #fafafa;
+}
+
+/* USERNAME */
+
+.jw-adminTd__username .jw-adminLinkLike {
+  font-weight: 700;
+}
+
+/* DATE */
+
+.jw-adminTd__date {
+  font-size: 13px;
+  color: #222;
+  white-space: nowrap;
+}
+
+/* ACTIONS */
+
+.jw-adminTd__actions {
+  width: 90px;
+}
+
+.jw-adminEditBtn {
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  border: none;
+  background: #eaf8ef;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.jw-adminEditBtn:hover {
+  background: #d7f3e0;
+}
+
+/* STATUS BADGE */
+
+.jw-adminStatus {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.jw-adminStatus.is-active {
+  background: #eaf8ef;
+  color: #159447;
+}
+
+.jw-adminStatus.is-inactive {
+  background: #f2f2f2;
+  color: #666;
+}
+
+/* EMPTY STATE */
+
+.jw-adminEmpty {
+  text-align: center;
+  padding: 26px 12px;
+  color: #777;
+  font-size: 14px;
+}
+
+/* SKELETON */
+
+.jw-adminSkeleton {
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    #eee 25%,
+    #f5f5f5 37%,
+    #eee 63%
+  );
+  background-size: 400% 100%;
+  animation: jw-adminSkeleton 1.4s ease infinite;
+}
+
+@keyframes jw-adminSkeleton {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: 0 0;
+  }
+}

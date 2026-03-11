@@ -1,0 +1,205 @@
+/* Keep this file for page-specific tweaks only.
+   Layout + styling is handled by reusable components. */
+
+   .jw-adminUsersPage {
+    width: 100%;
+  }
+  
+  .jw-adminUsersPage__notice {
+    margin: 0 0 12px;
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  
+  .jw-adminUsersPage__notice.is-error {
+    border: 1px solid #f1c6c6;
+    background: #fff4f4;
+    color: #c53d3d;
+  }
+  
+  .jw-adminUsersModalOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    background: rgba(12, 18, 30, 0.36);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  
+  .jw-adminUsersModal {
+    width: 100%;
+    max-width: 520px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 18px 60px rgba(0, 0, 0, 0.16);
+    overflow: hidden;
+    animation: jw-adminUsersModalIn 0.18s ease-out;
+  }
+  
+  .jw-adminUsersModal__header {
+    padding: 18px 22px 14px;
+    border-bottom: 1px solid #ececec;
+  }
+  
+  .jw-adminUsersModal__title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #111;
+  }
+  
+  .jw-adminUsersModal__body {
+    padding: 20px 22px;
+    display: grid;
+    gap: 16px;
+  }
+  
+  .jw-adminUsersModal__field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  
+  .jw-adminUsersModal__label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #111;
+  }
+  
+  .jw-adminUsersModal__input {
+    width: 100%;
+    height: 44px;
+    border: 1px solid #dcdcdc;
+    border-radius: 10px;
+    background: #fff;
+    padding: 0 14px;
+    font-size: 14px;
+    color: #111;
+    outline: none;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  }
+  
+  .jw-adminUsersModal__input:focus {
+    border-color: #2abf62;
+    box-shadow: 0 0 0 3px rgba(42, 191, 98, 0.12);
+  }
+  
+  .jw-adminUsersModal__input.is-readonly {
+    background: #f7f7f7;
+    color: #666;
+  }
+  
+  .jw-adminUsersModal__inputWrap {
+    position: relative;
+    width: 100%;
+  }
+  
+  .jw-adminUsersModal__inputWrap .jw-adminUsersModal__input {
+    padding-right: 44px;
+  }
+  
+  .jw-adminUsersModal__eye {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    color: #707070;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .jw-adminUsersModal__eye:hover {
+    color: #222;
+  }
+  
+  .jw-adminUsersModal__error {
+    border: 1px solid #f1c6c6;
+    background: #fff4f4;
+    color: #c53d3d;
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  
+  .jw-adminUsersModal__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 14px;
+    padding: 16px 22px 20px;
+    border-top: 1px solid #ececec;
+  }
+  
+  .jw-adminUsersModal__btn {
+    height: 42px;
+    min-width: 140px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: transform 0.12s ease, opacity 0.18s ease;
+  }
+  
+  .jw-adminUsersModal__btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+  }
+  
+  .jw-adminUsersModal__btn:disabled {
+    opacity: 0.7;
+    cursor: default;
+  }
+  
+  .jw-adminUsersModal__btn.is-light {
+    background: #f7f7f7;
+    border-color: #e2e2e2;
+    color: #333;
+  }
+  
+  .jw-adminUsersModal__btn.is-green {
+    color: #fff;
+    border: none;
+    background: linear-gradient(180deg, #28d26a 0%, #13a94c 100%);
+  }
+  
+  @keyframes jw-adminUsersModalIn {
+    from {
+      opacity: 0;
+      transform: translateY(8px) scale(0.985);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+  
+  @media (max-width: 640px) {
+    .jw-adminUsersModal {
+      max-width: 100%;
+    }
+  
+    .jw-adminUsersModal__header,
+    .jw-adminUsersModal__body,
+    .jw-adminUsersModal__actions {
+      padding-left: 16px;
+      padding-right: 16px;
+    }
+  
+    .jw-adminUsersModal__actions {
+      flex-direction: column-reverse;
+    }
+  
+    .jw-adminUsersModal__btn {
+      width: 100%;
+      min-width: 0;
+    }
+  }

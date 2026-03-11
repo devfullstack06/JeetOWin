@@ -1,0 +1,151 @@
+/* ===============================
+   ADMIN LEFT NAV (WHITE TEXT)
+   =============================== */
+
+   .jw-adminNav {
+    width: 100%;
+    color: #ffffff; /* Force base text color white */
+  }
+  
+  .jw-adminNavGroups {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  /* ===============================
+     GROUP DROPDOWN BUTTON
+     =============================== */
+  
+  .jw-adminNavGroupBtn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 10px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.08);
+    cursor: pointer;
+  
+    /* ✅ Force white text */
+    color: #ffffff;
+  }
+  
+  .jw-adminNavGroupBtn:hover {
+    background: rgba(255,255,255,0.14);
+  }
+  
+  .jw-adminNavGroupBtnOpen {
+    background: rgba(255,255,255,0.18);
+  }
+  
+  .jw-adminNavGroupLabel {
+    font-size: 14px;
+    font-weight: 700;
+    text-align: left;
+  
+    /* ✅ White */
+    color: #ffffff;
+  }
+  
+  .jw-adminNavGroupCaret {
+    color: #ffffff;  /* ✅ Caret icon white */
+    font-size: 14px;
+  }
+  
+  /* ===============================
+     DROPDOWN ITEMS
+     =============================== */
+  
+  .jw-adminNavItems {
+    display: none;
+    padding: 8px 4px 2px;
+  }
+  
+  .jw-adminNavItemsOpen {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  /* ===============================
+     ITEM BUTTONS
+     =============================== */
+  
+  .jw-adminNavItem {
+    width: 100%;
+    text-align: left;
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 0;
+    background: transparent;
+  
+    /* ✅ Pure white */
+    color: #ffffff;
+  
+    cursor: pointer;
+    font-size: 14px;
+  }
+  
+  .jw-adminNavItem:hover {
+    background: rgba(255,255,255,0.15);
+  }
+  
+  /* Active state */
+  .jw-adminNavItemActive {
+    background: rgba(255,255,255,0.22);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.20);
+    color: #ffffff;
+    font-weight: 600;
+  }
+  
+  /* ===============================
+     DRAWER
+     =============================== */
+  
+  .jw-adminDrawerWrap {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.18s ease;
+  }
+  
+  .jw-adminDrawerOpen {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  
+  .jw-adminDrawerBackdrop {
+    position: absolute;
+    inset: 0;
+    border: 0;
+    background: rgba(0,0,0,0.35);
+  }
+  
+  .jw-adminDrawerPanel {
+    position: absolute;
+    top: var(--jw-admin-header-h);
+    left: 0;
+    width: 300px;
+    height: calc(100vh - var(--jw-admin-header-h));
+    background: linear-gradient(360deg, #14379c 22%, #071336 100%);
+    overflow-y: auto;
+    padding: 16px 12px;
+    transform: translateX(-100%);
+    transition: transform 0.18s ease;
+  }
+  
+  .jw-adminDrawerOpen .jw-adminDrawerPanel {
+    transform: translateX(0);
+  }
+  
+  /* Drawer only on mobile */
+  @media (min-width: 769px) {
+    .jw-adminDrawerWrap {
+      display: none;
+    }
+  }

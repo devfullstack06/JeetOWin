@@ -1,6 +1,8 @@
 // frontend/src/services/api.js
 // Reusable authenticated fetch helper for API calls
 
+import { logout } from "../utils/auth";
+
 /**
  * Authenticated fetch helper that automatically attaches JWT token
  * and handles JSON parsing and error responses
@@ -55,6 +57,21 @@ export async function apiFetch(path, options = {}) {
 
   // Check if response is OK
   if (!res.ok) {
+    // 401: force logout and redirect to login (e.g. suspended account or revoked token)
+    if (res.status === 401) {
+      logout();
+      const errorMessage =
+        data?.error ||
+        data?.message ||
+        "Your session has ended. Please log in again.";
+      // Redirect to login so user sees the message there (optional: pass via sessionStorage)
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("jw:loginError", errorMessage);
+        window.location.href = "/login";
+      }
+      throw new Error(errorMessage);
+    }
+
     // Extract error message from response data
     const errorMessage =
       data?.error ||

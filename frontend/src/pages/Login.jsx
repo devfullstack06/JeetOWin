@@ -25,10 +25,24 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Auto-redirect if already logged in (client)
+  // Show error when redirected after 401 (e.g. suspended account forced logout)
+  useEffect(() => {
+    const redirectError = sessionStorage.getItem("jw:loginError");
+    if (redirectError) {
+      sessionStorage.removeItem("jw:loginError");
+      setError(redirectError);
+    }
+  }, []);
+
+  // Auto-redirect if already logged in (client/admin)
   useEffect(() => {
     const token = localStorage.getItem("token");
     const role = localStorage.getItem("role");
+
+    if (token && role === "admin") {
+      navigate("/admin", { replace: true });
+      return;
+    }
     if (token && role === "client") {
       navigate("/home", { replace: true });
     }
@@ -45,23 +59,37 @@ export default function Login() {
 
     try {
       setLoading(true);
+
       const data = await loginApi({ username, password });
 
-      if (data.role && data.role !== "client") {
+      // ✅ IMPORTANT: store auth for ProtectedRoute
+      if (data?.token) localStorage.setItem("token", data.token);
+      if (data?.role) localStorage.setItem("role", data.role);
+
+      // ✅ store profile for greetings (client/admin)
+      localStorage.setItem("jw:fullName", (data?.fullName || "").trim());
+      localStorage.setItem("jw:username", (data?.username || "").trim());
+
+      // ✅ route by role
+      if (data?.role === "admin") {
+        navigate("/admin", { replace: true });
+      } else if (data?.role === "client") {
+        navigate("/home", { replace: true });
+      } else {
+        // Unknown role -> safe logout
         localStorage.removeItem("token");
         localStorage.removeItem("role");
         localStorage.removeItem("jw:fullName");
         localStorage.removeItem("jw:username");
-        setError("Access denied. This login is for clients only.");
-        return;
+        setError("Access denied. Unsupported role.");
       }
-
-      // ✅ store profile for LeftNav greeting
-      localStorage.setItem("jw:fullName", (data.fullName || "").trim());
-      localStorage.setItem("jw:username", (data.username || "").trim());
-
-      navigate("/home");
     } catch (err) {
+      // Clean any partial auth
+      localStorage.removeItem("token");
+      localStorage.removeItem("role");
+      localStorage.removeItem("jw:fullName");
+      localStorage.removeItem("jw:username");
+
       setError(err?.message || "Login failed. Please try again.");
     } finally {
       setLoading(false);
@@ -77,23 +105,7 @@ export default function Login() {
       {/* HEADER */}
       <header className="jw-header">
         <div className="jw-headerLeft">
-          {/* <button
-            className="jw-iconBtn jw-hamburger"
-            type="button"
-            aria-label="Menu"
-          >
-            <Menu size={22} />
-          </button> */}
-
           <Logo />
-
-          {/* <div 
-            className="jw-logo" 
-            onClick={() => navigate("/")}
-            style={{ cursor: "pointer" }}
-          >
-            JeetOWin
-          </div> */}
         </div>
 
         <button

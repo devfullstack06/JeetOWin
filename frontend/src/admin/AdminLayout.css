@@ -1,0 +1,219 @@
+/* Admin shell */
+.jw-adminApp,
+.jw-adminApp * {
+  box-sizing: border-box;
+}
+
+.jw-adminApp {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  background: #efefef;
+}
+
+/* Sidebar (dark gradient like your screenshot) */
+.jw-adminSidebar {
+  background: linear-gradient(360deg, #14379c 22%, #071336 100%);
+  padding: 18px 14px;
+}
+
+.jw-adminNavGroup {
+  margin-bottom: 18px;
+}
+
+.jw-adminNavGroupLabel {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  margin: 8px 6px;
+}
+
+.jw-adminNavItems {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.jw-adminNavItem {
+  display: block;
+  padding: 8px 10px;
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.92);
+  text-decoration: none;
+  font-size: 14px;
+  line-height: 1.2;
+  transition: transform 0.05s ease, background 0.15s ease;
+}
+
+.jw-adminNavItem:hover {
+  background: rgba(255, 255, 255, 0.10);
+}
+
+.jw-adminNavItem:active {
+  transform: scale(0.99);
+}
+
+.jw-adminNavItemActive {
+  background: rgba(255, 255, 255, 0.18);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.10);
+}
+
+/* Main */
+.jw-adminMain {
+  display: grid;
+  grid-template-rows: 62px 1fr;
+  min-width: 0;
+}
+
+.jw-adminTopbar {
+  height: 62px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: #f4f4f4;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.jw-adminTopbarLeft {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.jw-adminBrandName {
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  color: #0b1a40;
+}
+
+.jw-adminTicker {
+  height: 28px;
+  min-width: 420px;
+  max-width: 860px;
+  flex: 1;
+  background: #d9d9d9;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  overflow: hidden;
+  border: 1px solid rgba(0,0,0,0.10);
+}
+
+.jw-adminTickerText {
+  font-size: 13px;
+  color: #0b1a40;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.jw-adminProfileBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 18px;
+  border: 1px solid rgba(0,0,0,0.10);
+  background: #fff;
+  cursor: pointer;
+}
+
+.jw-adminProfileName {
+  font-size: 13px;
+  color: #111;
+}
+
+.jw-adminContent {
+  padding: 14px 18px 22px;
+  min-width: 0;
+}
+
+.jw-adminBread {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.55);
+  margin-bottom: 10px;
+}
+
+/* Page card */
+.jw-adminPage {
+  min-width: 0;
+}
+
+.jw-adminCard {
+  background: #fff;
+  border-radius: 16px;
+  padding: 14px;
+  border: 1px solid rgba(0,0,0,0.08);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+}
+
+.jw-adminCardHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.jw-adminCardTitle {
+  font-size: 22px;
+  font-weight: 800;
+  color: #0b1a40;
+}
+
+.jw-adminCardSub {
+  margin-top: 4px;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.jw-adminGhostBtn {
+  border: 1px solid rgba(0,0,0,0.12);
+  background: #fff;
+  border-radius: 10px;
+  height: 34px;
+  padding: 0 10px;
+  cursor: pointer;
+}
+
+.jw-adminDivider {
+  margin: 12px 0;
+  height: 1px;
+  background: rgba(0,0,0,0.08);
+}
+
+.jw-adminBody {
+  padding: 6px 2px 2px;
+}
+
+.jw-adminPlaceholder {
+  background: #f6f6f6;
+  border: 1px dashed rgba(0,0,0,0.18);
+  border-radius: 14px;
+  padding: 18px;
+}
+
+.jw-adminPlaceholderTitle {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0b1a40;
+}
+
+.jw-adminPlaceholderText {
+  margin-top: 6px;
+  font-size: 13px;
+  color: rgba(0,0,0,0.65);
+}
+
+/* Optional: responsive sidebar collapse later (keep simple for Phase 1) */
+@media (max-width: 980px) {
+  .jw-adminApp {
+    grid-template-columns: 240px 1fr;
+  }
+  .jw-adminTicker {
+    min-width: 240px;
+  }
+}

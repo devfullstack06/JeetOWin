@@ -257,7 +257,7 @@ async function login(req, res) {
       });
     }
 
-    // Find user by username (join with roles to get role name)
+    // Find user by username (join with roles and clients for status)
     const [users] = await pool.query(
       `SELECT 
       u.id, 
@@ -265,7 +265,8 @@ async function login(req, res) {
       u.password_hash, 
       u.status, 
       r.name as role_name,
-      c.full_name as full_name
+      c.full_name as full_name,
+      c.status AS client_status
    FROM users u
    JOIN roles r ON u.role_id = r.id
    LEFT JOIN clients c ON c.user_id = u.id
@@ -282,7 +283,17 @@ async function login(req, res) {
 
     const user = users[0];
 
-    // Check if user account is active
+    // For client users: block login if client status is suspended (admin panel sets clients.status)
+    if (user.role_name === "client") {
+      const clientStatus = String(user.client_status || "").toLowerCase();
+      if (clientStatus === "suspended") {
+        return res.status(403).json({
+          error: "Your account has been suspended. Please contact support.",
+        });
+      }
+    }
+
+    // Check if user account is active (users.status – e.g. for other roles or legacy)
     if (user.status !== "active") {
       return res.status(403).json({
         error: "Account is suspended. Please contact support.",

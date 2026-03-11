@@ -6,6 +6,7 @@ const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const path = require("path");
+const adminRouter = require("./routes/admin");
 
 // Load environment variables from .env file
 dotenv.config();
@@ -49,6 +50,7 @@ app.use("/api/backoffice", backofficeRouter);
 app.use("/api/accounts", accountsRouter);
 app.use("/api/transfers", transfersRouter);
 app.use("/api/wallets", walletsRouter);
+app.use("/api/admin", adminRouter);
 // Choose port from environment or default to 3000
 const PORT = process.env.PORT || 3000;
 

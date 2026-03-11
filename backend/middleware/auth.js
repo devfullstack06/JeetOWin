@@ -51,6 +51,23 @@ async function authenticateToken(req, res, next) {
       role: decoded.role,
     };
 
+    // 4) For client role: block if account is suspended (force logout)
+    if (decoded.role === "client") {
+      const [clientRows] = await pool.query(
+        "SELECT status FROM clients WHERE user_id = ? LIMIT 1",
+        [decoded.userId]
+      );
+      const clientStatus =
+        clientRows.length > 0
+          ? String(clientRows[0].status || "").toLowerCase()
+          : "";
+      if (clientStatus === "suspended") {
+        return res.status(401).json({
+          error: "Your account has been suspended. Please contact support.",
+        });
+      }
+    }
+
     // Continue to route handler
     next();
   } catch (error) {
