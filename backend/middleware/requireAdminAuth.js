@@ -44,7 +44,6 @@ module.exports = function requireAdminAuth(req, res, next) {
     req.authUser = {
       id: userId,
       role,
-      email: decoded?.email || "",
       username: decoded?.username || "",
     };
 

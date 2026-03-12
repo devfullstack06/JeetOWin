@@ -60,7 +60,6 @@ exports.updateAdminPassword = async (req, res) => {
       SELECT
         u.id,
         u.username,
-        u.email,
         u.password_hash,
         u.status,
         r.name AS role_name
