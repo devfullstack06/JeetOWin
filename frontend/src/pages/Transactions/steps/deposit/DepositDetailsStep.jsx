@@ -57,79 +57,92 @@ export default function DepositDetailsStep({
             onSelect={onSelectCompany}
           />
 
-          {/* Wallet panel */}
-          <div className="jw-txWalletPanel">
-            <div className="jw-txWalletLeft">
-              <div className="jw-txWalletName">
-                {activeWallet?.holderName || "-"}
-              </div>
-              <div className="jw-txWalletNumberRow">
-                <div className="jw-txWalletNumber">
-                  {activeWallet?.holderNumber || "-"}
+          {selectedCompanyId && !activeWallet ? (
+            <div className="jw-txNoWallet">
+              No Wallet available for this company. Kindly choose another Wallet.
+            </div>
+          ) : (
+            <>
+              <div className="jw-txWalletPanel">
+                <div className="jw-txWalletLeft">
+                  <div className="jw-txWalletName">
+                    {activeWallet?.holderName || "-"}
+                  </div>
+                  <div className="jw-txWalletNumberRow">
+                    <div className="jw-txWalletNumber">
+                      {activeWallet?.holderNumber || "-"}
+                    </div>
+                    <CopyButton textToCopy={activeWallet?.holderNumber || ""} />
+                  </div>
                 </div>
-                <CopyButton textToCopy={activeWallet?.holderNumber || ""} />
-              </div>
-            </div>
 
-            <div className="jw-txWalletQR">
-              <div className="jw-txQRBox" aria-label="QR">
-                QR
-              </div>
-            </div>
-          </div>
-
-          <AmountInputRow
-            value={amount}
-            onChange={setAmount}
-            placeholder="Enter Deposit Amount"
-            minText={`Min. Rs. ${Number(minAmount).toLocaleString()}`}
-          />
-          {errors?.amount && <div className="jw-txErr">{errors.amount}</div>}
-
-          <QuickAmountRow amounts={quickAmounts} onPick={(v) => setAmount(v)} />
-
-          <div className="jw-txSlipBox">
-            <div className="jw-txSlipInner">
-              <label className="jw-txAttachChip">
-                Attach Deposit Slip
-                <input
-                  key={fileInputKey}
-                  type="file"
-                  accept="image/*"
-                  className="jw-txFileInput"
-                  onChange={(e) => onPickSlip?.(e.target.files?.[0] || null)}
-                />
-              </label>
-
-              {slipFile && (
-                <div className="jw-txSlipMeta">
-                  <div className="jw-txSlipName">{slipFile.name}</div>
-                  {slipPreviewUrl && (
+                {activeWallet?.qrImagePath && (
+                  <div className="jw-txWalletQR">
                     <img
-                      className="jw-txSlipThumb"
-                      src={slipPreviewUrl}
-                      alt="Slip preview"
+                      src={`/uploads/qr/${activeWallet.qrImagePath}`}
+                      alt="Deposit QR"
+                      className="jw-txQRBox"
                     />
+                  </div>
+                )}
+              </div>
+
+              <AmountInputRow
+                value={amount}
+                onChange={setAmount}
+                placeholder="Enter Deposit Amount"
+                minText={`Min. Rs. ${Number(minAmount).toLocaleString()}`}
+              />
+              {errors?.amount && <div className="jw-txErr">{errors.amount}</div>}
+
+              <QuickAmountRow amounts={quickAmounts} onPick={(v) => setAmount(v)} />
+
+              <div className="jw-txSlipBox">
+                <div className="jw-txSlipInner">
+                  <label className="jw-txAttachChip">
+                    Attach Deposit Slip
+                    <input
+                      key={fileInputKey}
+                      type="file"
+                      accept="image/*"
+                      className="jw-txFileInput"
+                      onChange={(e) => onPickSlip?.(e.target.files?.[0] || null)}
+                    />
+                  </label>
+
+                  {slipFile && (
+                    <div className="jw-txSlipMeta">
+                      <div className="jw-txSlipName">{slipFile.name}</div>
+                      {slipPreviewUrl && (
+                        <img
+                          className="jw-txSlipThumb"
+                          src={slipPreviewUrl}
+                          alt="Slip preview"
+                        />
+                      )}
+                    </div>
                   )}
                 </div>
-              )}
-            </div>
-          </div>
-          {errors?.slip && <div className="jw-txErr">{errors.slip}</div>}
+              </div>
+              {errors?.slip && <div className="jw-txErr">{errors.slip}</div>}
+            </>
+          )}
         </div>
       </div>
-      <div className="jw-txActions">
-        <button type="button" className="jw-txBtn is-cancel" onClick={resetAll}>
-          Cancel
-        </button>
-        <button
-          type="button"
-          className="jw-txBtn is-submit is-green"
-          onClick={onSubmit}
-        >
-          Submit
-        </button>
-      </div>
+      {selectedCompanyId && activeWallet && (
+        <div className="jw-txActions">
+          <button type="button" className="jw-txBtn is-cancel" onClick={resetAll}>
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="jw-txBtn is-submit is-green"
+            onClick={onSubmit}
+          >
+            Submit
+          </button>
+        </div>
+      )}
       </div>
 
       {errors?.submit && <div className="jw-txErr">{errors.submit}</div>}

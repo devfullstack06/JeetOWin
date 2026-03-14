@@ -1,17 +1,35 @@
-import React from "react";
+import React, { useState } from "react";
 
-// ✅ Tile SVGs (put these files in: frontend/src/assets/wallets/)
-import iconJazzCash from "../../../assets/wallets/JazzCash.svg";
-import iconEasyPaisa from "../../../assets/wallets/EasyPaisa.svg";
-import iconJazzCashTill from "../../../assets/wallets/JazzCashTill.svg";
-import iconBank from "../../../assets/wallets/Bank.svg";
+function initials(name = "") {
+  return (name || "?")
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase())
+    .join("") || "?";
+}
 
-const ICONS = {
-  jazzcash: iconJazzCash,
-  easypaisa: iconEasyPaisa,
-  jazzcash_till: iconJazzCashTill,
-  bank: iconBank,
-};
+function WalletTileIcon({ company }) {
+  const [imgError, setImgError] = useState(false);
+  const iconUrl = company.iconKey ? `/uploads/wallets/${company.iconKey}` : null;
+  const showImg = iconUrl && !imgError;
+
+  if (showImg) {
+    return (
+      <img
+        className="jw-walletTileIcon"
+        src={iconUrl}
+        alt=""
+        onError={() => setImgError(true)}
+      />
+    );
+  }
+  return (
+    <div className="jw-walletTileFallback">
+      {initials(company.name)}
+    </div>
+  );
+}
 
 export default function WalletsListStep({
   companies = [],
@@ -20,6 +38,12 @@ export default function WalletsListStep({
   onSelectCompany = () => {},
   onAddNew = () => {},
 }) {
+  const sortedCompanies = React.useMemo(() => {
+    return [...companies].sort(
+      (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)
+    );
+  }, [companies]);
+
   return (
     <div className="jw-walletsListStep">
       {/* ✅ Section between label and list (matches PNG) */}
@@ -40,11 +64,9 @@ export default function WalletsListStep({
         </button>
       </div>
 
-      {/* ✅ Company tiles */}
+      {/* ✅ Active wallet companies from API */}
       <div className="jw-walletsTilesRow" aria-label="Wallet companies">
-        {companies.map((c) => {
-          const key = String(c.iconKey || "").toLowerCase();
-          const src = ICONS[key];
+        {sortedCompanies.map((c) => {
           const isActive = selectedCompanyId === c.id;
 
           return (
@@ -56,14 +78,7 @@ export default function WalletsListStep({
               aria-label={c.name}
               title={c.name}
             >
-              {src ? (
-                <img className="jw-walletTileIcon" src={src} alt={c.name} />
-              ) : (
-                <div className="jw-walletTileFallback">
-                  {String(c.name || "?").slice(0, 1).toUpperCase()}
-                </div>
-              )}
-
+              <WalletTileIcon company={c} />
               <div className="jw-walletTileLabel">{c.name}</div>
             </button>
           );

@@ -23,19 +23,70 @@ function isDigitsOnly(s) {
 /**
  * GET /api/wallets/companies
  * Active companies for dropdown/tiles.
+ * Query: for=deposit | for=withdraw — only companies available for that flow.
  */
 router.get("/companies", authenticateToken, requireClient, async (req, res) => {
   try {
+    const forType = String(req.query.for || "").trim().toLowerCase();
+    let where = "is_active = 1";
+    if (forType === "deposit") {
+      where += " AND available_for_deposit = 1";
+    } else if (forType === "withdraw") {
+      where += " AND available_for_withdraw = 1";
+    }
+
     const [rows] = await pool.query(
-      `SELECT id, name, code, icon_key AS iconKey
+      `SELECT id, name, code, icon_key AS iconKey, sort_order AS sortOrder
        FROM wallet_companies
-       WHERE is_active = 1
+       WHERE ${where}
        ORDER BY sort_order ASC, name ASC`
     );
     return res.json({ companies: rows });
   } catch (e) {
+    if (e.code === "ER_BAD_FIELD_ERROR") {
+      try {
+        const [rows] = await pool.query(
+          `SELECT id, name, code, icon_key AS iconKey, sort_order AS sortOrder
+           FROM wallet_companies
+           WHERE is_active = 1
+           ORDER BY sort_order ASC, name ASC`
+        );
+        return res.json({ companies: rows });
+      } catch (e2) {
+        console.error("[wallets] GET /companies fallback error:", e2);
+        return res.status(500).json({ error: "Failed to load wallet companies" });
+      }
+    }
     console.error("[wallets] GET /companies error:", e);
     return res.status(500).json({ error: "Failed to load wallet companies" });
+  }
+});
+
+/**
+ * GET /api/wallets/payment-wallets
+ * Active payment wallets for deposit (per company).
+ * Query: companyId=123 — required; returns wallets available for deposit.
+ */
+router.get("/payment-wallets", authenticateToken, requireClient, async (req, res) => {
+  const companyId = req.query.companyId ? Number(req.query.companyId) : null;
+  if (!companyId || !Number.isFinite(companyId)) {
+    return res.status(400).json({ error: "companyId is required" });
+  }
+  try {
+    const [rows] = await pool.query(
+      `SELECT id, name, number, min_deposit AS minDeposit, max_deposit AS maxDeposit,
+              qr_image_path AS qrImagePath
+       FROM payment_wallets
+       WHERE wallet_company_id = ?
+         AND status = 'active'
+         AND available_for_deposit = 1
+       ORDER BY sort_order ASC, id ASC`,
+      [companyId]
+    );
+    return res.json({ paymentWallets: rows });
+  } catch (e) {
+    console.error("[wallets] GET /payment-wallets error:", e);
+    return res.status(500).json({ error: "Failed to load payment wallets" });
   }
 });
 

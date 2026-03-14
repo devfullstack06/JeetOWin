@@ -1,0 +1,158 @@
+/* Wallets page (Companies tab) */
+
+/* Overlay: start below header and fill to bottom of viewport */
+.jw-adminUsersModalOverlay--belowHeader {
+  top: var(--jw-admin-header-h, 62px);
+  inset: unset;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(100vh - var(--jw-admin-header-h, 62px));
+  align-items: stretch;
+  padding: 20px;
+}
+
+.jw-adminUsersModalOverlay--belowHeader .jw-adminUsersModal {
+  margin: 0;
+  max-height: 100%;
+}
+
+/* Modal with scrollable body so it doesn't exceed viewport */
+.jw-adminUsersModal--scrollable {
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.jw-adminUsersModalOverlay--belowHeader .jw-adminUsersModal--scrollable {
+  max-height: 100%;
+}
+
+.jw-adminUsersModal--scrollable .jw-adminUsersModal__body {
+  overflow-y: auto;
+  min-height: 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+.jw-adminUsersModal--scrollable .jw-adminUsersModal__actions {
+  flex-shrink: 0;
+}
+
+.jw-adminUsersModal__hint {
+  display: block;
+  font-size: 11px;
+  color: #666;
+  margin-top: 4px;
+}
+
+.jw-adminCompaniesImageLink {
+  display: inline;
+  color: #15a84b;
+  text-decoration: underline;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+}
+
+.jw-adminCompaniesImageLink:hover {
+  color: #0d7a38;
+}
+
+/* Image popup modal */
+.jw-adminImagePopupOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.jw-adminImagePopup {
+  position: relative;
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.jw-adminImagePopupClose {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: #f0f0f0;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #333;
+}
+
+.jw-adminImagePopupClose:hover {
+  background: #e0e0e0;
+}
+
+.jw-adminImagePopupTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111;
+  margin-bottom: 12px;
+}
+
+.jw-adminImagePopupImg {
+  max-width: 80vw;
+  max-height: 70vh;
+  object-fit: contain;
+  display: block;
+}
+
+.jw-adminImagePopupError {
+  padding: 24px;
+  color: #666;
+  font-size: 14px;
+  text-align: center;
+  max-width: 320px;
+}
+
+.jw-adminCompaniesImagePlaceholder {
+  color: #999;
+}
+
+.jw-adminCompaniesFileOk {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: #159447;
+}
+
+.jw-adminCreateBtnInner {
+  display: inline-flex;
+  align-items: center;
+}
+
+.jw-adminWalletsPlaceholder {
+  padding: 40px 20px;
+  text-align: center;
+  color: #777;
+  font-size: 14px;
+}
+
+.jw-adminEditBtn--topup,
+.jw-adminEditBtn--deduct {
+  margin-left: 6px;
+  font-size: 11px;
+  padding: 4px 8px;
+}

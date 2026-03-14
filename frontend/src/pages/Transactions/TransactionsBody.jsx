@@ -13,10 +13,6 @@ import WithdrawDetailsStep from "./steps/withdraw/WithdrawDetailsStep";
 import WithdrawTicketStep from "./steps/withdraw/WithdrawTicketStep";
 
 import {
-  paymentCompanies,
-  paymentWallets,
-} from "./config/transactionsMockData";
-import {
   createDepositTicket,
   createWithdrawTicket,
   fetchTransactionTicket,
@@ -27,6 +23,7 @@ import {
 import {
   fetchWalletCompanies,
   fetchMyWallets,
+  fetchPaymentWallets,
 } from "../Wallets/api/walletsApi";
 
 export default function TransactionsBody({ initialTab }) {
@@ -52,19 +49,22 @@ export default function TransactionsBody({ initialTab }) {
   // =======================
   // Deposit State
   // =======================
+  const [depositCompanies, setDepositCompanies] = useState([]);
   const activeDepositCompanies = useMemo(() => {
-    return [...paymentCompanies]
-      .filter((c) => c.isActive)
-      .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
-  }, []);
+    return [...depositCompanies].sort(
+      (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)
+    );
+  }, [depositCompanies]);
 
-  const defaultDepositCompanyId = useMemo(() => {
-    return activeDepositCompanies[0]?.id || null;
-  }, [activeDepositCompanies]);
+  const defaultDepositCompanyId = useMemo(
+    () => activeDepositCompanies[0]?.id ?? null,
+    [activeDepositCompanies]
+  );
 
   const [depStep, setDepStep] = useState("details"); // details | process | approved | rejected
-  const [depCompanyId, setDepCompanyId] = useState(defaultDepositCompanyId);
-  const [depWalletId, setDepWalletId] = useState(null); // random wallet per company per visit
+  const [depCompanyId, setDepCompanyId] = useState(null);
+  const [depPaymentWallets, setDepPaymentWallets] = useState([]);
+  const [depActiveWallet, setDepActiveWallet] = useState(null); // picked payment wallet from API
 
   const [depAmount, setDepAmount] = useState("");
   const [depSlipFile, setDepSlipFile] = useState(null);
@@ -74,24 +74,64 @@ export default function TransactionsBody({ initialTab }) {
   const [depTicket, setDepTicket] = useState(null);
   const [depErrors, setDepErrors] = useState({});
 
-  const depActiveWallet = useMemo(() => {
-    if (!depWalletId) return null;
-    return paymentWallets.find((w) => w.id === depWalletId) || null;
-  }, [depWalletId]);
-
-  // random wallet pick per company
   useEffect(() => {
-    if (!depCompanyId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const cRes = await fetchWalletCompanies("deposit");
+        if (cancelled) return;
+        const comps = (cRes?.companies ?? []).map((x) => ({
+          id: x.id,
+          name: x.name,
+          iconKey: x.icon_key ?? x.iconKey,
+          sortOrder: x.sort_order ?? x.sortOrder ?? 0,
+        }));
+        comps.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+        setDepositCompanies(comps);
+        setDepCompanyId((prev) => prev ?? comps[0]?.id ?? null);
+      } catch (e) {
+        console.error("[Transactions] deposit companies load failed:", e);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
-    const pool = paymentWallets.filter(
-      (w) => w.paymentCompanyId === depCompanyId,
-    );
-    if (!pool.length) {
-      setDepWalletId(null);
+  // fetch payment wallets for selected company; pick one at random
+  useEffect(() => {
+    if (!depCompanyId) {
+      setDepPaymentWallets([]);
+      setDepActiveWallet(null);
       return;
     }
-    const picked = pool[Math.floor(Math.random() * pool.length)];
-    setDepWalletId(picked.id);
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetchPaymentWallets(depCompanyId);
+        if (cancelled) return;
+        const list = res?.paymentWallets ?? [];
+        setDepPaymentWallets(list);
+        if (!list.length) {
+          setDepActiveWallet(null);
+          return;
+        }
+        const picked = list[Math.floor(Math.random() * list.length)];
+        setDepActiveWallet({
+          id: picked.id,
+          holderName: picked.name,
+          holderNumber: picked.number,
+          minAmount: Number(picked.minDeposit) || 500,
+          maxAmount: Number(picked.maxDeposit) || 0,
+          qrImagePath: picked.qrImagePath || null,
+        });
+      } catch (e) {
+        if (!cancelled) {
+          console.error("[Transactions] payment wallets fetch failed:", e);
+          setDepPaymentWallets([]);
+          setDepActiveWallet(null);
+        }
+      }
+    })();
+    return () => { cancelled = true; };
   }, [depCompanyId]);
 
   const clearDepositForm = () => {
@@ -133,18 +173,15 @@ export default function TransactionsBody({ initialTab }) {
 
     (async () => {
       try {
-        const cRes = await fetchWalletCompanies();
+        const cRes = await fetchWalletCompanies("withdraw");
         if (cancelled) return;
 
-        const comps = (cRes?.companies ?? [])
-          .map((x) => ({
-            id: x.id,
-            name: x.name,
-            iconKey: x.icon_key || x.iconKey,
-            sortOrder: x.sort_order ?? x.sortOrder ?? 0,
-            isActive: x.is_active ?? x.isActive ?? 1,
-          }))
-          .filter((x) => x.isActive);
+        const comps = (cRes?.companies ?? []).map((x) => ({
+          id: x.id,
+          name: x.name,
+          iconKey: x.icon_key ?? x.iconKey,
+          sortOrder: x.sort_order ?? x.sortOrder ?? 0,
+        }));
 
         comps.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
 

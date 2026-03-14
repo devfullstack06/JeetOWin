@@ -18,16 +18,30 @@
   
   .jw-adminFilterBar__actions {
     display: flex;
-    gap: 18px;
-    align-items: center;
+    flex-direction: column;
+    gap: 34px;
+    align-items: flex-start;
     justify-content: flex-end;
     padding-left: 10px;
+  }
+
+  .jw-adminFilterBar__summary {
+    font-size: 13px;
+    color: #333;
+    font-weight: 600;
+  }
+
+  .jw-adminFilterBar__buttons {
+    display: flex;
+    gap: 18px;
+    align-items: center;
   }
   
   .jw-adminFilterField__label {
     font-size: 13px;
     color: #111;
-    margin-bottom: 6px;
+    margin-bottom: 10px;
+    font-weight: 400;
   }
   
   .jw-adminInput {
@@ -42,6 +56,10 @@
   }
   
   .jw-adminInput::placeholder {
+    color: #9a9a9a;
+  }
+
+  .jw-adminInput.jw-adminInput--placeholder {
     color: #9a9a9a;
   }
   

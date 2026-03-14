@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 function initials(name = "") {
   return (name || "?")
@@ -7,6 +7,27 @@ function initials(name = "") {
     .slice(0, 2)
     .map((p) => p[0]?.toUpperCase())
     .join("");
+}
+
+function CompanyTileIcon({ company }) {
+  const [imgError, setImgError] = useState(false);
+  const iconUrl = company.iconKey ? `/uploads/wallets/${company.iconKey}` : null;
+  const showImg = iconUrl && !imgError;
+
+  if (showImg) {
+    return (
+      <div className="jw-txTileIcon jw-txTileIcon--img">
+        <img
+          src={iconUrl}
+          alt=""
+          onError={() => setImgError(true)}
+        />
+      </div>
+    );
+  }
+  return (
+    <div className="jw-txTileIcon">{initials(company.name)}</div>
+  );
 }
 
 export default function CompanyTilesRow({ items, selectedId, onSelect }) {
@@ -21,8 +42,7 @@ export default function CompanyTilesRow({ items, selectedId, onSelect }) {
           role="listitem"
           aria-label={c.name}
         >
-          {/* Replace this later with real icons from admin: c.icon_key */}
-          <div className="jw-txTileIcon">{initials(c.name)}</div>
+          <CompanyTileIcon company={c} />
           <div className="jw-txTileLabel">{c.name}</div>
         </button>
       ))}

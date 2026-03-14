@@ -25,6 +25,8 @@ import AdminLayout from "./admin/AdminLayout";
 import AdminPlaceholder from "./admin/components/AdminPlaceholder";
 import UpdatePassword from "./admin/pages/UpdatePassword";
 import UsersPage from "./admin/pages/Users/UsersPage";
+import AdminWalletsPage from "./admin/pages/Wallets/WalletsPage";
+import AdminReportsPage from "./admin/pages/Reports/ReportsPage";
 import { adminNavGroups } from "./admin/adminNav";
 
 function MobileNavLayout() {
@@ -110,6 +112,11 @@ export default function App() {
             <Route index element={<AdminPlaceholder title="Dashboard" crumb="Admin > Dashboard" />} />
             <Route path="users/user-info" element={<UsersPage />} />
             <Route path="update-password" element={<UpdatePassword />} />
+            <Route path="wallets/company" element={<AdminWalletsPage />} />
+            <Route path="wallets/wallets" element={<AdminWalletsPage />} />
+            <Route path="reports/general-entries" element={<AdminReportsPage />} />
+            <Route path="reports/general-ledger" element={<AdminReportsPage />} />
+            <Route path="reports/balance-sheet" element={<AdminReportsPage />} />
 
             {/* Auto placeholders for remaining admin routes */}
             {adminItems.map((it) => {
@@ -120,6 +127,11 @@ export default function App() {
               // skip real implemented routes
               if (nestedPath === "users/user-info") return null;
               if (nestedPath === "update-password") return null;
+              if (nestedPath === "wallets/company") return null;
+              if (nestedPath === "wallets/wallets") return null;
+              if (nestedPath === "reports/general-entries") return null;
+              if (nestedPath === "reports/general-ledger") return null;
+              if (nestedPath === "reports/balance-sheet") return null;
 
               return (
                 <Route

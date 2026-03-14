@@ -41,6 +41,7 @@ export function AdminButton({
 
 export default function AdminFilterBar({
   children,
+  summary,
   actions,
   onClear,
   onSubmit,
@@ -50,18 +51,23 @@ export default function AdminFilterBar({
       <div className="jw-adminFilterBar__grid">{children}</div>
 
       <div className="jw-adminFilterBar__actions">
-        {actions ? (
-          actions
-        ) : (
-          <>
-            <AdminButton variant="light" onClick={onClear}>
-              Clear
-            </AdminButton>
-            <AdminButton variant="green" onClick={onSubmit}>
-              Submit
-            </AdminButton>
-          </>
-        )}
+        {summary ? (
+          <div className="jw-adminFilterBar__summary">{summary}</div>
+        ) : null}
+        <div className="jw-adminFilterBar__buttons">
+          {actions ? (
+            actions
+          ) : (
+            <>
+              <AdminButton variant="light" onClick={onClear}>
+                Clear
+              </AdminButton>
+              <AdminButton variant="green" onClick={onSubmit}>
+                Submit
+              </AdminButton>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

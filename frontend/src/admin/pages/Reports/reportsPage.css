@@ -1,0 +1,15 @@
+/* Reports page – reuses admin table/filter styles from usersPage + walletsPage */
+
+.jw-adminReportsPlaceholder {
+  padding: 24px;
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+}
+
+.jw-adminTd__narration {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

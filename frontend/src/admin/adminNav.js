@@ -29,6 +29,14 @@ export const adminNavGroups = [
       ],
     },
     {
+      group: "Reports",
+      items: [
+        { id: "admin-reports-general-entries", label: "General Entries", path: "/admin/reports/general-entries", crumb: "Admin > Reports > General Entries" },
+        { id: "admin-reports-general-ledger", label: "General Ledger", path: "/admin/reports/general-ledger", crumb: "Admin > Reports > General Ledger" },
+        { id: "admin-reports-balance-sheet", label: "Balance Sheet", path: "/admin/reports/balance-sheet", crumb: "Admin > Reports > Balance Sheet" },
+      ],
+    },
+    {
       group: "Accounts",
       items: [
         { id: "admin-accounts-info", label: "Accounts Info", path: "/admin/accounts/accounts-info", crumb: "Admin > Accounts > Accounts Info" },

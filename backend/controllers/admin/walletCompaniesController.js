@@ -1,0 +1,594 @@
+const fs = require("fs");
+const path = require("path");
+const { pool } = require("../../config/database");
+
+// From backend/controllers/admin/ go up to project root (3 levels), then frontend/src/assets/wallets
+const WALLETS_ASSETS_DIR = path.resolve(__dirname, "../../../frontend/src/assets/wallets");
+
+function ensureWalletsAssetsDir() {
+  try {
+    fs.mkdirSync(WALLETS_ASSETS_DIR, { recursive: true });
+    return true;
+  } catch (e) {
+    console.error("ensureWalletsAssetsDir:", e.message, "path:", WALLETS_ASSETS_DIR);
+    return false;
+  }
+}
+
+function writeSvgToAssets(id, svgContent) {
+  if (!id || !svgContent || typeof svgContent !== "string") return null;
+  if (!ensureWalletsAssetsDir()) return null;
+  const filename = `${id}.svg`;
+  const filepath = path.join(WALLETS_ASSETS_DIR, filename);
+  try {
+    fs.writeFileSync(filepath, svgContent, "utf8");
+    return filename;
+  } catch (e) {
+    console.error("writeSvgToAssets error:", e.message, "filepath:", filepath);
+    return null;
+  }
+}
+
+const SORT_COLUMN_MAP = {
+  name: "name",
+  forDP: "available_for_deposit",
+  forWD: "available_for_withdraw",
+  sortOrder: "sort_order",
+};
+
+function normalizeSortDir(value) {
+  return String(value || "").toLowerCase() === "desc" ? "DESC" : "ASC";
+}
+
+function normalizePositiveInt(value, fallback) {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n <= 0) return fallback;
+  return Math.floor(n);
+}
+
+function slugifyWalletCompanyCode(value) {
+  const raw = String(value || "").trim().toLowerCase();
+
+  const slug = raw
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+
+  return (slug || "wallet-company").slice(0, 32);
+}
+
+async function getUniqueWalletCompanyCode(name) {
+  const baseCode = slugifyWalletCompanyCode(name);
+
+  try {
+    const [rows] = await pool.query(
+      "SELECT code FROM wallet_companies WHERE code = ? OR code LIKE ?",
+      [baseCode, `${baseCode}-%`]
+    );
+
+    const used = new Set(
+      (rows || [])
+        .map((row) => String(row.code || "").trim().toLowerCase())
+        .filter(Boolean)
+    );
+
+    if (!used.has(baseCode)) {
+      return baseCode;
+    }
+
+    for (let i = 2; i <= 9999; i += 1) {
+      const suffix = `-${i}`;
+      const trimmedBase = baseCode.slice(0, Math.max(1, 32 - suffix.length));
+      const candidate = `${trimmedBase}${suffix}`;
+      if (!used.has(candidate)) {
+        return candidate;
+      }
+    }
+
+    return `${baseCode.slice(0, 28)}-x`;
+  } catch (err) {
+    if (err.code === "ER_BAD_FIELD_ERROR" || err.code === "ER_NO_SUCH_TABLE") {
+      throw err;
+    }
+    throw err;
+  }
+}
+
+/**
+ * GET /api/admin/wallet-companies
+ * List wallet companies with filters (name, status), sort, pagination.
+ * Works with or without icon_svg column; if table is missing, returns empty list.
+ */
+exports.getAdminWalletCompanies = async (req, res) => {
+  try {
+    const name = String(req.query.name || "").trim();
+    const availability = String(req.query.availability || "").trim().toLowerCase();
+    const page = normalizePositiveInt(req.query.page, 1);
+    const pageSize = normalizePositiveInt(req.query.pageSize, 25);
+    const sortKey = SORT_COLUMN_MAP[req.query.sortKey] ? req.query.sortKey : "name";
+    const sortColumn = SORT_COLUMN_MAP[sortKey];
+    const sortDir = normalizeSortDir(req.query.sortDir);
+
+    const where = [];
+    const params = [];
+
+    if (name) {
+      where.push("name LIKE ?");
+      params.push(`%${name}%`);
+    }
+    if (availability === "deposit") {
+      where.push("available_for_deposit = 1");
+    } else if (availability === "withdraw") {
+      where.push("available_for_withdraw = 1");
+    }
+
+    const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
+
+    let total = 0;
+    let rows = [];
+
+    try {
+      const [countRows] = await pool.query(
+        `SELECT COUNT(*) AS total FROM wallet_companies ${whereSql}`,
+        params
+      );
+      total = Number(countRows?.[0]?.total || 0);
+    } catch (tableErr) {
+      if (tableErr.code === "ER_BAD_FIELD_ERROR" && (availability === "deposit" || availability === "withdraw")) {
+        const whereNoAvail = name ? ["name LIKE ?"] : [];
+        const paramsNoAvail = name ? [`%${name}%`] : [];
+        const whereSqlNoAvail = whereNoAvail.length ? `WHERE ${whereNoAvail.join(" AND ")}` : "";
+        const [countRows] = await pool.query(
+          `SELECT COUNT(*) AS total FROM wallet_companies ${whereSqlNoAvail}`,
+          paramsNoAvail
+        );
+        total = Number(countRows?.[0]?.total || 0);
+      } else if (tableErr.code === "ER_NO_SUCH_TABLE") {
+        return res.status(200).json({
+          items: [],
+          total: 0,
+          page: 1,
+          pageSize,
+          sortKey: "name",
+          sortDir: "asc",
+        });
+      }
+      throw tableErr;
+    }
+
+    const offset = (page - 1) * pageSize;
+
+    const selectCols = "id, name, code, icon_key, icon_svg, is_active, sort_order, created_at";
+    const selectColsWithFlags = selectCols + ", available_for_deposit, available_for_withdraw";
+
+    let dataRows;
+    try {
+      [dataRows] = await pool.query(
+        `SELECT ${selectColsWithFlags}
+         FROM wallet_companies ${whereSql}
+         ORDER BY ${sortColumn} ${sortDir}, id ASC
+         LIMIT ? OFFSET ?`,
+        [...params, pageSize, offset]
+      );
+    } catch (colErr) {
+      if (colErr.code === "ER_NO_SUCH_TABLE") {
+        return res.status(200).json({
+          items: [],
+          total: 0,
+          page: 1,
+          pageSize,
+          sortKey: "name",
+          sortDir: "asc",
+        });
+      }
+      if (colErr.code === "ER_BAD_FIELD_ERROR") {
+        const orderCol = (sortColumn === "available_for_deposit" || sortColumn === "available_for_withdraw") ? "name" : sortColumn;
+        const stripAvailability = availability === "deposit" || availability === "withdraw";
+        const whereSqlFallback = stripAvailability ? (name ? "WHERE name LIKE ?" : "") : whereSql;
+        const paramsFallback = stripAvailability ? (name ? [`%${name}%`] : []) : params;
+        [dataRows] = await pool.query(
+          `SELECT ${selectCols}
+           FROM wallet_companies ${whereSqlFallback}
+           ORDER BY ${orderCol} ${sortDir}, id ASC
+           LIMIT ? OFFSET ?`,
+          [...paramsFallback, pageSize, offset]
+        );
+      } else {
+        throw colErr;
+      }
+    }
+    rows = dataRows;
+
+    const hasDepositWithdrawCols = rows[0] && "available_for_deposit" in rows[0];
+
+    const items = rows.map((row) => {
+      const forDep = hasDepositWithdrawCols ? !!row.available_for_deposit : !!row.is_active;
+      const forWd = hasDepositWithdrawCols ? !!row.available_for_withdraw : !!row.is_active;
+      return {
+        id: row.id,
+        name: row.name || "",
+        code: row.code || "",
+        iconKey: row.icon_key || "",
+        iconSvg: row.icon_svg != null ? String(row.icon_svg) : "",
+        forDP: forDep ? "Yes" : "No",
+        forWD: forWd ? "Yes" : "No",
+        availableForDeposit: forDep,
+        availableForWithdraw: forWd,
+        sortOrder: row.sort_order,
+        createdAt: row.created_at,
+      };
+    });
+
+    return res.status(200).json({
+      items,
+      total,
+      page,
+      pageSize,
+      sortKey,
+      sortDir: sortDir.toLowerCase(),
+    });
+  } catch (err) {
+    console.error("getAdminWalletCompanies error:", err);
+    return res.status(500).json({ message: "Failed to load wallet companies." });
+  }
+};
+
+/**
+ * POST /api/admin/wallet-companies
+ * Create wallet company. Body: { name, status, iconSvg? }
+ */
+function buildItemFromRow(row) {
+  const forDep = row.available_for_deposit != null ? !!row.available_for_deposit : !!row.is_active;
+  const forWd = row.available_for_withdraw != null ? !!row.available_for_withdraw : !!row.is_active;
+  return {
+    id: row.id,
+    name: row.name || "",
+    code: row.code != null ? row.code : "",
+    iconKey: row.icon_key != null ? row.icon_key : "",
+    iconSvg: row.icon_svg != null ? String(row.icon_svg) : "",
+    forDP: forDep ? "Yes" : "No",
+    forWD: forWd ? "Yes" : "No",
+    availableForDeposit: forDep,
+    availableForWithdraw: forWd,
+    sortOrder: row.sort_order != null ? row.sort_order : 0,
+    createdAt: row.created_at != null ? row.created_at : null,
+  };
+}
+
+function parseYesNo(value) {
+  if (value === true || value === 1) return 1;
+  if (value === false || value === 0) return 0;
+  const s = String(value || "").trim().toLowerCase();
+  return s === "yes" || s === "true" || s === "1" ? 1 : 0;
+}
+
+exports.createAdminWalletCompany = async (req, res) => {
+  try {
+    const name = String(req.body?.name || "").trim();
+    const availableForDeposit = parseYesNo(req.body?.availableForDeposit ?? 1);
+    const availableForWithdraw = parseYesNo(req.body?.availableForWithdraw ?? 1);
+    const iconSvg = req.body?.iconSvg != null ? String(req.body.iconSvg) : null;
+    const sortOrderFromBody = req.body?.sortOrder !== undefined && req.body?.sortOrder !== null
+      ? Number(req.body.sortOrder)
+      : null;
+
+    if (!name) {
+      return res.status(400).json({ message: "Name is required." });
+    }
+
+    let existing;
+    try {
+      [existing] = await pool.query(
+        "SELECT id FROM wallet_companies WHERE name = ? LIMIT 1",
+        [name]
+      );
+    } catch (e) {
+      if (e.code === "ER_NO_SUCH_TABLE") {
+        return res.status(503).json({
+          message:
+            "Wallet companies table is not set up. Please run the database migration (database/migration_wallet_companies.sql).",
+        });
+      }
+      throw e;
+    }
+
+    if (existing.length > 0) {
+      return res
+        .status(400)
+        .json({ message: "A wallet company with this name already exists." });
+    }
+
+    let sortOrder = 1;
+    if (Number.isFinite(sortOrderFromBody) && sortOrderFromBody >= 0) {
+      sortOrder = Math.floor(sortOrderFromBody);
+    } else {
+      try {
+        const [[maxRow]] = await pool.query(
+          "SELECT COALESCE(MAX(sort_order), 0) + 1 AS nextOrder FROM wallet_companies"
+        );
+        sortOrder = Number(maxRow?.nextOrder) || 1;
+      } catch (e) {
+        if (e.code === "ER_NO_SUCH_TABLE") {
+          return res.status(503).json({
+            message:
+              "Wallet companies table is not set up. Please run the database migration (database/migration_wallet_companies.sql).",
+          });
+        }
+        throw e;
+      }
+    }
+
+    let code;
+    try {
+      code = await getUniqueWalletCompanyCode(name);
+    } catch (e) {
+      if (e.code === "ER_NO_SUCH_TABLE") {
+        return res.status(503).json({
+          message:
+            "Wallet companies table is not set up. Please run the database migration (database/migration_wallet_companies.sql).",
+        });
+      }
+      throw e;
+    }
+
+    let result;
+    try {
+      [result] = await pool.query(
+        `INSERT INTO wallet_companies (name, code, available_for_deposit, available_for_withdraw, icon_svg, sort_order)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [name, code, availableForDeposit, availableForWithdraw, iconSvg || null, sortOrder]
+      );
+    } catch (insertErr) {
+      if (insertErr.code === "ER_BAD_FIELD_ERROR") {
+        try {
+          [result] = await pool.query(
+            `INSERT INTO wallet_companies (name, code, is_active, icon_svg, sort_order)
+             VALUES (?, ?, 1, ?, ?)`,
+            [name, code, iconSvg || null, sortOrder]
+          );
+        } catch (e2) {
+          if (e2.code === "ER_BAD_FIELD_ERROR") {
+            [result] = await pool.query(
+              `INSERT INTO wallet_companies (name, code, is_active)
+               VALUES (?, ?, 1)`,
+              [name, code]
+            );
+          } else {
+            throw e2;
+          }
+        }
+      } else {
+        throw insertErr;
+      }
+    }
+
+    const insertId = result.insertId;
+    if (insertId == null || insertId === undefined) {
+      console.error("createAdminWalletCompany: insertId missing", result);
+      return res.status(500).json({ message: "Failed to create wallet company." });
+    }
+
+    if (iconSvg && iconSvg.trim()) {
+      const filename = writeSvgToAssets(insertId, iconSvg);
+      if (filename) {
+        try {
+          await pool.query(
+            "UPDATE wallet_companies SET icon_key = ? WHERE id = ?",
+            [filename, insertId]
+          );
+        } catch (_) {}
+      }
+    }
+
+    let rows;
+    try {
+      [rows] = await pool.query(
+        "SELECT id, name, code, icon_key, icon_svg, is_active, sort_order, created_at, available_for_deposit, available_for_withdraw FROM wallet_companies WHERE id = ?",
+        [insertId]
+      );
+    } catch (selErr) {
+      if (selErr.code === "ER_BAD_FIELD_ERROR") {
+        try {
+          [rows] = await pool.query(
+            "SELECT id, name, code, icon_key, icon_svg, is_active, sort_order, created_at FROM wallet_companies WHERE id = ?",
+            [insertId]
+          );
+        } catch (e2) {
+          [rows] = await pool.query(
+            "SELECT id, name, code, icon_key, is_active, sort_order, created_at FROM wallet_companies WHERE id = ?",
+            [insertId]
+          );
+        }
+      } else {
+        throw selErr;
+      }
+    }
+
+    const row = rows[0];
+    if (!row) {
+      return res.status(500).json({ message: "Failed to create wallet company." });
+    }
+
+    return res.status(201).json({
+      message: "Wallet company created.",
+      item: buildItemFromRow(row),
+    });
+  } catch (err) {
+    if (String(err?.code) === "ER_DUP_ENTRY") {
+      return res
+        .status(400)
+        .json({ message: "A wallet company with this name or code already exists." });
+    }
+    console.error("createAdminWalletCompany error:", err);
+    return res.status(500).json({ message: "Failed to create wallet company." });
+  }
+};
+
+/**
+ * PATCH /api/admin/wallet-companies/:id
+ * Update wallet company. Body: { status?, iconSvg? }
+ */
+exports.updateAdminWalletCompany = async (req, res) => {
+  try {
+    const id = normalizePositiveInt(req.params.id, 0);
+    const body = req.body || {};
+    const availableForDepositRaw = body.availableForDeposit ?? body.available_for_deposit;
+    const availableForWithdrawRaw = body.availableForWithdraw ?? body.available_for_withdraw;
+    const availableForDeposit = availableForDepositRaw !== undefined && availableForDepositRaw !== null ? parseYesNo(availableForDepositRaw) : null;
+    const availableForWithdraw = availableForWithdrawRaw !== undefined && availableForWithdrawRaw !== null ? parseYesNo(availableForWithdrawRaw) : null;
+    const iconSvg = body.iconSvg !== undefined ? String(body.iconSvg) : undefined;
+    const sortOrderRaw = body.sortOrder ?? body.sort_order;
+    const sortOrder = sortOrderRaw !== undefined && sortOrderRaw !== null && Number.isFinite(Number(sortOrderRaw))
+      ? Math.floor(Number(sortOrderRaw))
+      : null;
+
+    if (!id) {
+      return res.status(400).json({ message: "Invalid id." });
+    }
+
+    let existing;
+    try {
+      [existing] = await pool.query(
+        "SELECT id, name, is_active, icon_svg, available_for_deposit, available_for_withdraw FROM wallet_companies WHERE id = ?",
+        [id]
+      );
+    } catch (e) {
+      if (e.code === "ER_BAD_FIELD_ERROR") {
+        [existing] = await pool.query(
+          "SELECT id, name, is_active, icon_svg FROM wallet_companies WHERE id = ?",
+          [id]
+        );
+      } else {
+        throw e;
+      }
+    }
+
+    if (existing.length === 0) {
+      return res.status(404).json({ message: "Wallet company not found." });
+    }
+
+    const updates = [];
+    const params = [];
+
+    if (availableForDeposit !== null) {
+      updates.push("available_for_deposit = ?");
+      params.push(availableForDeposit);
+    }
+    if (availableForWithdraw !== null) {
+      updates.push("available_for_withdraw = ?");
+      params.push(availableForWithdraw);
+    }
+    if (iconSvg !== undefined) {
+      updates.push("icon_svg = ?");
+      params.push(iconSvg || null);
+    }
+    if (sortOrder !== null && sortOrder >= 0) {
+      updates.push("sort_order = ?");
+      params.push(sortOrder);
+    }
+
+    if (updates.length === 0) {
+      const row = existing[0];
+      return res.status(200).json({
+        message: "No changes.",
+        item: buildItemFromRow(row),
+      });
+    }
+
+    params.push(id);
+    try {
+      await pool.query(
+        `UPDATE wallet_companies SET ${updates.join(", ")} WHERE id = ?`,
+        params
+      );
+    } catch (updErr) {
+      if (updErr.code === "ER_BAD_FIELD_ERROR") {
+        const depWdUpdates = updates.filter((u) => u.startsWith("available_for_"));
+        const depWdParams = [];
+        updates.forEach((u, i) => {
+          if (u.startsWith("available_for_")) depWdParams.push(params[i]);
+        });
+        if (depWdUpdates.length > 0) {
+          depWdParams.push(id);
+          try {
+            await pool.query(
+              `UPDATE wallet_companies SET ${depWdUpdates.join(", ")} WHERE id = ?`,
+              depWdParams
+            );
+          } catch (_) {}
+        }
+        const safeUpdates = updates.filter((u) => !u.startsWith("available_for_"));
+        const safeParams = [];
+        updates.forEach((u, i) => {
+          if (!u.startsWith("available_for_")) safeParams.push(params[i]);
+        });
+        if (safeUpdates.length > 0) {
+          safeParams.push(id);
+          await pool.query(
+            `UPDATE wallet_companies SET ${safeUpdates.join(", ")} WHERE id = ?`,
+            safeParams
+          );
+        }
+      } else {
+        throw updErr;
+      }
+    }
+
+    if (iconSvg !== undefined && iconSvg && String(iconSvg).trim()) {
+      const filename = writeSvgToAssets(id, iconSvg);
+      if (filename) {
+        try {
+          await pool.query(
+            "UPDATE wallet_companies SET icon_key = ? WHERE id = ?",
+            [filename, id]
+          );
+        } catch (_) {}
+      }
+    }
+
+    let rows;
+    try {
+      [rows] = await pool.query(
+        "SELECT id, name, code, icon_key, icon_svg, is_active, sort_order, created_at, available_for_deposit, available_for_withdraw FROM wallet_companies WHERE id = ?",
+        [id]
+      );
+    } catch (selErr) {
+      if (selErr.code === "ER_BAD_FIELD_ERROR") {
+        [rows] = await pool.query(
+          "SELECT id, name, code, icon_key, icon_svg, is_active, sort_order, created_at FROM wallet_companies WHERE id = ?",
+          [id]
+        );
+      } else {
+        throw selErr;
+      }
+    }
+
+    const row = rows[0];
+
+    return res.status(200).json({
+      message: "Wallet company updated.",
+      item: buildItemFromRow(row),
+    });
+  } catch (err) {
+    console.error("updateAdminWalletCompany error:", err);
+    return res.status(500).json({ message: "Failed to update wallet company." });
+  }
+};
+
+/**
+ * GET /api/admin/wallet-companies/active
+ * Returns id, name, sortOrder for active companies only (for dropdowns).
+ */
+exports.getAdminWalletCompaniesActive = async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT id, name, sort_order AS sortOrder FROM wallet_companies WHERE is_active = 1 ORDER BY sort_order ASC, name ASC`
+    );
+    return res.status(200).json({ companies: rows || [] });
+  } catch (e) {
+    if (e.code === "ER_NO_SUCH_TABLE") return res.status(200).json({ companies: [] });
+    console.error("getAdminWalletCompaniesActive error:", e);
+    return res.status(500).json({ message: "Failed to load companies." });
+  }
+};

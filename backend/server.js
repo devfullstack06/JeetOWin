@@ -30,10 +30,14 @@ const app = express();
 app.use(cors());
 
 // Parse incoming JSON bodies (for POST/PUT requests)
-app.use(express.json());
+// Higher limit for admin routes that send SVG markup (e.g. wallet company icon upload)
+app.use(express.json({ limit: "10mb" }));
 
 // ✅ If you really want static serving, register BEFORE listen
 app.use("/frontend", express.static(path.join(__dirname, "..", "frontend")));
+// Wallet company SVG assets (admin uploads saved to frontend/src/assets/wallets)
+app.use("/uploads/wallets", express.static(path.join(__dirname, "..", "frontend", "src", "assets", "wallets")));
+app.use("/uploads/qr", express.static(path.join(__dirname, "uploads", "qr")));
 
 // Simple health check endpoint
 // You can hit this in the browser: GET http://localhost:3000/health

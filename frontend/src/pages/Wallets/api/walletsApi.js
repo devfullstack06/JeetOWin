@@ -26,13 +26,29 @@ function getToken() {
     return data;
   }
   
-  export function fetchWalletCompanies() {
-    return apiFetch("/api/wallets/companies", { method: "GET" });
+  /**
+   * @param forType - "deposit" | "withdraw" | undefined. If set, only companies available for that flow are returned.
+   */
+  export function fetchWalletCompanies(forType) {
+    const qs = forType === "deposit" || forType === "withdraw" ? `?for=${forType}` : "";
+    return apiFetch(`/api/wallets/companies${qs}`, { method: "GET" });
   }
   
   export function fetchMyWallets(companyId = null) {
     const qs = companyId ? `?companyId=${encodeURIComponent(companyId)}` : "";
     return apiFetch(`/api/wallets${qs}`, { method: "GET" });
+  }
+
+  /**
+   * Payment wallets for deposit (per wallet company).
+   * Returns active, available-for-deposit payment wallets.
+   */
+  export function fetchPaymentWallets(companyId) {
+    if (!companyId) return Promise.resolve({ paymentWallets: [] });
+    return apiFetch(
+      `/api/wallets/payment-wallets?companyId=${encodeURIComponent(companyId)}`,
+      { method: "GET" }
+    );
   }
   
   export function createWallet({ walletCompanyId, accountTitle, accountNumber }) {
