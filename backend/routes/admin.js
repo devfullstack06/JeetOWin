@@ -1,5 +1,6 @@
 const express = require("express");
 const requireAdminAuth = require("../middleware/requireAdminAuth");
+const { optionalWalletIconUpload } = require("../middleware/uploadWalletIcon");
 const {
   updateAdminPassword,
 } = require("../controllers/admin/updatePasswordController");
@@ -35,8 +36,8 @@ router.patch("/users/:id", requireAdminAuth, updateAdminUser);
 
 router.get("/wallet-companies/active", requireAdminAuth, getAdminWalletCompaniesActive);
 router.get("/wallet-companies", requireAdminAuth, getAdminWalletCompanies);
-router.post("/wallet-companies", requireAdminAuth, createAdminWalletCompany);
-router.patch("/wallet-companies/:id", requireAdminAuth, updateAdminWalletCompany);
+router.post("/wallet-companies", requireAdminAuth, optionalWalletIconUpload, createAdminWalletCompany);
+router.patch("/wallet-companies/:id", requireAdminAuth, optionalWalletIconUpload, updateAdminWalletCompany);
 
 router.get("/payment-wallets", requireAdminAuth, getAdminPaymentWallets);
 router.post("/payment-wallets", requireAdminAuth, createAdminPaymentWallet);

@@ -83,7 +83,9 @@ export default function TransactionsBody({ initialTab }) {
         const comps = (cRes?.companies ?? []).map((x) => ({
           id: x.id,
           name: x.name,
+          iconPath: x.icon_path ?? x.iconPath,
           iconKey: x.icon_key ?? x.iconKey,
+          iconSvg: x.iconSvg,
           sortOrder: x.sort_order ?? x.sortOrder ?? 0,
         }));
         comps.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
@@ -179,7 +181,9 @@ export default function TransactionsBody({ initialTab }) {
         const comps = (cRes?.companies ?? []).map((x) => ({
           id: x.id,
           name: x.name,
+          iconPath: x.icon_path ?? x.iconPath,
           iconKey: x.icon_key ?? x.iconKey,
+          iconSvg: x.iconSvg,
           sortOrder: x.sort_order ?? x.sortOrder ?? 0,
         }));
 

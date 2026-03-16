@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { getWalletIconUrl } from "../../../utils/walletIconUrl";
 
 function initials(name = "") {
   return (name || "?")
@@ -11,7 +12,7 @@ function initials(name = "") {
 
 function CompanyTileIcon({ company }) {
   const [imgError, setImgError] = useState(false);
-  const iconUrl = company.iconKey ? `/uploads/wallets/${company.iconKey}` : null;
+  const iconUrl = getWalletIconUrl(company);
   const showImg = iconUrl && !imgError;
 
   if (showImg) {

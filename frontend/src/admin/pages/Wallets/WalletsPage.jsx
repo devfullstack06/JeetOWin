@@ -9,6 +9,7 @@ import AdminFilterBar, {
   AdminButton,
 } from "../../components/AdminFilterBar/AdminFilterBar";
 import AdminPagination from "../../components/AdminPagination/AdminPagination";
+import { getWalletIconUrl } from "../../../utils/walletIconUrl";
 import "../Users/usersPage.css";
 import "./walletsPage.css";
 
@@ -44,15 +45,7 @@ function EditIcon() {
 }
 
 function getImageSrc(row) {
-  if (row.iconKey) return `/uploads/wallets/${row.iconKey}`;
-  if (row.iconSvg) {
-    try {
-      return `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(row.iconSvg)))}`;
-    } catch {
-      return null;
-    }
-  }
-  return null;
+  return getWalletIconUrl(row) ?? null;
 }
 
 function ImagePopupModal({ open, src, name, onClose }) {
@@ -137,7 +130,7 @@ function CompaniesTable({ rows, sort, onSort, onEdit, onImageClick, loading }) {
             </tr>
           ) : (
             rows.map((r) => {
-              const hasImage = r.iconKey || r.iconSvg;
+              const hasImage = r.iconPath || r.iconKey || r.iconSvg;
               return (
                 <tr key={r.id}>
                   <td>{r.name}</td>
@@ -177,7 +170,7 @@ function CompaniesTable({ rows, sort, onSort, onEdit, onImageClick, loading }) {
   );
 }
 
-function CreateCompanyModal({ open, form, saving, errorText, onChange, onCancel, onConfirm }) {
+function CreateCompanyModal({ open, form, saving, errorText, onChange, onIconFileSelect, onCancel, onConfirm }) {
   const fileInputRef = React.useRef(null);
 
   if (!open) return null;
@@ -185,9 +178,14 @@ function CreateCompanyModal({ open, form, saving, errorText, onChange, onCancel,
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => onChange("iconSvg", reader.result || "");
-    reader.readAsText(file, "UTF-8");
+    if (onIconFileSelect) {
+      onIconFileSelect(file);
+      onChange("iconSvg", "selected");
+    } else {
+      const reader = new FileReader();
+      reader.onload = () => onChange("iconSvg", reader.result || "");
+      reader.readAsText(file, "UTF-8");
+    }
   };
 
   return (
@@ -268,7 +266,7 @@ function CreateCompanyModal({ open, form, saving, errorText, onChange, onCancel,
   );
 }
 
-function EditCompanyModal({ open, company, form, saving, errorText, onChange, onCancel, onConfirm }) {
+function EditCompanyModal({ open, company, form, saving, errorText, onChange, onIconFileSelect, onCancel, onConfirm }) {
   const fileInputRef = React.useRef(null);
 
   if (!open || !company) return null;
@@ -276,9 +274,14 @@ function EditCompanyModal({ open, company, form, saving, errorText, onChange, on
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => onChange("iconSvg", reader.result || "");
-    reader.readAsText(file, "UTF-8");
+    if (onIconFileSelect) {
+      onIconFileSelect(file);
+      onChange("iconSvg", "selected");
+    } else {
+      const reader = new FileReader();
+      reader.onload = () => onChange("iconSvg", reader.result || "");
+      reader.readAsText(file, "UTF-8");
+    }
   };
 
   return (
@@ -438,12 +441,14 @@ export default function WalletsPage() {
 
   const [createOpen, setCreateOpen] = useState(false);
   const [createForm, setCreateForm] = useState({ name: "", availableForDeposit: "yes", availableForWithdraw: "yes", sortOrder: "", iconSvg: "" });
+  const [createIconFile, setCreateIconFile] = useState(null);
   const [createSaving, setCreateSaving] = useState(false);
   const [createError, setCreateError] = useState("");
 
   const [editOpen, setEditOpen] = useState(false);
   const [editingCompany, setEditingCompany] = useState(null);
   const [editForm, setEditForm] = useState({ availableForDeposit: "yes", availableForWithdraw: "yes", sortOrder: "", iconSvg: "" });
+  const [editIconFile, setEditIconFile] = useState(null);
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState("");
 
@@ -627,6 +632,7 @@ export default function WalletsPage() {
 
   const openCreate = () => {
     setCreateForm({ name: "", availableForDeposit: "yes", availableForWithdraw: "yes", sortOrder: "", iconSvg: "" });
+    setCreateIconFile(null);
     setCreateError("");
     setCreateOpen(true);
   };
@@ -649,20 +655,37 @@ export default function WalletsPage() {
     setCreateError("");
     const token = localStorage.getItem("token") || "";
     try {
-      const res = await fetch("/api/admin/wallet-companies", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({
-          name: createForm.name.trim(),
-          availableForDeposit: createForm.availableForDeposit,
-          availableForWithdraw: createForm.availableForWithdraw,
-          sortOrder: createForm.sortOrder !== "" && createForm.sortOrder !== undefined ? Number(createForm.sortOrder) : undefined,
-          iconSvg: createForm.iconSvg || undefined,
-        }),
-      });
+      let res;
+      if (createIconFile) {
+        const formData = new FormData();
+        formData.append("name", createForm.name.trim());
+        formData.append("availableForDeposit", createForm.availableForDeposit);
+        formData.append("availableForWithdraw", createForm.availableForWithdraw);
+        if (createForm.sortOrder !== "" && createForm.sortOrder !== undefined) {
+          formData.append("sortOrder", String(createForm.sortOrder));
+        }
+        formData.append("icon", createIconFile);
+        res = await fetch("/api/admin/wallet-companies", {
+          method: "POST",
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          body: formData,
+        });
+      } else {
+        res = await fetch("/api/admin/wallet-companies", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({
+            name: createForm.name.trim(),
+            availableForDeposit: createForm.availableForDeposit,
+            availableForWithdraw: createForm.availableForWithdraw,
+            sortOrder: createForm.sortOrder !== "" && createForm.sortOrder !== undefined ? Number(createForm.sortOrder) : undefined,
+            iconSvg: createForm.iconSvg || undefined,
+          }),
+        });
+      }
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setCreateError(data?.message || "Failed to create.");
@@ -670,6 +693,7 @@ export default function WalletsPage() {
         return;
       }
       setCreateOpen(false);
+      setCreateIconFile(null);
       setCreateSaving(false);
       fetchCompanies();
     } catch {
@@ -684,8 +708,9 @@ export default function WalletsPage() {
       availableForDeposit: row.availableForDeposit ? "yes" : "no",
       availableForWithdraw: row.availableForWithdraw ? "yes" : "no",
       sortOrder: row.sortOrder !== undefined && row.sortOrder !== null ? row.sortOrder : "",
-      iconSvg: "", // new file only; leave empty to keep current
+      iconSvg: "",
     });
+    setEditIconFile(null);
     setEditError("");
     setEditOpen(true);
   };
@@ -705,22 +730,38 @@ export default function WalletsPage() {
     setEditError("");
     const token = localStorage.getItem("token") || "";
     try {
-      const body = {
-        availableForDeposit: editForm.availableForDeposit,
-        availableForWithdraw: editForm.availableForWithdraw,
-      };
-      if (editForm.sortOrder !== "" && editForm.sortOrder !== undefined && editForm.sortOrder !== null) {
-        body.sortOrder = Number(editForm.sortOrder);
+      let res;
+      if (editIconFile) {
+        const formData = new FormData();
+        formData.append("availableForDeposit", editForm.availableForDeposit);
+        formData.append("availableForWithdraw", editForm.availableForWithdraw);
+        if (editForm.sortOrder !== "" && editForm.sortOrder !== undefined && editForm.sortOrder !== null) {
+          formData.append("sortOrder", String(editForm.sortOrder));
+        }
+        formData.append("icon", editIconFile);
+        res = await fetch(`/api/admin/wallet-companies/${editingCompany.id}`, {
+          method: "PATCH",
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          body: formData,
+        });
+      } else {
+        const body = {
+          availableForDeposit: editForm.availableForDeposit,
+          availableForWithdraw: editForm.availableWithdraw,
+        };
+        if (editForm.sortOrder !== "" && editForm.sortOrder !== undefined && editForm.sortOrder !== null) {
+          body.sortOrder = Number(editForm.sortOrder);
+        }
+        if (editForm.iconSvg && editForm.iconSvg.trim()) body.iconSvg = editForm.iconSvg;
+        res = await fetch(`/api/admin/wallet-companies/${editingCompany.id}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify(body),
+        });
       }
-      if (editForm.iconSvg && editForm.iconSvg.trim()) body.iconSvg = editForm.iconSvg;
-      const res = await fetch(`/api/admin/wallet-companies/${editingCompany.id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify(body),
-      });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setEditError(data?.message || "Failed to update.");
@@ -731,6 +772,7 @@ export default function WalletsPage() {
       if (updated) setRows((prev) => prev.map((r) => (r.id === updated.id ? { ...r, ...updated } : r)));
       setEditOpen(false);
       setEditingCompany(null);
+      setEditIconFile(null);
       setEditSaving(false);
     } catch {
       setEditError("Failed to update.");
@@ -880,6 +922,7 @@ export default function WalletsPage() {
         saving={createSaving}
         errorText={createError}
         onChange={handleCreateChange}
+        onIconFileSelect={setCreateIconFile}
         onCancel={closeCreate}
         onConfirm={handleCreateConfirm}
       />
@@ -890,6 +933,7 @@ export default function WalletsPage() {
         saving={editSaving}
         errorText={editError}
         onChange={handleEditChange}
+        onIconFileSelect={setEditIconFile}
         onCancel={closeEdit}
         onConfirm={handleEditConfirm}
       />

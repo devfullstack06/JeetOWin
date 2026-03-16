@@ -29,15 +29,13 @@ const app = express();
 // Enable CORS so the frontend (running on another port) can call this API
 app.use(cors());
 
-// Parse incoming JSON bodies (for POST/PUT requests)
-// Higher limit for admin routes that send SVG markup (e.g. wallet company icon upload)
+// Parse incoming JSON and URL-encoded bodies (limit 10mb to avoid 413 errors)
 app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-// ✅ If you really want static serving, register BEFORE listen
+// Static: uploaded files (wallet icons, QR) from backend/uploads
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/frontend", express.static(path.join(__dirname, "..", "frontend")));
-// Wallet company SVG assets (admin uploads saved to frontend/src/assets/wallets)
-app.use("/uploads/wallets", express.static(path.join(__dirname, "..", "frontend", "src", "assets", "wallets")));
-app.use("/uploads/qr", express.static(path.join(__dirname, "uploads", "qr")));
 
 // Simple health check endpoint
 // You can hit this in the browser: GET http://localhost:3000/health

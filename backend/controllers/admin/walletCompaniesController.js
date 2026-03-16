@@ -1,8 +1,12 @@
 const fs = require("fs");
 const path = require("path");
 const { pool } = require("../../config/database");
+const { sanitizeSvg } = require("../../utils/svgSanitize");
+const { optimizeSvg } = require("../../utils/svgOptimize");
+const { generatePngFromSvg } = require("../../utils/svgToPng");
+const { uniqueWalletIconFilename, UPLOADS_WALLETS } = require("../../middleware/uploadWalletIcon");
 
-// From backend/controllers/admin/ go up to project root (3 levels), then frontend/src/assets/wallets
+// Legacy: frontend assets (kept for backward compat when writing from iconSvg body)
 const WALLETS_ASSETS_DIR = path.resolve(__dirname, "../../../frontend/src/assets/wallets");
 
 function ensureWalletsAssetsDir() {
@@ -27,6 +31,46 @@ function writeSvgToAssets(id, svgContent) {
     console.error("writeSvgToAssets error:", e.message, "filepath:", filepath);
     return null;
   }
+}
+
+function ensureUploadsWalletsDir() {
+  try {
+    fs.mkdirSync(UPLOADS_WALLETS, { recursive: true });
+    return true;
+  } catch (e) {
+    console.error("ensureUploadsWalletsDir:", e.message);
+    return false;
+  }
+}
+
+/**
+ * Process uploaded SVG buffer: sanitize, optimize, write SVG + PNG to backend/uploads/wallets.
+ * @param {Buffer} buffer - Raw SVG file buffer
+ * @param {string} baseName - Filename without path (e.g. "jazzcash-1234-abcd.svg")
+ * @returns {{ iconPath: string } | { error: string }}
+ */
+function processUploadedIconBuffer(buffer, baseName) {
+  if (!Buffer.isBuffer(buffer) || buffer.length === 0) {
+    return { error: "Empty icon file." };
+  }
+  const raw = buffer.toString("utf8");
+  const sanitized = sanitizeSvg(raw);
+  if (!sanitized.ok) {
+    return { error: sanitized.error || "Invalid SVG." };
+  }
+  const optimized = optimizeSvg(sanitized.data);
+  if (!ensureUploadsWalletsDir()) {
+    return { error: "Failed to create uploads directory." };
+  }
+  const svgPath = path.join(UPLOADS_WALLETS, baseName);
+  try {
+    fs.writeFileSync(svgPath, optimized, "utf8");
+  } catch (e) {
+    console.error("processUploadedIconBuffer write SVG:", e.message);
+    return { error: "Failed to save icon file." };
+  }
+  generatePngFromSvg(svgPath, Buffer.from(optimized, "utf8")).catch(() => {});
+  return { iconPath: `/uploads/wallets/${baseName}` };
 }
 
 const SORT_COLUMN_MAP = {
@@ -159,7 +203,8 @@ exports.getAdminWalletCompanies = async (req, res) => {
 
     const offset = (page - 1) * pageSize;
 
-    const selectCols = "id, name, code, icon_key, icon_svg, is_active, sort_order, created_at";
+    const selectCols = "id, name, code, icon_key, icon_path, icon_svg, is_active, sort_order, created_at";
+    const selectColsNoIconPath = "id, name, code, icon_key, icon_svg, is_active, sort_order, created_at";
     const selectColsWithFlags = selectCols + ", available_for_deposit, available_for_withdraw";
 
     let dataRows;
@@ -188,7 +233,7 @@ exports.getAdminWalletCompanies = async (req, res) => {
         const whereSqlFallback = stripAvailability ? (name ? "WHERE name LIKE ?" : "") : whereSql;
         const paramsFallback = stripAvailability ? (name ? [`%${name}%`] : []) : params;
         [dataRows] = await pool.query(
-          `SELECT ${selectCols}
+          `SELECT ${selectColsNoIconPath}
            FROM wallet_companies ${whereSqlFallback}
            ORDER BY ${orderCol} ${sortDir}, id ASC
            LIMIT ? OFFSET ?`,
@@ -205,12 +250,14 @@ exports.getAdminWalletCompanies = async (req, res) => {
     const items = rows.map((row) => {
       const forDep = hasDepositWithdrawCols ? !!row.available_for_deposit : !!row.is_active;
       const forWd = hasDepositWithdrawCols ? !!row.available_for_withdraw : !!row.is_active;
+      const hasPath = !!(row.icon_path || row.icon_key);
       return {
         id: row.id,
         name: row.name || "",
         code: row.code || "",
+        iconPath: row.icon_path != null ? String(row.icon_path) : "",
         iconKey: row.icon_key || "",
-        iconSvg: row.icon_svg != null ? String(row.icon_svg) : "",
+        iconSvg: !hasPath && row.icon_svg != null ? String(row.icon_svg) : "",
         forDP: forDep ? "Yes" : "No",
         forWD: forWd ? "Yes" : "No",
         availableForDeposit: forDep,
@@ -241,12 +288,14 @@ exports.getAdminWalletCompanies = async (req, res) => {
 function buildItemFromRow(row) {
   const forDep = row.available_for_deposit != null ? !!row.available_for_deposit : !!row.is_active;
   const forWd = row.available_for_withdraw != null ? !!row.available_for_withdraw : !!row.is_active;
+  const hasPath = !!(row.icon_path || row.icon_key);
   return {
     id: row.id,
     name: row.name || "",
     code: row.code != null ? row.code : "",
+    iconPath: row.icon_path != null ? String(row.icon_path) : "",
     iconKey: row.icon_key != null ? row.icon_key : "",
-    iconSvg: row.icon_svg != null ? String(row.icon_svg) : "",
+    iconSvg: !hasPath && row.icon_svg != null ? String(row.icon_svg) : "",
     forDP: forDep ? "Yes" : "No",
     forWD: forWd ? "Yes" : "No",
     availableForDeposit: forDep,
@@ -272,9 +321,20 @@ exports.createAdminWalletCompany = async (req, res) => {
     const sortOrderFromBody = req.body?.sortOrder !== undefined && req.body?.sortOrder !== null
       ? Number(req.body.sortOrder)
       : null;
+    const iconFile = req.file;
 
     if (!name) {
       return res.status(400).json({ message: "Name is required." });
+    }
+
+    let iconPathFromFile = null;
+    if (iconFile && iconFile.buffer && iconFile.buffer.length > 0) {
+      const baseName = uniqueWalletIconFilename(slugifyWalletCompanyCode(name));
+      const result = processUploadedIconBuffer(iconFile.buffer, baseName);
+      if (result.error) {
+        return res.status(400).json({ message: result.error });
+      }
+      iconPathFromFile = result.iconPath;
     }
 
     let existing;
@@ -333,27 +393,40 @@ exports.createAdminWalletCompany = async (req, res) => {
     }
 
     let result;
+    const insertIconPath = iconPathFromFile || null;
     try {
       [result] = await pool.query(
-        `INSERT INTO wallet_companies (name, code, available_for_deposit, available_for_withdraw, icon_svg, sort_order)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        [name, code, availableForDeposit, availableForWithdraw, iconSvg || null, sortOrder]
+        `INSERT INTO wallet_companies (name, code, available_for_deposit, available_for_withdraw, icon_path, icon_svg, sort_order)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [name, code, availableForDeposit, availableForWithdraw, insertIconPath, iconSvg || null, sortOrder]
       );
     } catch (insertErr) {
       if (insertErr.code === "ER_BAD_FIELD_ERROR") {
         try {
           [result] = await pool.query(
-            `INSERT INTO wallet_companies (name, code, is_active, icon_svg, sort_order)
-             VALUES (?, ?, 1, ?, ?)`,
-            [name, code, iconSvg || null, sortOrder]
+            `INSERT INTO wallet_companies (name, code, available_for_deposit, available_for_withdraw, icon_svg, sort_order)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [name, code, availableForDeposit, availableForWithdraw, iconSvg || null, sortOrder]
           );
         } catch (e2) {
           if (e2.code === "ER_BAD_FIELD_ERROR") {
-            [result] = await pool.query(
-              `INSERT INTO wallet_companies (name, code, is_active)
-               VALUES (?, ?, 1)`,
-              [name, code]
-            );
+            try {
+              [result] = await pool.query(
+                `INSERT INTO wallet_companies (name, code, is_active, icon_svg, sort_order)
+                 VALUES (?, ?, 1, ?, ?)`,
+                [name, code, iconSvg || null, sortOrder]
+              );
+            } catch (e3) {
+              if (e3.code === "ER_BAD_FIELD_ERROR") {
+                [result] = await pool.query(
+                  `INSERT INTO wallet_companies (name, code, is_active)
+                   VALUES (?, ?, 1)`,
+                  [name, code]
+                );
+              } else {
+                throw e3;
+              }
+            }
           } else {
             throw e2;
           }
@@ -369,7 +442,9 @@ exports.createAdminWalletCompany = async (req, res) => {
       return res.status(500).json({ message: "Failed to create wallet company." });
     }
 
-    if (iconSvg && iconSvg.trim()) {
+    if (iconPathFromFile) {
+      // Already saved via file upload; no further action
+    } else if (iconSvg && iconSvg.trim()) {
       const filename = writeSvgToAssets(insertId, iconSvg);
       if (filename) {
         try {
@@ -379,19 +454,34 @@ exports.createAdminWalletCompany = async (req, res) => {
           );
         } catch (_) {}
       }
+      // Also write to backend uploads and set icon_path for consistent serving from /uploads
+      const sanitized = sanitizeSvg(iconSvg);
+      if (sanitized.ok && ensureUploadsWalletsDir()) {
+        const optimized = optimizeSvg(sanitized.data);
+        const backendSvgName = `${insertId}.svg`;
+        const backendSvgPath = path.join(UPLOADS_WALLETS, backendSvgName);
+        try {
+          fs.writeFileSync(backendSvgPath, optimized, "utf8");
+          generatePngFromSvg(backendSvgPath, Buffer.from(optimized, "utf8")).catch(() => {});
+          await pool.query(
+            "UPDATE wallet_companies SET icon_path = ? WHERE id = ?",
+            [`/uploads/wallets/${backendSvgName}`, insertId]
+          ).catch(() => {});
+        } catch (_) {}
+      }
     }
 
     let rows;
     try {
       [rows] = await pool.query(
-        "SELECT id, name, code, icon_key, icon_svg, is_active, sort_order, created_at, available_for_deposit, available_for_withdraw FROM wallet_companies WHERE id = ?",
+        "SELECT id, name, code, icon_key, icon_path, icon_svg, is_active, sort_order, created_at, available_for_deposit, available_for_withdraw FROM wallet_companies WHERE id = ?",
         [insertId]
       );
     } catch (selErr) {
       if (selErr.code === "ER_BAD_FIELD_ERROR") {
         try {
           [rows] = await pool.query(
-            "SELECT id, name, code, icon_key, icon_svg, is_active, sort_order, created_at FROM wallet_companies WHERE id = ?",
+            "SELECT id, name, code, icon_key, icon_svg, is_active, sort_order, created_at, available_for_deposit, available_for_withdraw FROM wallet_companies WHERE id = ?",
             [insertId]
           );
         } catch (e2) {
@@ -438,6 +528,7 @@ exports.updateAdminWalletCompany = async (req, res) => {
     const availableForDeposit = availableForDepositRaw !== undefined && availableForDepositRaw !== null ? parseYesNo(availableForDepositRaw) : null;
     const availableForWithdraw = availableForWithdrawRaw !== undefined && availableForWithdrawRaw !== null ? parseYesNo(availableForWithdrawRaw) : null;
     const iconSvg = body.iconSvg !== undefined ? String(body.iconSvg) : undefined;
+    const iconFile = req.file;
     const sortOrderRaw = body.sortOrder ?? body.sort_order;
     const sortOrder = sortOrderRaw !== undefined && sortOrderRaw !== null && Number.isFinite(Number(sortOrderRaw))
       ? Math.floor(Number(sortOrderRaw))
@@ -445,6 +536,16 @@ exports.updateAdminWalletCompany = async (req, res) => {
 
     if (!id) {
       return res.status(400).json({ message: "Invalid id." });
+    }
+
+    let iconPathFromFile = null;
+    if (iconFile && iconFile.buffer && iconFile.buffer.length > 0) {
+      const baseName = uniqueWalletIconFilename(`id-${id}`);
+      const result = processUploadedIconBuffer(iconFile.buffer, baseName);
+      if (result.error) {
+        return res.status(400).json({ message: result.error });
+      }
+      iconPathFromFile = result.iconPath;
     }
 
     let existing;
@@ -483,6 +584,10 @@ exports.updateAdminWalletCompany = async (req, res) => {
       updates.push("icon_svg = ?");
       params.push(iconSvg || null);
     }
+    if (iconPathFromFile !== null) {
+      updates.push("icon_path = ?");
+      params.push(iconPathFromFile);
+    }
     if (sortOrder !== null && sortOrder >= 0) {
       updates.push("sort_order = ?");
       params.push(sortOrder);
@@ -518,10 +623,10 @@ exports.updateAdminWalletCompany = async (req, res) => {
             );
           } catch (_) {}
         }
-        const safeUpdates = updates.filter((u) => !u.startsWith("available_for_"));
+        const safeUpdates = updates.filter((u) => !u.startsWith("available_for_") && u !== "icon_path = ?");
         const safeParams = [];
         updates.forEach((u, i) => {
-          if (!u.startsWith("available_for_")) safeParams.push(params[i]);
+          if (!u.startsWith("available_for_") && u !== "icon_path = ?") safeParams.push(params[i]);
         });
         if (safeUpdates.length > 0) {
           safeParams.push(id);
@@ -535,7 +640,9 @@ exports.updateAdminWalletCompany = async (req, res) => {
       }
     }
 
-    if (iconSvg !== undefined && iconSvg && String(iconSvg).trim()) {
+    if (iconPathFromFile) {
+      // Already updated icon_path above
+    } else if (iconSvg !== undefined && iconSvg && String(iconSvg).trim()) {
       const filename = writeSvgToAssets(id, iconSvg);
       if (filename) {
         try {
@@ -545,18 +652,32 @@ exports.updateAdminWalletCompany = async (req, res) => {
           );
         } catch (_) {}
       }
+      const sanitized = sanitizeSvg(iconSvg);
+      if (sanitized.ok && ensureUploadsWalletsDir()) {
+        const optimized = optimizeSvg(sanitized.data);
+        const backendSvgName = `${id}.svg`;
+        const backendSvgPath = path.join(UPLOADS_WALLETS, backendSvgName);
+        try {
+          fs.writeFileSync(backendSvgPath, optimized, "utf8");
+          generatePngFromSvg(backendSvgPath, Buffer.from(optimized, "utf8")).catch(() => {});
+          await pool.query(
+            "UPDATE wallet_companies SET icon_path = ? WHERE id = ?",
+            [`/uploads/wallets/${backendSvgName}`, id]
+          ).catch(() => {});
+        } catch (_) {}
+      }
     }
 
     let rows;
     try {
       [rows] = await pool.query(
-        "SELECT id, name, code, icon_key, icon_svg, is_active, sort_order, created_at, available_for_deposit, available_for_withdraw FROM wallet_companies WHERE id = ?",
+        "SELECT id, name, code, icon_key, icon_path, icon_svg, is_active, sort_order, created_at, available_for_deposit, available_for_withdraw FROM wallet_companies WHERE id = ?",
         [id]
       );
     } catch (selErr) {
       if (selErr.code === "ER_BAD_FIELD_ERROR") {
         [rows] = await pool.query(
-          "SELECT id, name, code, icon_key, icon_svg, is_active, sort_order, created_at FROM wallet_companies WHERE id = ?",
+          "SELECT id, name, code, icon_key, icon_svg, is_active, sort_order, created_at, available_for_deposit, available_for_withdraw FROM wallet_companies WHERE id = ?",
           [id]
         );
       } else {

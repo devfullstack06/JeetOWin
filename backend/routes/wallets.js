@@ -36,7 +36,7 @@ router.get("/companies", authenticateToken, requireClient, async (req, res) => {
     }
 
     const [rows] = await pool.query(
-      `SELECT id, name, code, icon_key AS iconKey, sort_order AS sortOrder
+      `SELECT id, name, code, icon_path AS iconPath, icon_key AS iconKey, sort_order AS sortOrder
        FROM wallet_companies
        WHERE ${where}
        ORDER BY sort_order ASC, name ASC`
@@ -107,22 +107,47 @@ router.get("/", authenticateToken, requireClient, async (req, res) => {
       params.push(companyId);
     }
 
-    const [rows] = await pool.query(
-      `SELECT
-         w.id,
-         w.account_title AS accountTitle,
-         w.account_number AS accountNumber,
-         w.wallet_company_id AS walletCompanyId,
-         c.name AS companyName,
-         c.code AS companyCode,
-         c.icon_key AS iconKey,
-         w.created_at
-       FROM client_wallets w
-       JOIN wallet_companies c ON c.id = w.wallet_company_id
-       WHERE ${where}
-       ORDER BY w.created_at DESC`,
-      params
-    );
+    let rows;
+    try {
+      [rows] = await pool.query(
+        `SELECT
+           w.id,
+           w.account_title AS accountTitle,
+           w.account_number AS accountNumber,
+           w.wallet_company_id AS walletCompanyId,
+           c.name AS companyName,
+           c.code AS companyCode,
+           c.icon_path AS iconPath,
+           c.icon_key AS iconKey,
+           w.created_at
+         FROM client_wallets w
+         JOIN wallet_companies c ON c.id = w.wallet_company_id
+         WHERE ${where}
+         ORDER BY w.created_at DESC`,
+        params
+      );
+    } catch (qErr) {
+      if (qErr.code === "ER_BAD_FIELD_ERROR") {
+        [rows] = await pool.query(
+          `SELECT
+             w.id,
+             w.account_title AS accountTitle,
+             w.account_number AS accountNumber,
+             w.wallet_company_id AS walletCompanyId,
+             c.name AS companyName,
+             c.code AS companyCode,
+             c.icon_key AS iconKey,
+             w.created_at
+           FROM client_wallets w
+           JOIN wallet_companies c ON c.id = w.wallet_company_id
+           WHERE ${where}
+           ORDER BY w.created_at DESC`,
+          params
+        );
+      } else {
+        throw qErr;
+      }
+    }
 
     return res.json({ wallets: rows });
   } catch (e) {
