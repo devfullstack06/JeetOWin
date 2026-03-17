@@ -170,8 +170,22 @@ function CompaniesTable({ rows, sort, onSort, onEdit, onImageClick, loading }) {
   );
 }
 
-function CreateCompanyModal({ open, form, saving, errorText, onChange, onIconFileSelect, onCancel, onConfirm }) {
+const ICON_MAX_BYTES = 200 * 1024;
+const ICON_SIZE_ERROR_MSG = "Icon file must be 200KB or smaller.";
+
+function CreateCompanyModal({ open, form, saving, errorText, onChange, onIconFileSelect, onCancel, onConfirm, iconFile, iconSizeError }) {
   const fileInputRef = React.useRef(null);
+  const [previewUrl, setPreviewUrl] = React.useState(null);
+
+  React.useEffect(() => {
+    if (!iconFile) {
+      setPreviewUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(iconFile);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [iconFile]);
 
   if (!open) return null;
 
@@ -252,12 +266,20 @@ function CreateCompanyModal({ open, form, saving, errorText, onChange, onIconFil
               onChange={handleFileChange}
             />
             {form.iconSvg ? <span className="jw-adminCompaniesFileOk">SVG selected</span> : null}
+            {iconFile ? (
+              <div className="jw-adminCompaniesFileInfo">
+                {previewUrl ? <img src={previewUrl} alt="" className="jw-adminCompaniesFilePreview" /> : null}
+                <span className="jw-adminCompaniesFileName">{iconFile.name}</span>
+                <span className="jw-adminUsersModal__hint">{(iconFile.size / 1024).toFixed(1)} KB</span>
+                {iconSizeError ? <div className="jw-adminUsersModal__error">{ICON_SIZE_ERROR_MSG}</div> : null}
+              </div>
+            ) : null}
           </div>
           {errorText ? <div className="jw-adminUsersModal__error">{errorText}</div> : null}
         </div>
         <div className="jw-adminUsersModal__actions">
           <button type="button" className="jw-adminUsersModal__btn is-light" onClick={onCancel} disabled={saving}>Cancel</button>
-          <button type="button" className="jw-adminUsersModal__btn is-green" onClick={onConfirm} disabled={saving}>
+          <button type="button" className="jw-adminUsersModal__btn is-green" onClick={onConfirm} disabled={saving || iconSizeError}>
             {saving ? "Creating..." : "Create +"}
           </button>
         </div>
@@ -266,8 +288,19 @@ function CreateCompanyModal({ open, form, saving, errorText, onChange, onIconFil
   );
 }
 
-function EditCompanyModal({ open, company, form, saving, errorText, onChange, onIconFileSelect, onCancel, onConfirm }) {
+function EditCompanyModal({ open, company, form, saving, errorText, onChange, onIconFileSelect, onCancel, onConfirm, iconFile, iconSizeError }) {
   const fileInputRef = React.useRef(null);
+  const [previewUrl, setPreviewUrl] = React.useState(null);
+
+  React.useEffect(() => {
+    if (!iconFile) {
+      setPreviewUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(iconFile);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [iconFile]);
 
   if (!open || !company) return null;
 
@@ -343,12 +376,20 @@ function EditCompanyModal({ open, company, form, saving, errorText, onChange, on
               onChange={handleFileChange}
             />
             {form.iconSvg ? <span className="jw-adminCompaniesFileOk">New SVG selected</span> : company.iconSvg ? <span className="jw-adminCompaniesFileOk">Current image on file</span> : null}
+            {iconFile ? (
+              <div className="jw-adminCompaniesFileInfo">
+                {previewUrl ? <img src={previewUrl} alt="" className="jw-adminCompaniesFilePreview" /> : null}
+                <span className="jw-adminCompaniesFileName">{iconFile.name}</span>
+                <span className="jw-adminUsersModal__hint">{(iconFile.size / 1024).toFixed(1)} KB</span>
+                {iconSizeError ? <div className="jw-adminUsersModal__error">{ICON_SIZE_ERROR_MSG}</div> : null}
+              </div>
+            ) : null}
           </div>
           {errorText ? <div className="jw-adminUsersModal__error">{errorText}</div> : null}
         </div>
         <div className="jw-adminUsersModal__actions">
           <button type="button" className="jw-adminUsersModal__btn is-light" onClick={onCancel} disabled={saving}>Cancel</button>
-          <button type="button" className="jw-adminUsersModal__btn is-green" onClick={onConfirm} disabled={saving}>{saving ? "Saving..." : "Confirm"}</button>
+          <button type="button" className="jw-adminUsersModal__btn is-green" onClick={onConfirm} disabled={saving || iconSizeError}>{saving ? "Saving..." : "Confirm"}</button>
         </div>
       </div>
     </div>
@@ -925,6 +966,8 @@ export default function WalletsPage() {
         onIconFileSelect={setCreateIconFile}
         onCancel={closeCreate}
         onConfirm={handleCreateConfirm}
+        iconFile={createIconFile}
+        iconSizeError={!!(createIconFile && createIconFile.size > ICON_MAX_BYTES)}
       />
       <EditCompanyModal
         open={editOpen}
@@ -936,6 +979,8 @@ export default function WalletsPage() {
         onIconFileSelect={setEditIconFile}
         onCancel={closeEdit}
         onConfirm={handleEditConfirm}
+        iconFile={editIconFile}
+        iconSizeError={!!(editIconFile && editIconFile.size > ICON_MAX_BYTES)}
       />
       <ImagePopupModal
         open={imagePopup.open}
