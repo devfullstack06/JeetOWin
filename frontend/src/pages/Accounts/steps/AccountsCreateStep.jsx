@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { ChevronDown } from "lucide-react";
 
 export default function AccountsCreateStep({
@@ -12,6 +12,28 @@ export default function AccountsCreateStep({
   brandsAvailable,
   clearBrandError,
 }) {
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  const selectedBrand = brandsAvailable.find((b) => (typeof b === "string" ? b : b.name) === brand) ?? null;
+  const displayName = typeof selectedBrand === "string" ? selectedBrand : selectedBrand?.name;
+  const displayIconSrc = typeof selectedBrand === "object" && selectedBrand?.iconSrc ? selectedBrand.iconSrc : null;
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setDropdownOpen(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleSelect = (item) => {
+    const name = typeof item === "string" ? item : item.name;
+    setBrand(name);
+    clearBrandError();
+    setDropdownOpen(false);
+  };
+
   return (
     <div className="jw-accountsFormOuter">
       <div className="jw-accountsFormPanel">
@@ -22,27 +44,62 @@ export default function AccountsCreateStep({
         <form className="jw-accountsForm" onSubmit={onSubmit}>
           {/* ✅ TOP: Fields */}
           <div className="jw-accountsFormFields">
-            {/* Brand select */}
+            {/* Brand select: 60px height, 50x50 icon + name */}
             <div className="jw-field">
-              <div className="jw-selectWrap">
-                <select
-                  className="jw-select"
-                  value={brand}
-                  onChange={(e) => {
-                    setBrand(e.target.value);
-                    clearBrandError();
-                  }}
+              <div className="jw-brandSelectWrap" ref={dropdownRef}>
+                <button
+                  type="button"
+                  className="jw-brandSelectTrigger jw-select"
+                  onClick={() => setDropdownOpen((o) => !o)}
+                  aria-haspopup="listbox"
+                  aria-expanded={dropdownOpen}
+                  aria-label={displayName ? `Brand: ${displayName}` : "Select Brand"}
                 >
-                  <option value="" disabled>
-                    Select Brand
-                  </option>
-                  {brandsAvailable.map((b) => (
-                    <option key={b} value={b}>
-                      {b}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="jw-selectIcon" size={20} />
+                  <span className="jw-brandSelectTriggerInner">
+                    {displayName ? (
+                      <>
+                        <span className="jw-brandSelectIconWrap">
+                          {displayIconSrc ? (
+                            <img src={displayIconSrc} alt="" className="jw-brandSelectIcon" width={50} height={50} />
+                          ) : (
+                            <span className="jw-brandSelectIconPlaceholder" />
+                          )}
+                        </span>
+                        <span className="jw-brandSelectName">{displayName}</span>
+                      </>
+                    ) : (
+                      <span className="jw-brandSelectPlaceholder">Select Brand</span>
+                    )}
+                  </span>
+                  <ChevronDown className="jw-selectIcon jw-brandSelectChevron" size={20} />
+                </button>
+                {dropdownOpen && (
+                  <div className="jw-brandSelectList" role="listbox">
+                    {brandsAvailable.map((b) => {
+                      const name = typeof b === "string" ? b : b.name;
+                      const iconSrc = typeof b === "object" && b.iconSrc ? b.iconSrc : null;
+                      return (
+                        <button
+                          key={typeof b === "object" ? b.id ?? name : name}
+                          type="button"
+                          role="option"
+                          aria-selected={brand === name}
+                          className="jw-brandSelectOption"
+                          onClick={() => handleSelect(b)}
+                        >
+                          <span className="jw-brandSelectIconWrap">
+                            {iconSrc ? (
+                              <img src={iconSrc} alt="" className="jw-brandSelectIcon" width={50} height={50} />
+                            ) : (
+                              <span className="jw-brandSelectIconPlaceholder" />
+                            )}
+                          </span>
+                          <span className="jw-brandSelectName">{name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               {errors.brand && (

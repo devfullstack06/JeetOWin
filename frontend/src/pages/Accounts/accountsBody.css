@@ -269,6 +269,118 @@
   -moz-appearance: none;
 }
 
+/* Brand select: 60px height, 50x50 icon + name */
+.jw-brandSelectWrap {
+  position: relative;
+  width: 100%;
+}
+
+.jw-brandSelectTrigger.jw-select {
+  min-height: 60px;
+  height: 60px;
+  padding: 5px 40px 5px 5px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
+  cursor: pointer;
+}
+
+.jw-brandSelectTriggerInner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+}
+
+.jw-brandSelectIconWrap {
+  flex-shrink: 0;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: transparent;
+}
+
+.jw-brandSelectIcon {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+}
+
+.jw-brandSelectIconPlaceholder {
+  width: 50px;
+  height: 50px;
+  background: transparent;
+}
+
+.jw-brandSelectName {
+  font-size: 14px;
+  font-weight: 510;
+  color: rgba(255, 255, 255, 0.9);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jw-brandSelectPlaceholder {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 14px;
+}
+
+.jw-brandSelectChevron {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.jw-brandSelectList {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  margin-top: 4px;
+  max-height: 280px;
+  overflow-y: auto;
+  background: #0a1a3a;
+  border: 0.5px solid rgba(255, 255, 255, 0.75);
+  border-radius: 10px;
+  z-index: 100;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.jw-brandSelectOption {
+  width: 100%;
+  min-height: 60px;
+  padding: 5px 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  font-weight: 510;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.jw-brandSelectOption:hover,
+.jw-brandSelectOption[aria-selected="true"] {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.jw-brandSelectOption .jw-brandSelectIconWrap {
+  flex-shrink: 0;
+}
+
 .jw-select:invalid {
   color: rgba(255, 255, 255, 0.5);
 }

@@ -33,6 +33,12 @@ const {
   updateAdminSocialLink,
 } = require("../controllers/admin/socialLinksController");
 const { optionalSocialIconUpload } = require("../middleware/uploadSocialIcon");
+const {
+  getAdminBrands,
+  createAdminBrand,
+  updateAdminBrand,
+} = require("../controllers/admin/brandsController");
+const { optionalBrandIconUpload } = require("../middleware/uploadBrandIcon");
 
 const router = express.Router();
 
@@ -59,5 +65,9 @@ router.patch("/general-entries/:id", requireAdminAuth, updateAdminGeneralEntryNa
 router.get("/social-links", requireAdminAuth, getAdminSocialLinks);
 router.post("/social-links", requireAdminAuth, optionalSocialIconUpload, createAdminSocialLink);
 router.patch("/social-links/:id", requireAdminAuth, optionalSocialIconUpload, updateAdminSocialLink);
+
+router.get("/brands", requireAdminAuth, getAdminBrands);
+router.post("/brands", requireAdminAuth, optionalBrandIconUpload, createAdminBrand);
+router.patch("/brands/:id", requireAdminAuth, optionalBrandIconUpload, updateAdminBrand);
 
 module.exports = router;

@@ -22,16 +22,28 @@ function requireClient(req, res, next) {
 router.get("/brands", authenticateToken, requireClient, async (req, res) => {
   try {
     const [rows] = await pool.query(
-      "SELECT name FROM brands WHERE is_active = 1 ORDER BY name ASC"
+      "SELECT id, name, icon_path FROM brands WHERE available_accounts = 1 ORDER BY sort_order ASC, name ASC"
     );
-
-    // fallback if table empty
-    const brands = rows.map((r) => r.name);
+    const brands = (rows || []).map((r) => ({
+      id: r.id,
+      name: r.name,
+      iconPath: r.icon_path != null ? String(r.icon_path) : null,
+    }));
     return res.json({ brands });
   } catch (e) {
+    if (e.code === "ER_BAD_FIELD_ERROR" || e.code === "ER_NO_SUCH_TABLE") {
+      try {
+        const [rowsLegacy] = await pool.query(
+          "SELECT name FROM brands WHERE is_active = 1 ORDER BY name ASC"
+        );
+        const brands = (rowsLegacy || []).map((r, i) => ({ id: `legacy-${i}`, name: r.name, iconPath: null }));
+        return res.json({ brands });
+      } catch (_) {
+        return res.json({ brands: [] });
+      }
+    }
     console.error("[accounts] /brands error:", e);
-    // Safe fallback to keep UI working even if brands table not created yet
-    return res.json({ brands: ["Betpro", "BrandX", "BrandY", "BrandZ"] });
+    return res.status(500).json({ message: "Failed to load brands.", brands: [] });
   }
 });
 

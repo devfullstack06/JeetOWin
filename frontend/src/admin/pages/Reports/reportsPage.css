@@ -13,3 +13,13 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* General Entries: View button – Eye icon, same layout and background as edit btn */
+.jw-adminReportsViewBtn {
+  background: #eaf8ef;
+  color: #159447;
+}
+.jw-adminReportsViewBtn:hover {
+  background: #d7f3e0;
+  color: #0d7a38;
+}

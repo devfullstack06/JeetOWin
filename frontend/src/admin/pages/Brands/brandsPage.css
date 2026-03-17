@@ -1,0 +1,8 @@
+/* Brands page – reuses admin table/filter styles from usersPage + walletsPage */
+
+.jw-adminBrandsPlaceholder {
+  padding: 24px;
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+}

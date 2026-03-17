@@ -46,7 +46,7 @@ export const adminNavGroups = [
       group: "Brands",
       items: [
         { id: "admin-brands-website", label: "Website", path: "/admin/brands/website", crumb: "Admin > Brands > Website" },
-        { id: "admin-brands-company", label: "Company", path: "/admin/brands/company", crumb: "Admin > Brands > Company" },
+        { id: "admin-brands-master", label: "Master", path: "/admin/brands/company", crumb: "Admin > Brands > Master" },
       ],
     },
     {

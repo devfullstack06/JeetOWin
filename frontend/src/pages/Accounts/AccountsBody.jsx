@@ -12,6 +12,7 @@ import AccountsRejectedStep from "./steps/AccountsRejectedStep";
 import usePageTitle from "../../hooks/usePageTitle";
 
 
+import { getApiOrigin } from "../../utils/walletIconUrl";
 import {
   createAccountTicket,
   fetchBrands,
@@ -157,7 +158,19 @@ export default function AccountsBody() {
         if (cancelled) return;
 
         if (brandsRes.status === "fulfilled") {
-          setBrands(brandsRes.value?.brands ?? []);
+          const raw = brandsRes.value?.brands ?? [];
+          const origin = getApiOrigin();
+          setBrands(
+            raw.map((b) => {
+              if (typeof b === "string") {
+                return { id: b, name: b, iconPath: null, iconSrc: "" };
+              }
+              const iconSrc = b.iconPath
+                ? `${origin}${b.iconPath.startsWith("/") ? b.iconPath : `/${b.iconPath}`}`
+                : "";
+              return { ...b, iconSrc };
+            })
+          );
         } else {
           console.error("[Accounts] fetch brands failed:", brandsRes.reason);
           setBrands([]); // fallback

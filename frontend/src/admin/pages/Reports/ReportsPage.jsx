@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { Eye } from "lucide-react";
 import AdminPageShell from "../../components/AdminPageShell/AdminPageShell";
 import AdminTabs from "../../components/AdminTabs/AdminTabs";
 import AdminFilterBar, {
@@ -67,11 +68,12 @@ function GeneralEntriesTable({ rows, loading, onAction }) {
                 <td className="jw-adminTd__actions">
                   <button
                     type="button"
-                    className="jw-adminEditBtn"
+                    className="jw-adminEditBtn jw-adminReportsViewBtn"
                     title="View / Edit"
                     onClick={() => onAction?.(r)}
+                    aria-label="View / Edit"
                   >
-                    View
+                    <Eye size={16} />
                   </button>
                 </td>
               </tr>

@@ -157,7 +157,7 @@ async function getTransferBrands(req, res) {
     return res.json({ brands: rows.map((r) => r.name) });
   } catch (e) {
     console.error("[transfers] /brands error:", e);
-    return res.json({ brands: ["Betpro", "BrandX", "BrandY", "BrandZ"] });
+    return res.json({ brands: [] });
   }
 }
 
