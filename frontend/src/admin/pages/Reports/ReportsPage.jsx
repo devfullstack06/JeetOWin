@@ -9,6 +9,7 @@ import AdminFilterBar, {
 } from "../../components/AdminFilterBar/AdminFilterBar";
 import AdminDateRange from "../../components/AdminDateRange/AdminDateRange";
 import AdminPagination from "../../components/AdminPagination/AdminPagination";
+import { formatAdminDateTime } from "../../utils/adminDateUtils";
 import "../Users/usersPage.css";
 import "./reportsPage.css";
 
@@ -19,16 +20,6 @@ function buildQuery(params) {
     search.set(key, String(value));
   });
   return search.toString();
-}
-
-function formatDateTime(createdAt) {
-  if (!createdAt) return "—";
-  const d = new Date(createdAt);
-  if (Number.isNaN(d.getTime())) return String(createdAt);
-  return d.toLocaleString(undefined, {
-    dateStyle: "short",
-    timeStyle: "short",
-  });
 }
 
 function GeneralEntriesTable({ rows, loading, onAction }) {
@@ -66,7 +57,7 @@ function GeneralEntriesTable({ rows, loading, onAction }) {
           ) : (
             rows.map((r) => (
               <tr key={r.id}>
-                <td>{formatDateTime(r.createdAt)}</td>
+                <td>{formatAdminDateTime(r.createdAt)}</td>
                 <td>{r.fromAccount || "—"}</td>
                 <td>{r.toAccount || "—"}</td>
                 <td className="jw-adminTd__narration">
@@ -113,7 +104,7 @@ function EntryDetailModal({ open, entry, narration, onNarrationChange, saving, e
           </div>
           <div className="jw-adminUsersModal__field">
             <label className="jw-adminUsersModal__label">Date</label>
-            <div className="jw-adminUsersModal__readOnly">{formatDateTime(entry?.createdAt)}</div>
+            <div className="jw-adminUsersModal__readOnly">{formatAdminDateTime(entry?.createdAt)}</div>
           </div>
           <div className="jw-adminUsersModal__field">
             <label className="jw-adminUsersModal__label">From</label>

@@ -9,6 +9,7 @@ import AdminFilterBar, {
 import AdminDateRange from "../../components/AdminDateRange/AdminDateRange";
 import AdminTable from "../../components/AdminTable/AdminTable";
 import AdminPagination from "../../components/AdminPagination/AdminPagination";
+import { formatAdminDateTime } from "../../utils/adminDateUtils";
 import "./usersPage.css";
 
 function buildQuery(params) {
@@ -258,7 +259,7 @@ export default function UsersPage() {
         setRows(
           items.map((item) => ({
             ...item,
-            joinDateText: item.joinDateText || item.joinDateISO || "",
+            joinDateText: formatAdminDateTime(item.joinDateISO) || item.joinDateISO || "",
             balance:
               item.balanceText ??
               Number(item.balance || 0).toFixed(2),
@@ -403,7 +404,7 @@ export default function UsersPage() {
             row.id === updatedItem.id
               ? {
                   ...updatedItem,
-                  joinDateText: updatedItem.joinDateText || updatedItem.joinDateISO || "",
+                  joinDateText: formatAdminDateTime(updatedItem.joinDateISO) || updatedItem.joinDateISO || "",
                   balance:
                     updatedItem.balanceText ??
                     Number(updatedItem.balance || 0).toFixed(2),
