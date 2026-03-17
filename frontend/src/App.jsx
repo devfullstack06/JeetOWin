@@ -27,6 +27,7 @@ import UpdatePassword from "./admin/pages/UpdatePassword";
 import UsersPage from "./admin/pages/Users/UsersPage";
 import AdminWalletsPage from "./admin/pages/Wallets/WalletsPage";
 import AdminReportsPage from "./admin/pages/Reports/ReportsPage";
+import AdminContentPage from "./admin/pages/Content/ContentPage";
 import { adminNavGroups } from "./admin/adminNav";
 
 function MobileNavLayout() {
@@ -118,6 +119,10 @@ export default function App() {
             <Route path="reports/general-ledger" element={<AdminReportsPage />} />
             <Route path="reports/balance-sheet" element={<AdminReportsPage />} />
 
+            {/* Content: single ContentPage with tabs; all content/* paths render it */}
+            <Route path="content" element={<AdminContentPage />} />
+            <Route path="content/:contentTab" element={<AdminContentPage />} />
+
             {/* Auto placeholders for remaining admin routes */}
             {adminItems.map((it) => {
               if (it.path === "/admin") return null;
@@ -132,6 +137,8 @@ export default function App() {
               if (nestedPath === "reports/general-entries") return null;
               if (nestedPath === "reports/general-ledger") return null;
               if (nestedPath === "reports/balance-sheet") return null;
+              if (nestedPath === "content") return null;
+              if (nestedPath.startsWith("content/")) return null;
 
               return (
                 <Route

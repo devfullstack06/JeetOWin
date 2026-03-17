@@ -27,6 +27,12 @@ const {
   updateAdminGeneralEntryNarration,
   getAdminAccountBalance,
 } = require("../controllers/admin/generalEntriesController");
+const {
+  getAdminSocialLinks,
+  createAdminSocialLink,
+  updateAdminSocialLink,
+} = require("../controllers/admin/socialLinksController");
+const { optionalSocialIconUpload } = require("../middleware/uploadSocialIcon");
 
 const router = express.Router();
 
@@ -49,5 +55,9 @@ router.get("/admin-account-balance", requireAdminAuth, getAdminAccountBalance);
 router.get("/general-entries", requireAdminAuth, getAdminGeneralEntries);
 router.get("/general-entries/:id", requireAdminAuth, getAdminGeneralEntryById);
 router.patch("/general-entries/:id", requireAdminAuth, updateAdminGeneralEntryNarration);
+
+router.get("/social-links", requireAdminAuth, getAdminSocialLinks);
+router.post("/social-links", requireAdminAuth, optionalSocialIconUpload, createAdminSocialLink);
+router.patch("/social-links/:id", requireAdminAuth, optionalSocialIconUpload, updateAdminSocialLink);
 
 module.exports = router;

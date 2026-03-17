@@ -1,0 +1,15 @@
+/* Content page – tabs + placeholders; Social Media reuses wallets/users styles */
+
+.jw-adminContentPlaceholder {
+  padding: 24px;
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+}
+
+.jw-adminTd__url {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

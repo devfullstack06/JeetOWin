@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import "./footer.css";
+import { getApiOrigin, getWalletIconUrl } from "../utils/walletIconUrl";
 
 const DEFAULT_RESPONSIBLE = {
   title: "Responsible Gambling:",
@@ -71,21 +72,44 @@ const DEFAULT_REGULATIONS = {
 //   ],
 // };
 
-import { SOCIAL_LINKS_DEFAULT } from "../config/socialLinks";
-
-const DEFAULT_SOCIAL = {
-  title: "Social Media:",
-  items: SOCIAL_LINKS_DEFAULT.filter((x) => x.type !== "chat"),
-};
-
+const SOCIAL_TITLE = "Social Media:";
 
 export default function Footer({
   responsible = DEFAULT_RESPONSIBLE,
   regulations = DEFAULT_REGULATIONS,
-  social = DEFAULT_SOCIAL,
+  social: socialProp,
   copyright = "© 2026 JeetOWin.com | All Rights Reserved.",
   onOpenRegulation = () => {},
 }) {
+  const [footerSocialItems, setFooterSocialItems] = useState([]);
+
+  useEffect(() => {
+    let ignore = false;
+    const apiOrigin = getApiOrigin();
+    fetch(`${apiOrigin}/api/social-links?for=footer`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (ignore || !Array.isArray(data.items)) return;
+        setFooterSocialItems(
+          data.items.map((r) => ({
+            id: r.id,
+            label: r.name || "",
+            href: r.url || "",
+            iconSrc: getWalletIconUrl({ iconPath: r.iconPath }) || "",
+          }))
+        );
+      })
+      .catch(() => {
+        if (!ignore) setFooterSocialItems([]);
+      });
+    return () => { ignore = true; };
+  }, []);
+
+  const social = socialProp ?? {
+    title: SOCIAL_TITLE,
+    items: footerSocialItems,
+  };
+
   return (
     <footer className="jw-footer" aria-label="Footer">
       <div className="jw-footerPanel">

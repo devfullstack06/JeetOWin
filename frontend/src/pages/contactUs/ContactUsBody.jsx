@@ -1,9 +1,9 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Headphones } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import usePageTitle from "../../hooks/usePageTitle";
-import { getSortedSocialLinks } from "../../config/socialLinks";
+import { getApiOrigin, getWalletIconUrl } from "../../utils/walletIconUrl";
 import ContactLinkRow from "./ContactLinkRow";
 
 import "./contactUs.css";
@@ -12,10 +12,31 @@ export default function ContactUsBody() {
   const navigate = useNavigate();
   usePageTitle("Contact Us");
 
+  const [links, setLinks] = useState([]);
+  useEffect(() => {
+    let ignore = false;
+    const apiOrigin = getApiOrigin();
+    fetch(`${apiOrigin}/api/social-links?for=contact`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (ignore || !Array.isArray(data.items)) return;
+        setLinks(
+          data.items.map((r) => ({
+            id: r.id,
+            label: r.name || "",
+            href: r.url || "",
+            iconSrc: getWalletIconUrl({ iconPath: r.iconPath }) || "",
+          }))
+        );
+      })
+      .catch(() => {
+        if (!ignore) setLinks([]);
+      });
+    return () => { ignore = true; };
+  }, []);
+
   // keep step-ready like other modules (future chat panel)
   const [step, setStep] = useState("list"); // list | chat (later)
-
-  const links = useMemo(() => getSortedSocialLinks(), []);
 
   const handleClose = () => {
     // same behavior style as Accounts when on main screen

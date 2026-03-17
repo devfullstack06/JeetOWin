@@ -1,6 +1,6 @@
 import { logout } from "./auth";
 
-const DEFAULT_IDLE_MS = 15 * 60 * 1000; // 15 minutes
+const DEFAULT_IDLE_MS = 60 * 60 * 1000; // 60 minutes
 
 let idleTimer = null;
 

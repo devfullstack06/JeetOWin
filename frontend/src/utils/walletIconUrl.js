@@ -4,7 +4,10 @@
  * When API is on another origin, prepend that origin so /uploads/... loads from backend.
  */
 
-function getUploadsBase() {
+/**
+ * Origin of the API server (e.g. "http://localhost:3000"). Empty string when not set (use relative URLs + Vite proxy).
+ */
+export function getApiOrigin() {
   const apiBase = import.meta.env.VITE_API_BASE_URL;
   if (!apiBase) return "";
   try {
@@ -12,6 +15,10 @@ function getUploadsBase() {
   } catch {
     return "";
   }
+}
+
+function getUploadsBase() {
+  return getApiOrigin();
 }
 
 /**
