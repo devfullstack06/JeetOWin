@@ -28,6 +28,7 @@ mysql -u $MYSQL_USER -p $MYSQL_DB < migration_general_entries.sql
 mysql -u $MYSQL_USER -p $MYSQL_DB < migration_admin_account_balance.sql
 mysql -u $MYSQL_USER -p $MYSQL_DB < migration_accounts.sql
 mysql -u $MYSQL_USER -p $MYSQL_DB < migration_wallet_companies_icon_path.sql
+mysql -u $MYSQL_USER -p $MYSQL_DB < migration_wallet_companies_sync_icon_key.sql
 ```
 
 Or use the script (Linux/Mac):
@@ -112,6 +113,10 @@ server {
         add_header Cache-Control "public, max-age=31536000, immutable";
     }
 }
+
+location /uploads/ {
+    alias /var/www/jeetowin/backend/uploads/;
+}
 ```
 
 - **client_max_body_size 10M** — allows uploads (e.g. wallet SVG icons) and large JSON bodies without 413.
@@ -127,6 +132,8 @@ cd /path/to/project/database
 mysql -u USER -p jeetowin < migration_general_entries.sql
 mysql -u USER -p jeetowin < migration_admin_account_balance.sql
 mysql -u USER -p jeetowin < migration_accounts.sql
+mysql -u USER -p jeetowin < migration_wallet_companies_icon_path.sql
+mysql -u USER -p jeetowin < migration_wallet_companies_sync_icon_key.sql
 ```
 
 ## Migration Order Summary
@@ -142,3 +149,4 @@ mysql -u USER -p jeetowin < migration_accounts.sql
 | 7 | migration_admin_account_balance.sql | Admin account balance |
 | 8 | migration_accounts.sql | Accounts table (account-based ledger) |
 | 9 | migration_wallet_companies_icon_path.sql | Icon file path (file-based wallet icons) |
+| 10 | migration_wallet_companies_sync_icon_key.sql | Sync icon_key from icon_path (one-off data sync) |

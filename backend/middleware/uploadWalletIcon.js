@@ -9,7 +9,7 @@ const fs = require("fs");
 const crypto = require("crypto");
 
 const UPLOADS_WALLETS = path.join(__dirname, "..", "uploads", "wallets");
-const MAX_SIZE = 200 * 1024; // 200KB
+const MAX_SIZE = 2048 * 1024; // 200KB
 
 function ensureUploadsWalletsDir() {
   try {
