@@ -29,6 +29,7 @@ import AdminWalletsPage from "./admin/pages/Wallets/WalletsPage";
 import AdminReportsPage from "./admin/pages/Reports/ReportsPage";
 import AdminContentPage from "./admin/pages/Content/ContentPage";
 import AdminBrandsPage from "./admin/pages/Brands/BrandsPage";
+import AdminAccountsPage from "./admin/pages/Accounts/AccountsPage";
 import { adminNavGroups } from "./admin/adminNav";
 
 function MobileNavLayout() {
@@ -129,6 +130,11 @@ export default function App() {
             <Route path="brands/website" element={<AdminBrandsPage />} />
             <Route path="brands/company" element={<AdminBrandsPage />} />
 
+            {/* Accounts: single AccountsPage with tabs List + Tickets */}
+            <Route path="accounts" element={<Navigate to="/admin/accounts/list" replace />} />
+            <Route path="accounts/list" element={<AdminAccountsPage />} />
+            <Route path="accounts/tickets" element={<AdminAccountsPage />} />
+
             {/* Auto placeholders for remaining admin routes */}
             {adminItems.map((it) => {
               if (it.path === "/admin") return null;
@@ -148,6 +154,8 @@ export default function App() {
               if (nestedPath === "brands") return null;
               if (nestedPath === "brands/website") return null;
               if (nestedPath === "brands/company") return null;
+              if (nestedPath === "accounts/list") return null;
+              if (nestedPath === "accounts/tickets") return null;
 
               return (
                 <Route

@@ -18,6 +18,13 @@
     background: #fff4f4;
     color: #c53d3d;
   }
+
+  .jw-adminReportsPlaceholder {
+    padding: 24px;
+    text-align: center;
+    color: #666;
+    font-size: 14px;
+  }
   
   .jw-adminUsersModalOverlay {
     position: fixed;
@@ -137,6 +144,84 @@
   
   .jw-adminUsersModal__eye:hover {
     color: #222;
+  }
+
+  .jw-adminUsersModal__field {
+    position: relative;
+  }
+
+  .jw-adminUsersModal__selectedRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 42px;
+    padding: 8px 12px;
+    border: 1px solid #d2d2d2;
+    border-radius: 10px;
+    background: #fafafa;
+  }
+
+  .jw-adminUsersModal__selectedLabel {
+    font-size: 14px;
+    color: #111;
+  }
+
+  .jw-adminUsersModal__clearSelect {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    color: #666;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+  }
+
+  .jw-adminUsersModal__clearSelect:hover {
+    background: #eee;
+    color: #222;
+  }
+
+  .jw-adminUsersModal__dropdown {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    margin-top: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+    background: #fff;
+    border: 1px solid #d2d2d2;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    z-index: 10;
+  }
+
+  .jw-adminUsersModal__dropdownItem {
+    display: block;
+    width: 100%;
+    padding: 10px 14px;
+    text-align: left;
+    border: none;
+    background: none;
+    font-size: 14px;
+    color: #111;
+    cursor: pointer;
+  }
+
+  .jw-adminUsersModal__dropdownItem:hover {
+    background: #f0f0f0;
+  }
+
+  .jw-adminUsersModal__dropdownEmpty,
+  .jw-adminUsersModal__dropdownLoading {
+    padding: 10px 14px;
+    font-size: 13px;
+    color: #666;
   }
   
   .jw-adminUsersModal__error {

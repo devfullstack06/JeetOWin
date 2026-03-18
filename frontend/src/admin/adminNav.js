@@ -39,7 +39,8 @@ export const adminNavGroups = [
     {
       group: "Accounts",
       items: [
-        { id: "admin-accounts-info", label: "Accounts Info", path: "/admin/accounts/accounts-info", crumb: "Admin > Accounts > Accounts Info" },
+        { id: "admin-accounts-list", label: "List", path: "/admin/accounts/list", crumb: "Admin > Accounts > List" },
+        { id: "admin-accounts-tickets", label: "Tickets", path: "/admin/accounts/tickets", crumb: "Admin > Accounts > Tickets" },
       ],
     },
     {
