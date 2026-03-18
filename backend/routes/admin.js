@@ -50,6 +50,12 @@ const {
   createAdminClientAccount,
   updateAdminClientAccount,
 } = require("../controllers/admin/clientAccountsController");
+const {
+  getAdminAccountTickets,
+  approveAdminAccountTicket,
+  patchAdminAccountTicket,
+  rejectAdminAccountTicket,
+} = require("../controllers/admin/accountTicketsController");
 const { optionalBrandIconUpload } = require("../middleware/uploadBrandIcon");
 
 const router = express.Router();
@@ -91,5 +97,10 @@ router.get("/client-accounts", requireAdminAuth, getAdminClientAccounts);
 router.get("/client-accounts/:id", requireAdminAuth, getAdminClientAccountById);
 router.post("/client-accounts", requireAdminAuth, createAdminClientAccount);
 router.patch("/client-accounts/:id", requireAdminAuth, updateAdminClientAccount);
+
+router.get("/account-tickets", requireAdminAuth, getAdminAccountTickets);
+router.post("/account-tickets/:id/approve", requireAdminAuth, approveAdminAccountTicket);
+router.patch("/account-tickets/:id/reject", requireAdminAuth, rejectAdminAccountTicket);
+router.patch("/account-tickets/:id", requireAdminAuth, patchAdminAccountTicket);
 
 module.exports = router;

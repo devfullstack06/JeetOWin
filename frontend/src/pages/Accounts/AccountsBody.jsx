@@ -17,7 +17,6 @@ import {
   createAccountTicket,
   fetchBrands,
   fetchMyAccounts,
-  fetchTicketStatus,
 } from "./api/accountsApi";
 
 export default function AccountsBody() {
@@ -41,6 +40,7 @@ export default function AccountsBody() {
 
   // Ticket + result states
   const [ticketId, setTicketId] = useState(null);
+  const [processingTicket, setProcessingTicket] = useState(null); // { ticketId, createdAt, brand, username, status } after create
   const [createdAccount, setCreatedAccount] = useState(null);
   const [rejectedReason, setRejectedReason] = useState("");
 
@@ -55,6 +55,7 @@ export default function AccountsBody() {
   const goToList = async () => {
     setStep("list");
     setTicketId(null);
+    setProcessingTicket(null);
     setCreatedAccount(null);
     setRejectedReason("");
     resetForm();
@@ -130,6 +131,17 @@ export default function AccountsBody() {
 
       const newTicketId = res?.ticketId;
       setTicketId(newTicketId || null);
+      setProcessingTicket(
+        newTicketId
+          ? {
+              ticketId: newTicketId,
+              createdAt: res?.createdAt ?? null,
+              brand: res?.brand ?? brand,
+              username: res?.username ?? suggestedUsername ?? null,
+              status: res?.status ?? "pending",
+            }
+          : null
+      );
 
       // Start polling (admin not ready => likely remains pending)
       // If backend instantly returns approved/rejected, we'll handle it too.
@@ -205,9 +217,16 @@ export default function AccountsBody() {
 
     const poll = async () => {
       try {
-        const data = await fetchTicketStatus(ticketId);
-
-        const status = data?.status; // pending | approved | rejected
+        const res = await fetch(`/api/accounts/tickets/${ticketId}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token") || ""}` },
+        });
+        if (res.status === 404) {
+          setCreatedAccount(null);
+          setStep("created");
+          return;
+        }
+        const data = await res.json().catch(() => ({}));
+        const status = data?.status;
         if (!status || status === "pending") return;
 
         if (status === "approved") {
@@ -223,7 +242,6 @@ export default function AccountsBody() {
         }
       } catch (e) {
         console.error("[Accounts] poll status failed:", e);
-        // keep trying; transient errors shouldn't break UX
       }
     };
 
@@ -305,7 +323,7 @@ export default function AccountsBody() {
         )}
 
         {step === "processing" && (
-          <AccountsProcessingStep ticketId={ticketId} onBack={goToList} />
+          <AccountsProcessingStep ticket={processingTicket} onBack={goToList} />
         )}
 
         {step === "created" && (

@@ -99,7 +99,19 @@ router.post("/tickets", authenticateToken, requireClient, async (req, res) => {
       [req.user.userId, brand, suggestedUsername || null]
     );
 
-    return res.json({ ticketId: result.insertId });
+    const id = result.insertId;
+    const [[row]] = await pool.query(
+      `SELECT id, brand, suggested_username, status, created_at
+       FROM account_tickets WHERE id = ? LIMIT 1`,
+      [id]
+    );
+    return res.json({
+      ticketId: id,
+      createdAt: row?.created_at ?? null,
+      brand: row?.brand ?? brand,
+      username: row?.suggested_username ?? suggestedUsername ?? null,
+      status: row?.status ?? "pending",
+    });
   } catch (e) {
     console.error("[accounts] POST /tickets error:", e);
     return res.status(500).json({ error: "Failed to create ticket" });

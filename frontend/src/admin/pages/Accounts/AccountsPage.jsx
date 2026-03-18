@@ -1,6 +1,50 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Plus, X } from "lucide-react";
+
+const TICKET_TIMER_MINUTES = 10;
+
+function ticketRemainingSeconds(createdAt) {
+  if (!createdAt) return null;
+  const created = new Date(createdAt).getTime();
+  const end = created + TICKET_TIMER_MINUTES * 60 * 1000;
+  return Math.floor((end - Date.now()) / 1000);
+}
+
+function ticketTimerColor(seconds) {
+  if (seconds === null) return "#666";
+  if (seconds > 7 * 60) return "#159447";
+  if (seconds > 4 * 60) return "#2563eb";
+  if (seconds > 0) return "#ca8a04";
+  return "#dc2626";
+}
+
+function formatTimer(seconds) {
+  if (seconds === null) return "—";
+  const abs = Math.abs(seconds);
+  const m = Math.floor(abs / 60);
+  const s = abs % 60;
+  const str = `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  return seconds < 0 ? `-${str}` : str;
+}
+
+function TicketTimer({ createdAt }) {
+  const [seconds, setSeconds] = useState(() => ticketRemainingSeconds(createdAt));
+  useEffect(() => {
+    setSeconds(ticketRemainingSeconds(createdAt));
+    const t = setInterval(() => setSeconds(ticketRemainingSeconds(createdAt)), 1000);
+    return () => clearInterval(t);
+  }, [createdAt]);
+  const color = ticketTimerColor(seconds);
+  return <span className="jw-ticketTimer" style={{ color, fontWeight: 600 }}>{formatTimer(seconds)}</span>;
+}
+
+function getTicketStateDisplay(row) {
+  if (row.status === "rejected") return { label: "Rejected", className: "jw-ticketState-rejected" };
+  const sec = ticketRemainingSeconds(row.createdAt);
+  if (sec !== null && sec < 0) return { label: "Overdue", className: "jw-ticketState-overdue" };
+  return { label: "Pending", className: "jw-ticketState-pending" };
+}
 import AdminPageShell from "../../components/AdminPageShell/AdminPageShell";
 import AdminTabs from "../../components/AdminTabs/AdminTabs";
 import AdminFilterBar, {
@@ -538,6 +582,258 @@ function EditModal({
   );
 }
 
+function TicketsTable({ rows, loading, stateFilter, onProcess, onEditRejected }) {
+  const isLoading = loading || (rows.length === 1 && rows[0]?.id === "loading-row");
+  const isEmpty = !loading && rows.length === 1 && rows[0]?.id === "empty-row";
+  const showTimerColumn = stateFilter !== "rejected";
+  const showUpdatedAtColumn = stateFilter === "rejected";
+  const colCount = 6 + (showTimerColumn ? 1 : 0) + (showUpdatedAtColumn ? 1 : 0);
+
+  return (
+    <div className="jw-adminTableWrap">
+      <table className="jw-adminTable">
+        <thead>
+          <tr>
+            {showTimerColumn && <th>Timer</th>}
+            <th>Client</th>
+            <th>Suggested</th>
+            <th>Brand</th>
+            <th>State</th>
+            <th>Created at</th>
+            {showUpdatedAtColumn && <th>Updated at</th>}
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {isLoading ? (
+            Array.from({ length: 5 }).map((_, i) => (
+              <tr key={`sk-${i}`}>
+                <td colSpan={colCount}>
+                  <div className="jw-adminSkeleton" style={{ height: 20 }} />
+                </td>
+              </tr>
+            ))
+          ) : isEmpty ? (
+            <tr>
+              <td colSpan={colCount} className="jw-adminEmpty">
+                No results found
+              </td>
+            </tr>
+          ) : (
+            rows.map((r) => {
+              const stateDisplay = getTicketStateDisplay(r);
+              const canProcess = r.status === "pending";
+              const isRejected = r.status === "rejected";
+              return (
+                <tr key={r.id}>
+                  {showTimerColumn && <td><TicketTimer createdAt={r.createdAt} /></td>}
+                  <td>{r.clientUsername || "—"}</td>
+                  <td>{r.suggestedUsername || "—"}</td>
+                  <td>{r.brand || "—"}</td>
+                  <td><span className={stateDisplay.className}>{stateDisplay.label}</span></td>
+                  <td className="jw-adminTd__date">{formatAdminDateTime(r.createdAt)}</td>
+                  {showUpdatedAtColumn && <td className="jw-adminTd__date">{formatAdminDateTime(r.updatedAt)}</td>}
+                  <td className="jw-adminTd__actions">
+                    {canProcess ? (
+                      <button
+                        type="button"
+                        className="jw-adminEditBtn"
+                        title="Process"
+                        onClick={() => onProcess?.(r)}
+                      >
+                        <EditIconSvg />
+                      </button>
+                    ) : isRejected ? (
+                      <button
+                        type="button"
+                        className="jw-adminEditBtn"
+                        title="Edit"
+                        onClick={() => onEditRejected?.(r)}
+                      >
+                        <EditIconSvg />
+                      </button>
+                    ) : (
+                      "—"
+                    )}
+                  </td>
+                </tr>
+              );
+            })
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function RejectedEditModal({ open, row, notes, saving, errorText, onChangeNotes, onCancel, onSave }) {
+  if (!open || !row) return null;
+  const stateDisplay = getTicketStateDisplay(row);
+  return (
+    <div className="jw-adminUsersModalOverlay jw-adminUsersModalOverlay--belowHeader" onClick={onCancel}>
+      <div className="jw-adminUsersModal jw-adminUsersModal--scrollable" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Edit rejected ticket">
+        <div className="jw-adminUsersModal__header">
+          <div className="jw-adminUsersModal__title">Edit Rejected Ticket</div>
+        </div>
+        <div className="jw-adminUsersModal__body">
+          <div className="jw-adminUsersModal__field">
+            <label className="jw-adminUsersModal__label">Information</label>
+            <div className="jw-adminUsersModal__readOnly jw-adminUsersModal__infoBlock">
+              <div>State: <span className={stateDisplay.className}>{stateDisplay.label}</span></div>
+              <div>Ticket id: {row.id}</div>
+              <div>Created at: {formatAdminDateTime(row.createdAt)}</div>
+              <div>Rejected at: {formatAdminDateTime(row.updatedAt)}</div>
+              <div>Client: {row.clientUsername || "—"}</div>
+              <div>Brand: {row.brand || "—"}</div>
+              <div>Reason: {row.reason || "—"}</div>
+            </div>
+          </div>
+          <div className="jw-adminUsersModal__field">
+            <label className="jw-adminUsersModal__label">Notes (optional)</label>
+            <textarea
+              className="jw-adminUsersModal__textarea jw-adminUsersModal__input"
+              value={notes}
+              onChange={(e) => onChangeNotes(e.target.value)}
+              placeholder="Notes"
+              rows={3}
+            />
+          </div>
+          {errorText ? <div className="jw-adminUsersPage__notice is-error">{errorText}</div> : null}
+        </div>
+        <div className="jw-adminUsersModal__actions">
+          <button type="button" className="jw-adminUsersModal__btn is-light" onClick={onCancel} disabled={saving}>Cancel</button>
+          <button type="button" className="jw-adminUsersModal__btn is-primary" onClick={onSave} disabled={saving}>{saving ? "Saving…" : "Save"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ProcessModal({
+  open,
+  row,
+  form,
+  masters,
+  saving,
+  errorText,
+  onChange,
+  onCancel,
+  onConfirm,
+}) {
+  if (!open || !row) return null;
+  const isPending = row.status === "pending";
+  const sec = ticketRemainingSeconds(row.createdAt);
+  const isOverdue = sec !== null && sec < 0;
+  const stateLabel = isOverdue ? "Overdue" : "Pending";
+  const showApproveFields = form.process === "approve";
+  const showRejectFields = form.process === "reject";
+
+  return (
+    <div className="jw-adminUsersModalOverlay jw-adminUsersModalOverlay--belowHeader" onClick={onCancel}>
+      <div className="jw-adminUsersModal jw-adminUsersModal--scrollable" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Process ticket">
+        <div className="jw-adminUsersModal__header">
+          <div className="jw-adminUsersModal__title">Process Ticket</div>
+        </div>
+        <div className="jw-adminUsersModal__body">
+          <div className="jw-adminUsersModal__field">
+            <label className="jw-adminUsersModal__label">Information</label>
+            <div className="jw-adminUsersModal__readOnly jw-adminUsersModal__infoBlock">
+              <div>CountDown: <TicketTimer createdAt={row.createdAt} /></div>
+              <div>State: {stateLabel}</div>
+              <div>Ticket ID: {row.id}</div>
+              <div>Created at: {formatAdminDateTime(row.createdAt)}</div>
+              <div>Client: {row.clientUsername || "—"}</div>
+              <div>Brand: {row.brand || "—"}</div>
+            </div>
+          </div>
+          {(isPending || isOverdue) && (
+            <>
+              <div className="jw-adminUsersModal__field">
+                <label className="jw-adminUsersModal__label">Process</label>
+                <select
+                  className="jw-adminUsersModal__input"
+                  value={form.process}
+                  onChange={(e) => onChange("process", e.target.value)}
+                >
+                  <option value="">Please Select</option>
+                  <option value="approve">Approve</option>
+                  <option value="reject">Reject</option>
+                </select>
+              </div>
+              {showApproveFields && (
+                <>
+                  <div className="jw-adminUsersModal__field">
+                    <label className="jw-adminUsersModal__label">Master</label>
+                    <select
+                      className={`jw-adminUsersModal__input ${!form.masterId ? "jw-adminInput--placeholder" : ""}`}
+                      value={form.masterId === "" ? "" : form.masterId}
+                      onChange={(e) => onChange("masterId", e.target.value ? Number(e.target.value) : "")}
+                    >
+                      <option value="">Please Select</option>
+                      {(masters || []).map((m) => (
+                        <option key={m.id} value={m.id}>{m.username}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="jw-adminUsersModal__field">
+                    <label className="jw-adminUsersModal__label">Username</label>
+                    <input
+                      className="jw-adminUsersModal__input"
+                      value={form.username}
+                      onChange={(e) => onChange("username", e.target.value)}
+                      placeholder="Suggested username"
+                    />
+                  </div>
+                  <div className="jw-adminUsersModal__field">
+                    <label className="jw-adminUsersModal__label">Notes (Optional)</label>
+                    <textarea
+                      className="jw-adminUsersModal__input jw-adminUsersModal__textarea"
+                      value={form.approveNotes}
+                      onChange={(e) => onChange("approveNotes", e.target.value)}
+                      placeholder="Optional"
+                      rows={2}
+                    />
+                  </div>
+                </>
+              )}
+              {showRejectFields && (
+                <>
+                  <div className="jw-adminUsersModal__field">
+                    <label className="jw-adminUsersModal__label">Reason</label>
+                    <input
+                      className="jw-adminUsersModal__input"
+                      value={form.reason}
+                      onChange={(e) => onChange("reason", e.target.value)}
+                      placeholder="Required for reject"
+                    />
+                  </div>
+                  <div className="jw-adminUsersModal__field">
+                    <label className="jw-adminUsersModal__label">Notes (Optional)</label>
+                    <textarea
+                      className="jw-adminUsersModal__input jw-adminUsersModal__textarea"
+                      value={form.rejectNotes}
+                      onChange={(e) => onChange("rejectNotes", e.target.value)}
+                      placeholder="Optional"
+                      rows={2}
+                    />
+                  </div>
+                </>
+              )}
+            </>
+          )}
+          {errorText ? <div className="jw-adminUsersModal__error">{errorText}</div> : null}
+        </div>
+        <div className="jw-adminUsersModal__actions">
+          <button type="button" className="jw-adminUsersModal__btn is-light" onClick={onCancel} disabled={saving}>Cancel</button>
+          <button type="button" className="jw-adminUsersModal__btn is-green" onClick={onConfirm} disabled={saving}>
+            {saving ? "Saving..." : "Confirm"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AccountsPage() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -589,6 +885,40 @@ export default function AccountsPage() {
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState("");
 
+  const [ticketFilters, setTicketFilters] = useState({
+    ticketId: "",
+    client: "",
+    brand: "",
+    state: "pending",
+    startDate: "",
+    endDate: "",
+  });
+  const [ticketApplied, setTicketApplied] = useState({});
+  const [ticketPage, setTicketPage] = useState(1);
+  const [ticketPageSize, setTicketPageSize] = useState(25);
+  const [ticketRows, setTicketRows] = useState([]);
+  const [ticketTotal, setTicketTotal] = useState(0);
+  const [ticketLoading, setTicketLoading] = useState(false);
+  const [ticketError, setTicketError] = useState("");
+  const [rejectedEditOpen, setRejectedEditOpen] = useState(false);
+  const [rejectedEditRow, setRejectedEditRow] = useState(null);
+  const [rejectedEditNotes, setRejectedEditNotes] = useState("");
+  const [rejectedEditSaving, setRejectedEditSaving] = useState(false);
+  const [rejectedEditError, setRejectedEditError] = useState("");
+  const [processModalOpen, setProcessModalOpen] = useState(false);
+  const [processModalRow, setProcessModalRow] = useState(null);
+  const [processForm, setProcessForm] = useState({
+    process: "",
+    masterId: "",
+    username: "",
+    approveNotes: "",
+    reason: "",
+    rejectNotes: "",
+  });
+  const [processSaving, setProcessSaving] = useState(false);
+  const [processError, setProcessError] = useState("");
+  const [ticketMasters, setTicketMasters] = useState([]);
+
   const displayRows = useMemo(() => {
     if (loading && rows.length === 0) return [{ id: "loading-row" }];
     if (!loading && rows.length === 0) return [{ id: "empty-row" }];
@@ -639,6 +969,46 @@ export default function AccountsPage() {
     fetchList();
   }, [activeTab, fetchList]);
 
+  const fetchTickets = useCallback(() => {
+    let ignore = false;
+    setTicketLoading(true);
+    setTicketError("");
+    const query = buildQuery({
+      ticketId: ticketApplied.ticketId,
+      client: ticketApplied.client,
+      brand: ticketApplied.brand,
+      state: ticketApplied.state || "pending",
+      dateFrom: ticketApplied.startDate,
+      dateTo: ticketApplied.endDate,
+      page: ticketPage,
+      pageSize: ticketPageSize,
+    });
+    const token = localStorage.getItem("token") || "";
+    fetch(`/api/admin/account-tickets?${query}`, {
+      method: "GET",
+      headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (ignore) return;
+        setTicketRows(data.items || []);
+        setTicketTotal(Number(data.total || 0));
+        if (data.message && !data.items) setTicketError(data.message);
+      })
+      .catch(() => {
+        if (!ignore) setTicketRows([]), setTicketTotal(0), setTicketError("Unable to load tickets.");
+      })
+      .finally(() => {
+        if (!ignore) setTicketLoading(false);
+      });
+    return () => { ignore = true; };
+  }, [ticketApplied, ticketPage, ticketPageSize]);
+
+  useEffect(() => {
+    if (activeTab !== "tickets") return;
+    fetchTickets();
+  }, [activeTab, fetchTickets]);
+
   useEffect(() => {
     const token = localStorage.getItem("token") || "";
     fetch("/api/admin/brands/for-accounts", {
@@ -687,6 +1057,167 @@ export default function AccountsPage() {
       return { key: "updatedAt", dir: "desc" };
     });
     setPage(1);
+  };
+
+  const ticketDisplayRows = useMemo(() => {
+    if (ticketLoading && ticketRows.length === 0) return [{ id: "loading-row" }];
+    if (!ticketLoading && ticketRows.length === 0) return [{ id: "empty-row" }];
+    return ticketRows;
+  }, [ticketLoading, ticketRows]);
+
+  const onTicketSubmit = () => {
+    setTicketApplied({ ...ticketFilters });
+    setTicketPage(1);
+  };
+
+  const onTicketClear = () => {
+    setTicketFilters({ ticketId: "", client: "", brand: "", state: "pending", startDate: "", endDate: "" });
+    setTicketApplied({});
+    setTicketPage(1);
+  };
+
+  const openProcessModal = (row) => {
+    setProcessModalRow(row);
+    setProcessForm({
+      process: "",
+      masterId: "",
+      username: row.suggestedUsername || "",
+      approveNotes: "",
+      reason: "",
+      rejectNotes: "",
+    });
+    setProcessError("");
+    setProcessModalOpen(true);
+  };
+
+  useEffect(() => {
+    if (!processModalOpen || !processModalRow) {
+      setTicketMasters([]);
+      return;
+    }
+    const brandName = processModalRow.brand;
+    const brand = (brands || []).find((b) => (b.name || "").trim() === (brandName || "").trim());
+    const brandId = brand?.id;
+    if (!brandId) {
+      setTicketMasters([]);
+      return;
+    }
+    const token = localStorage.getItem("token") || "";
+    const query = buildQuery({ website: brandId, type: "master", status: "active", pageSize: 500 });
+    fetch(`/api/admin/brand-companies?${query}`, {
+      headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    })
+      .then((res) => res.json())
+      .then((data) => setTicketMasters(data.items || []))
+      .catch(() => setTicketMasters([]));
+  }, [processModalOpen, processModalRow, brands]);
+
+  const handleProcessConfirm = async () => {
+    if (!processModalRow?.id) return;
+    const f = processForm;
+    if (!f.process) {
+      setProcessError("Please select Approve or Reject.");
+      return;
+    }
+    if (f.process === "approve") {
+      if (!f.username.trim()) {
+        setProcessError("Username is required.");
+        return;
+      }
+    }
+    if (f.process === "reject") {
+      if (!f.reason.trim()) {
+        setProcessError("Reason is required for reject.");
+        return;
+      }
+    }
+    setProcessSaving(true);
+    setProcessError("");
+    const token = localStorage.getItem("token") || "";
+    try {
+      if (f.process === "approve") {
+        const res = await fetch(`/api/admin/account-tickets/${processModalRow.id}/approve`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({
+            masterId: f.masterId ? Number(f.masterId) : undefined,
+            username: f.username.trim(),
+            notes: f.approveNotes.trim() || undefined,
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          setProcessError(data?.message || "Failed to approve.");
+          setProcessSaving(false);
+          return;
+        }
+      } else {
+        const res = await fetch(`/api/admin/account-tickets/${processModalRow.id}/reject`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({
+            reason: f.reason.trim(),
+            notes: f.rejectNotes.trim() || undefined,
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          setProcessError(data?.message || "Failed to reject.");
+          setProcessSaving(false);
+          return;
+        }
+      }
+      setProcessModalOpen(false);
+      setProcessModalRow(null);
+      setProcessSaving(false);
+      fetchTickets();
+    } catch {
+      setProcessError("Request failed.");
+      setProcessSaving(false);
+    }
+  };
+
+  const openRejectedEdit = (row) => {
+    setRejectedEditRow(row);
+    setRejectedEditNotes(row?.notes ?? "");
+    setRejectedEditError("");
+    setRejectedEditOpen(true);
+  };
+
+  const handleRejectedEditSave = async () => {
+    if (!rejectedEditRow?.id) return;
+    setRejectedEditSaving(true);
+    setRejectedEditError("");
+    const token = localStorage.getItem("token") || "";
+    try {
+      const res = await fetch(`/api/admin/account-tickets/${rejectedEditRow.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ notes: rejectedEditNotes.trim() || undefined }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setRejectedEditError(data?.message || "Failed to update.");
+        setRejectedEditSaving(false);
+        return;
+      }
+      setRejectedEditOpen(false);
+      setRejectedEditRow(null);
+      setRejectedEditSaving(false);
+      fetchTickets();
+    } catch {
+      setRejectedEditError("Request failed.");
+      setRejectedEditSaving(false);
+    }
   };
 
   const openCreate = () => {
@@ -800,6 +1331,52 @@ export default function AccountsPage() {
     }
   };
 
+  const ticketFiltersBar = (
+    <AdminFilterBar onClear={onTicketClear} onSubmit={onTicketSubmit}>
+      <AdminFilterField label="Ticket ID">
+        <AdminInput
+          value={ticketFilters.ticketId}
+          onChange={(v) => setTicketFilters((f) => ({ ...f, ticketId: v }))}
+          placeholder="ID"
+        />
+      </AdminFilterField>
+      <AdminFilterField label="Client">
+        <AdminInput
+          value={ticketFilters.client}
+          onChange={(v) => setTicketFilters((f) => ({ ...f, client: v }))}
+          placeholder="Search by client username"
+        />
+      </AdminFilterField>
+      <AdminFilterField label="Brand">
+        <AdminInput
+          value={ticketFilters.brand}
+          onChange={(v) => setTicketFilters((f) => ({ ...f, brand: v }))}
+          placeholder="Please Enter"
+        />
+      </AdminFilterField>
+      <AdminFilterField label="State">
+        <select
+          className={`jw-adminInput ${!ticketFilters.state ? "jw-adminInput--placeholder" : ""}`}
+          value={ticketFilters.state}
+          onChange={(e) => setTicketFilters((f) => ({ ...f, state: e.target.value }))}
+        >
+          <option value="pending">Pending</option>
+          <option value="rejected">Rejected</option>
+        </select>
+      </AdminFilterField>
+      <AdminFilterField label="Date">
+        <AdminDateRange
+          startDate={ticketFilters.startDate}
+          endDate={ticketFilters.endDate}
+          placeholder="Please Select"
+          onChange={({ startDate, endDate }) =>
+            setTicketFilters((f) => ({ ...f, startDate, endDate }))
+          }
+        />
+      </AdminFilterField>
+    </AdminFilterBar>
+  );
+
   const listFilters = (
     <AdminFilterBar onClear={onListClear} onSubmit={onListSubmit}>
       <AdminFilterField label="Client">
@@ -865,7 +1442,7 @@ export default function AccountsPage() {
             onChange={(key) => navigate(key === "tickets" ? "/admin/accounts/tickets" : "/admin/accounts/list")}
           />
         }
-        filters={activeTab === "list" ? listFilters : null}
+        filters={activeTab === "list" ? listFilters : activeTab === "tickets" ? ticketFiltersBar : null}
         table={
           activeTab === "list" ? (
             <>
@@ -881,7 +1458,18 @@ export default function AccountsPage() {
               />
             </>
           ) : activeTab === "tickets" ? (
-            <div className="jw-adminReportsPlaceholder">Tickets — Coming soon.</div>
+            <>
+              {ticketError && !ticketLoading ? (
+                <div className="jw-adminUsersPage__notice is-error">{ticketError}</div>
+              ) : null}
+              <TicketsTable
+                rows={ticketDisplayRows}
+                loading={ticketLoading}
+                stateFilter={(ticketApplied.state || "pending")}
+                onProcess={openProcessModal}
+                onEditRejected={openRejectedEdit}
+              />
+            </>
           ) : null
         }
         pagination={
@@ -894,6 +1482,17 @@ export default function AccountsPage() {
               onPageSizeChange={(n) => {
                 setPageSize(n);
                 setPage(1);
+              }}
+            />
+          ) : activeTab === "tickets" ? (
+            <AdminPagination
+              total={ticketTotal}
+              page={ticketPage}
+              pageSize={ticketPageSize}
+              onPageChange={setTicketPage}
+              onPageSizeChange={(n) => {
+                setTicketPageSize(n);
+                setTicketPage(1);
               }}
             />
           ) : null
@@ -929,6 +1528,36 @@ export default function AccountsPage() {
           if (!editSaving) setEditOpen(false);
         }}
         onConfirm={handleEditConfirm}
+      />
+
+      <RejectedEditModal
+        open={rejectedEditOpen}
+        row={rejectedEditRow}
+        notes={rejectedEditNotes}
+        saving={rejectedEditSaving}
+        errorText={rejectedEditError}
+        onChangeNotes={setRejectedEditNotes}
+        onCancel={() => {
+          if (!rejectedEditSaving) {
+            setRejectedEditOpen(false);
+            setRejectedEditRow(null);
+          }
+        }}
+        onSave={handleRejectedEditSave}
+      />
+
+      <ProcessModal
+        open={processModalOpen}
+        row={processModalRow}
+        form={processForm}
+        masters={ticketMasters}
+        saving={processSaving}
+        errorText={processError}
+        onChange={(key, value) => setProcessForm((prev) => ({ ...prev, [key]: value }))}
+        onCancel={() => {
+          if (!processSaving) setProcessModalOpen(false);
+        }}
+        onConfirm={handleProcessConfirm}
       />
     </>
   );

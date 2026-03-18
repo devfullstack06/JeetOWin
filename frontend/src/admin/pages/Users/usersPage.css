@@ -110,6 +110,48 @@
     align-items: center;
   }
 
+  .jw-adminUsersModal__infoBlock {
+    display: block;
+    padding: 12px 14px;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .jw-adminUsersModal__infoBlock div {
+    margin-bottom: 4px;
+  }
+
+  .jw-ticketTimer {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .jw-ticketState-pending {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    background: #fef9c3;
+    color: #854d0e;
+  }
+
+  .jw-ticketState-overdue {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    background: #fee2e2;
+    color: #dc2626;
+  }
+
+  .jw-ticketState-rejected {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    background: #ffedd5;
+    color: #c2410c;
+  }
+
   .jw-adminUsersModal__textarea {
     min-height: 80px;
     height: auto;
