@@ -74,6 +74,8 @@ function buildItem(row) {
     sortOrder: row.sort_order != null ? row.sort_order : 0,
     iconPath: row.icon_path != null ? String(row.icon_path) : "",
     createdAt: row.created_at,
+    total: Number(row.total_masters) || 0,
+    active: Number(row.active_masters) || 0,
   };
 }
 
@@ -114,19 +116,38 @@ exports.getAdminBrands = async (req, res) => {
     }
 
     const offset = (page - 1) * pageSize;
+    const selectWithCounts =
+      `SELECT id, name, available_accounts, available_home, sort_order, icon_path, created_at,
+        (SELECT COUNT(*) FROM brand_companies bc WHERE bc.brand_id = brands.id) AS total_masters,
+        (SELECT COUNT(*) FROM brand_companies bc WHERE bc.brand_id = brands.id AND bc.is_active = 1) AS active_masters
+       FROM brands ${whereSql}
+       ORDER BY ${sortColumn} ${sortDir}, id ASC
+       LIMIT ? OFFSET ?`;
     try {
-      [rows] = await pool.query(
-        `SELECT id, name, available_accounts, available_home, sort_order, icon_path, created_at
-         FROM brands ${whereSql}
-         ORDER BY ${sortColumn} ${sortDir}, id ASC
-         LIMIT ? OFFSET ?`,
-        [...params, pageSize, offset]
-      );
+      [rows] = await pool.query(selectWithCounts, [...params, pageSize, offset]);
     } catch (e) {
       if (e.code === "ER_NO_SUCH_TABLE") {
         return res.status(200).json({ items: [], total: 0, page: 1, pageSize, sortKey: "sortOrder", sortDir: "asc" });
       }
-      throw e;
+      if (e.code === "ER_NO_SUCH_TABLE") {
+        try {
+          [rows] = await pool.query(
+            `SELECT id, name, available_accounts, available_home, sort_order, icon_path, created_at
+             FROM brands ${whereSql}
+             ORDER BY ${sortColumn} ${sortDir}, id ASC
+             LIMIT ? OFFSET ?`,
+            [...params, pageSize, offset]
+          );
+          rows = (rows || []).map((r) => ({ ...r, total_masters: 0, active_masters: 0 }));
+        } catch (e2) {
+          if (e2.code === "ER_NO_SUCH_TABLE") {
+            return res.status(200).json({ items: [], total: 0, page: 1, pageSize, sortKey: "sortOrder", sortDir: "asc" });
+          }
+          throw e2;
+        }
+      } else {
+        throw e;
+      }
     }
 
     const items = rows.map((r) => buildItem(r));
