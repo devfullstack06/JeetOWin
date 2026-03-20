@@ -4,43 +4,43 @@
 
 const { pool } = require("../config/database");
 
-let ledgerColumnCache = null;
+/** @type {'transaction_number'|'trx_id'|null|undefined} */
+let ledgerColumnCache;
 /** @type {boolean | undefined} */
 let geAccountIdColumnsCache;
 
 /**
- * @returns {Promise<'transaction_number'|'trx_id'>}
+ * Which column stores the public transaction id (PWT… / DP…).
+ * @returns {Promise<'transaction_number'|'trx_id'|null>} null if table missing or both column names missing (run migrations).
  */
 async function resolveGeneralEntryLedgerColumn() {
-  if (ledgerColumnCache) return ledgerColumnCache;
-  try {
-    const [rows] = await pool.query(
-      `SELECT COLUMN_NAME AS n FROM information_schema.COLUMNS
-       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'general_entries'
-         AND COLUMN_NAME IN ('transaction_number','trx_id')
-       ORDER BY CASE COLUMN_NAME WHEN 'transaction_number' THEN 0 ELSE 1 END
-       LIMIT 1`
-    );
-    if (rows?.length) {
-      const n = String(rows[0].n || "").toLowerCase();
-      ledgerColumnCache = n === "trx_id" ? "trx_id" : "transaction_number";
-      return ledgerColumnCache;
-    }
-  } catch {
-    /* fall through to probe */
-  }
+  if (ledgerColumnCache !== undefined) return ledgerColumnCache;
+
   try {
     await pool.query("SELECT transaction_number FROM general_entries LIMIT 0");
     ledgerColumnCache = "transaction_number";
-  } catch {
-    try {
-      await pool.query("SELECT trx_id FROM general_entries LIMIT 0");
-      ledgerColumnCache = "trx_id";
-    } catch {
-      ledgerColumnCache = "transaction_number";
+    return ledgerColumnCache;
+  } catch (e) {
+    if (e && e.code === "ER_NO_SUCH_TABLE") {
+      ledgerColumnCache = null;
+      return null;
+    }
+    /* ER_BAD_FIELD_ERROR: column missing — try legacy trx_id */
+  }
+
+  try {
+    await pool.query("SELECT trx_id FROM general_entries LIMIT 0");
+    ledgerColumnCache = "trx_id";
+    return ledgerColumnCache;
+  } catch (e) {
+    if (e && e.code === "ER_NO_SUCH_TABLE") {
+      ledgerColumnCache = null;
+      return null;
     }
   }
-  return ledgerColumnCache;
+
+  ledgerColumnCache = null;
+  return null;
 }
 
 /**

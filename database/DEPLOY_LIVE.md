@@ -88,3 +88,22 @@ Use `./database/run_migrations.sh` (or run the **main** loop files in the order 
 - **Idempotent** scripts can be re-run; they no-op when already applied.
 - If live already ran an older `migration_deposit_tickets.sql` **without** `created_by_user_id` / `ledger_transaction_number`, the two small deposit migrations fix that without recreating the table.
 - After changing schema, restart the Node process so connection pools see the new structure.
+
+---
+
+## 5. Troubleshooting: `GET /api/admin/general-entries` → 500
+
+The admin **Reports → General entries** list needs `general_entries` to have either:
+
+- **`transaction_number`** (current schema), or  
+- **`trx_id`** (legacy), renamed by `migration_general_entries_transaction_number.sql`.
+
+**On live, run (in order):**
+
+1. `migration_general_entries.sql` — if the table does not exist yet.  
+2. `migration_general_entries_transaction_number.sql` — if you still have `trx_id` only, this renames it and adds sequences.  
+3. `migration_general_entries_add_account_ids.sql` — optional, for From/To **type** filters.
+
+After deploying backend build **`2025-01+`**, the API no longer defaults to a wrong column name; if both columns are missing it returns **200** with an empty list and a **`warning`** field instead of 500. You should still run the migrations so data appears.
+
+Check **Node server logs** (`pm2 logs` / hosting panel) for the real `sqlMessage` if errors persist (e.g. missing `accounts` table, connection errors).

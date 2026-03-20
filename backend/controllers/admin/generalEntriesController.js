@@ -56,6 +56,16 @@ exports.getAdminGeneralEntryAccountTypes = async (_req, res) => {
 exports.getAdminGeneralEntries = async (req, res) => {
   try {
     const ledgerCol = await resolveGeneralEntryLedgerColumn();
+    if (ledgerCol == null) {
+      return res.status(200).json({
+        items: [],
+        total: 0,
+        page: normalizePositiveInt(req.query.page, 1),
+        pageSize: Math.min(normalizePositiveInt(req.query.pageSize, 25), 100),
+        warning:
+          "Database: general_entries has no transaction_number or trx_id column. Run migration_general_entries.sql and migration_general_entries_transaction_number.sql (see database/DEPLOY_LIVE.md).",
+      });
+    }
     const useAccountJoins = await resolveGeHasAccountIdColumns();
     const geFrom = useAccountJoins ? GE_FROM_WITH_ACCOUNTS : GE_FROM_SIMPLE;
     const typeSelect = useAccountJoins
@@ -209,6 +219,12 @@ exports.getAdminGeneralEntries = async (req, res) => {
 exports.getAdminGeneralEntryById = async (req, res) => {
   try {
     const ledgerCol = await resolveGeneralEntryLedgerColumn();
+    if (ledgerCol == null) {
+      return res.status(503).json({
+        message:
+          "General entries table is not migrated (missing transaction_number / trx_id). Run migration_general_entries.sql and migration_general_entries_transaction_number.sql.",
+      });
+    }
     const useAccountJoins = await resolveGeHasAccountIdColumns();
     const typeSelect = useAccountJoins
       ? "fa.type AS fromAccountType, ta.type AS toAccountType"
