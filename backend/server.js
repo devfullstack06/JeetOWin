@@ -22,6 +22,7 @@ const backofficeRouter = require("./routes/backoffice");
 const accountsRouter = require("./routes/accounts");
 const transfersRouter = require("./routes/transfers");
 const walletsRouter = require("./routes/wallets");
+const depositsRouter = require("./routes/deposits");
 const socialLinksRouter = require("./routes/socialLinks");
 
 const app = express();
@@ -52,6 +53,7 @@ app.use("/api/backoffice", backofficeRouter);
 app.use("/api/accounts", accountsRouter);
 app.use("/api/transfers", transfersRouter);
 app.use("/api/wallets", walletsRouter);
+app.use("/api/deposits", depositsRouter);
 app.use("/api/social-links", socialLinksRouter);
 app.use("/api/admin", adminRouter);
 // Choose port from environment or default to 3000

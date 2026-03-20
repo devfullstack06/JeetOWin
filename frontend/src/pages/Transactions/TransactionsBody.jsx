@@ -14,6 +14,7 @@ import WithdrawTicketStep from "./steps/withdraw/WithdrawTicketStep";
 
 import {
   createDepositTicket,
+  fetchDepositTicketStatus,
   createWithdrawTicket,
   fetchTransactionTicket,
   devSetTicketStatus,
@@ -266,11 +267,19 @@ export default function TransactionsBody({ initialTab }) {
   const submitDeposit = async () => {
     const nextErr = {};
     const minAmt = depActiveWallet?.minAmount ?? 500;
+    const maxAmt = depActiveWallet?.maxAmount ?? 0;
     const amtNum = Number(depAmount || "0");
 
     if (!depCompanyId) nextErr.submit = "Please select a payment method.";
     if (!depAmount || isNaN(amtNum) || amtNum < minAmt) {
       nextErr.amount = `Minimum deposit is Rs. ${Number(minAmt).toLocaleString()}.`;
+    }
+    if (
+      Number.isFinite(amtNum) &&
+      maxAmt > 0 &&
+      amtNum > maxAmt
+    ) {
+      nextErr.quickAmount = `Maximum deposit is Rs. ${Number(maxAmt).toLocaleString()}.`;
     }
     if (!depSlipFile) nextErr.slip = "Please attach deposit slip.";
 
@@ -279,23 +288,37 @@ export default function TransactionsBody({ initialTab }) {
 
     try {
       const res = await createDepositTicket({
-        walletCompanyName:
-          activeDepositCompanies.find((c) => c.id === depCompanyId)?.name ||
-          "Deposit",
-        accountTitle: depActiveWallet?.holderName || "-",
-        accountNumber: depActiveWallet?.holderNumber || "-",
+        walletCompanyId: depCompanyId,
+        paymentWalletId: depActiveWallet?.id,
         amount: amtNum,
-        slipUrl: depSlipUrl,
+        slip: depSlipFile || undefined,
       });
 
-      setDepTicket(res.ticket);
-      setDepTicketId(res.ticket.id);
+      const companyName = activeDepositCompanies.find((c) => c.id === depCompanyId)?.name || "Deposit";
+      setDepTicket({
+        id: res.ticketId,
+        type: "DEPOSIT",
+        status: "PROCESSING",
+        createdAt: res.createdAt,
+        createdByUsername: res.createdByUsername ?? null,
+        walletCompanyName: companyName,
+        accountTitle: depActiveWallet?.holderName || "-",
+        accountNumber: depActiveWallet?.holderNumber || "-",
+        amount: res.amount ?? amtNum,
+        slipUrl: depSlipUrl || (res.slipPath ? `${window.location.origin}${res.slipPath}` : null),
+        reason: null,
+        approvedAt: null,
+        rejectedAt: null,
+      });
+      setDepTicketId(res.ticketId);
       setDepStep("process");
       setDepErrors({});
     } catch (e) {
-      setDepErrors({
-        submit: e?.message || "Failed to create deposit ticket.",
-      });
+      const msg = e?.message || "Failed to create deposit ticket.";
+      const isMaxDepositMsg = /maximum\s+deposit/i.test(msg);
+      setDepErrors(
+        isMaxDepositMsg ? { quickAmount: msg } : { submit: msg },
+      );
     }
   };
 
@@ -372,14 +395,25 @@ export default function TransactionsBody({ initialTab }) {
 
     const tick = async () => {
       try {
-        const res = await fetchTransactionTicket(ticketId);
-        const t = res?.ticket;
-
         if (isDepPolling) {
-          setDepTicket(t);
-          if (t?.status === "APPROVED") setDepStep("approved");
-          if (t?.status === "REJECTED") setDepStep("rejected");
+          const res = await fetchDepositTicketStatus(ticketId);
+          if (res == null) return; // 404
+          setDepTicket((prev) => ({
+            ...prev,
+            id: res.ticketId,
+            status: res.status === "approved" ? "APPROVED" : res.status === "rejected" ? "REJECTED" : "PROCESSING",
+            createdAt: res.createdAt,
+            updatedAt: res.updatedAt,
+            approvedAt: res.status === "approved" ? res.updatedAt : null,
+            rejectedAt: res.status === "rejected" ? res.updatedAt : null,
+            reason: res.reason || null,
+            createdByUsername: res.createdByUsername ?? prev?.createdByUsername ?? null,
+          }));
+          if (res.status === "approved") setDepStep("approved");
+          if (res.status === "rejected") setDepStep("rejected");
         } else if (isWdPolling) {
+          const res = await fetchTransactionTicket(ticketId);
+          const t = res?.ticket;
           setWdTicket(t);
           if (t?.status === "APPROVED") setWdStep("approved");
           if (t?.status === "REJECTED") setWdStep("rejected");
@@ -462,7 +496,11 @@ export default function TransactionsBody({ initialTab }) {
               amount={depAmount}
               setAmount={(v) => {
                 setDepAmount(v);
-                setDepErrors((p) => ({ ...p, amount: undefined }));
+                setDepErrors((p) => ({
+                  ...p,
+                  amount: undefined,
+                  quickAmount: undefined,
+                }));
               }}
               slipFile={depSlipFile}
               slipPreviewUrl={depSlipUrl}

@@ -23,6 +23,7 @@ const {
 } = require("../controllers/admin/paymentWalletsController");
 const {
   getAdminGeneralEntries,
+  getAdminGeneralEntryAccountTypes,
   getAdminGeneralEntryById,
   updateAdminGeneralEntryNarration,
   getAdminAccountBalance,
@@ -56,6 +57,16 @@ const {
   patchAdminAccountTicket,
   rejectAdminAccountTicket,
 } = require("../controllers/admin/accountTicketsController");
+const {
+  getAdminDepositTickets,
+  getAdminDepositTicketsReadiness,
+  getAdminDepositTicketById,
+  createAdminDepositTicket,
+  approveAdminDepositTicket,
+  rejectAdminDepositTicket,
+  patchAdminDepositTicket,
+} = require("../controllers/admin/depositTicketsController");
+const { optionalDepositFilesUpload } = require("../middleware/uploadDepositFiles");
 const { optionalBrandIconUpload } = require("../middleware/uploadBrandIcon");
 
 const router = express.Router();
@@ -77,6 +88,11 @@ router.post("/payment-wallets/:id/deduct", requireAdminAuth, deductAdminPaymentW
 
 router.get("/admin-account-balance", requireAdminAuth, getAdminAccountBalance);
 router.get("/general-entries", requireAdminAuth, getAdminGeneralEntries);
+router.get(
+  "/general-entries/account-types",
+  requireAdminAuth,
+  getAdminGeneralEntryAccountTypes
+);
 router.get("/general-entries/:id", requireAdminAuth, getAdminGeneralEntryById);
 router.patch("/general-entries/:id", requireAdminAuth, updateAdminGeneralEntryNarration);
 
@@ -102,5 +118,13 @@ router.get("/account-tickets", requireAdminAuth, getAdminAccountTickets);
 router.post("/account-tickets/:id/approve", requireAdminAuth, approveAdminAccountTicket);
 router.patch("/account-tickets/:id/reject", requireAdminAuth, rejectAdminAccountTicket);
 router.patch("/account-tickets/:id", requireAdminAuth, patchAdminAccountTicket);
+
+router.get("/deposit-tickets", requireAdminAuth, getAdminDepositTickets);
+router.get("/deposit-tickets/readiness", requireAdminAuth, getAdminDepositTicketsReadiness);
+router.get("/deposit-tickets/:id", requireAdminAuth, getAdminDepositTicketById);
+router.post("/deposit-tickets", requireAdminAuth, optionalDepositFilesUpload, createAdminDepositTicket);
+router.post("/deposit-tickets/:id/approve", requireAdminAuth, optionalDepositFilesUpload, approveAdminDepositTicket);
+router.patch("/deposit-tickets/:id/reject", requireAdminAuth, optionalDepositFilesUpload, rejectAdminDepositTicket);
+router.patch("/deposit-tickets/:id", requireAdminAuth, patchAdminDepositTicket);
 
 module.exports = router;

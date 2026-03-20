@@ -151,10 +151,11 @@ exports.approveAdminAccountTicket = async (req, res) => {
     const randomPassword = crypto.randomBytes(12).toString("hex");
     const passwordHash = await bcrypt.hash(randomPassword, 10);
 
+    const suggestedUsername = ticket.suggested_username != null ? String(ticket.suggested_username).trim() : null;
     await pool.query(
-      `INSERT INTO client_accounts (username, password_hash, client_id, brand, brand_id, brand_company_id, status, notes, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, 'active', ?, NOW(), NOW())`,
-      [finalUsername, passwordHash, ticket.client_id, ticket.brand, brandId, masterId, notes || null]
+      `INSERT INTO client_accounts (username, suggested_username, password_hash, client_id, brand, brand_id, brand_company_id, status, notes, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?, NOW(), NOW())`,
+      [finalUsername, suggestedUsername || null, passwordHash, ticket.client_id, ticket.brand, brandId, masterId, notes || null]
     );
 
     await pool.query("DELETE FROM account_tickets WHERE id = ?", [id]);

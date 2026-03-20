@@ -21,6 +21,7 @@ function buildItem(row) {
     clientId: row.client_id != null ? row.client_id : null,
     clientUsername: row.client_username != null ? String(row.client_username) : "",
     username: row.username || "",
+    suggestedUsername: row.suggested_username != null ? String(row.suggested_username) : "",
     brand: row.brand_name != null ? row.brand_name : (row.brand || ""),
     brandId: row.brand_id != null ? row.brand_id : null,
     brandCompanyId: row.brand_company_id != null ? row.brand_company_id : null,
@@ -120,7 +121,7 @@ exports.getAdminClientAccounts = async (req, res) => {
     const orderBy = `${sortColumn} ${sortDir}, ca.id DESC`;
     try {
       [rows] = await pool.query(
-        `SELECT ca.id, ca.client_id, ca.username, ca.brand, ca.brand_id, ca.brand_company_id, ca.status, ca.updated_at, ca.created_at, ca.notes,
+        `SELECT ca.id, ca.client_id, ca.username, ca.suggested_username, ca.brand, ca.brand_id, ca.brand_company_id, ca.status, ca.updated_at, ca.created_at, ca.notes,
                 b.name AS brand_name,
                 u.username AS client_username
          FROM client_accounts ca
@@ -172,7 +173,7 @@ exports.getAdminClientAccountById = async (req, res) => {
     if (!id) return res.status(400).json({ message: "Invalid id." });
 
     const [rows] = await pool.query(
-      `SELECT ca.id, ca.username, ca.brand, ca.brand_id, ca.brand_company_id, ca.status, ca.updated_at, ca.created_at, ca.notes,
+      `SELECT ca.id, ca.username, ca.suggested_username, ca.brand, ca.brand_id, ca.brand_company_id, ca.status, ca.updated_at, ca.created_at, ca.notes,
               b.name AS brand_name
        FROM client_accounts ca
        LEFT JOIN brands b ON b.id = ca.brand_id
@@ -251,7 +252,7 @@ exports.updateAdminClientAccount = async (req, res) => {
     const status = statusRaw === "inactive" ? "inactive" : statusRaw === "active" ? "active" : null;
 
     const [existing] = await pool.query(
-      "SELECT id, username, brand_id, brand_company_id, status, notes FROM client_accounts WHERE id = ? LIMIT 1",
+      "SELECT id, username, suggested_username, brand_id, brand_company_id, status, notes FROM client_accounts WHERE id = ? LIMIT 1",
       [id]
     );
     if (!existing.length) return res.status(404).json({ message: "Not found." });
@@ -276,7 +277,7 @@ exports.updateAdminClientAccount = async (req, res) => {
 
     if (updates.length === 0) {
       const [rows] = await pool.query(
-        `SELECT ca.id, ca.username, ca.brand, ca.brand_id, ca.brand_company_id, ca.status, ca.updated_at, ca.created_at, ca.notes,
+        `SELECT ca.id, ca.username, ca.suggested_username, ca.brand, ca.brand_id, ca.brand_company_id, ca.status, ca.updated_at, ca.created_at, ca.notes,
                 b.name AS brand_name
          FROM client_accounts ca LEFT JOIN brands b ON b.id = ca.brand_id WHERE ca.id = ?`,
         [id]
@@ -289,7 +290,7 @@ exports.updateAdminClientAccount = async (req, res) => {
     await pool.query(`UPDATE client_accounts SET ${updates.join(", ")} WHERE id = ?`, params);
 
     const [rows] = await pool.query(
-      `SELECT ca.id, ca.username, ca.brand, ca.brand_id, ca.brand_company_id, ca.status, ca.updated_at, ca.created_at, ca.notes,
+      `SELECT ca.id, ca.username, ca.suggested_username, ca.brand, ca.brand_id, ca.brand_company_id, ca.status, ca.updated_at, ca.created_at, ca.notes,
               b.name AS brand_name
        FROM client_accounts ca LEFT JOIN brands b ON b.id = ca.brand_id WHERE ca.id = ?`,
       [id]

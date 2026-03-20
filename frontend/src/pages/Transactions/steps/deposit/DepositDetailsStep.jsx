@@ -96,6 +96,11 @@ export default function DepositDetailsStep({
               {errors?.amount && <div className="jw-txErr">{errors.amount}</div>}
 
               <QuickAmountRow amounts={quickAmounts} onPick={(v) => setAmount(v)} />
+              {errors?.quickAmount && (
+                <div className="jw-txErr jw-txQuickRowErr" role="alert">
+                  {errors.quickAmount}
+                </div>
+              )}
 
               <div className="jw-txSlipBox">
                 <div className="jw-txSlipInner">

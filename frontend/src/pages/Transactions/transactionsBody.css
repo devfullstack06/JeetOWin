@@ -292,7 +292,7 @@
   border: 0;
   outline: none;
   color: #fff;
-  font-size: 13px;
+  font-size: 20px;
 }
 
 .jw-txAmountInput::placeholder {
@@ -308,6 +308,10 @@
 .jw-txQuickRow {
   display: flex;
   gap: 12px;
+}
+
+.jw-txQuickRowErr {
+  margin-top: 8px;
 }
 
 .jw-txQuickBtn {

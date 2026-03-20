@@ -75,6 +75,12 @@
     font-weight: 500;
     color: #111;
   }
+
+  .jw-adminRequiredMark {
+    color: #c62828;
+    font-weight: 700;
+    margin-left: 2px;
+  }
   
   .jw-adminUsersModal__input {
     width: 100%;
@@ -121,6 +127,20 @@
     margin-bottom: 4px;
   }
 
+  .jw-adminUsersModal__link {
+    background: none;
+    border: none;
+    padding: 0;
+    color: #2563eb;
+    cursor: pointer;
+    text-decoration: underline;
+    font-size: inherit;
+  }
+
+  .jw-adminUsersModal__link:hover {
+    color: #1d4ed8;
+  }
+
   .jw-ticketTimer {
     font-variant-numeric: tabular-nums;
   }
@@ -152,6 +172,42 @@
     color: #c2410c;
   }
 
+  .jw-depositState-pending {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    background: #fef9c3;
+    color: #854d0e;
+  }
+
+  .jw-depositState-overdue {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    background: #fee2e2;
+    color: #dc2626;
+  }
+
+  .jw-depositState-approved {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    background: #dcfce7;
+    color: #166534;
+  }
+
+  .jw-depositState-rejected {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    background: #ffedd5;
+    color: #c2410c;
+  }
+
   .jw-adminUsersModal__textarea {
     min-height: 80px;
     height: auto;
@@ -163,9 +219,197 @@
     position: relative;
     width: 100%;
   }
-  
+
   .jw-adminUsersModal__inputWrap .jw-adminUsersModal__input {
     padding-right: 44px;
+  }
+
+  .jw-depositUsernameDropdown .jw-adminInput {
+    padding-right: 12px;
+  }
+
+  .jw-depositUsernameDropdown--hasClient .jw-adminInput {
+    padding-right: 40px;
+  }
+
+  .jw-depositUsernameDropdown__selectedTick {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    color: #22c55e;
+    z-index: 2;
+  }
+
+  .jw-depositUsernameDropdown__list {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    margin: 2px 0 0;
+    padding: 0;
+    list-style: none;
+    max-height: 220px;
+    overflow-y: auto;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+    z-index: 10;
+  }
+
+  .jw-depositUsernameDropdown__item {
+    padding: 10px 14px;
+    font-size: 14px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .jw-depositUsernameDropdown__item:last-child {
+    border-bottom: none;
+  }
+
+  .jw-depositUsernameDropdown__item:hover,
+  .jw-depositUsernameDropdown__item[aria-selected="true"],
+  .jw-depositUsernameDropdown__item.is-keyboard-focus {
+    background: #f0f7ff;
+  }
+
+  .jw-depositUsernameDropdown__item.is-empty {
+    color: #888;
+    cursor: default;
+  }
+
+  /* Deposit: wallet balance/min/max sits between Wallet select and Amount */
+  .jw-depositWalletMetaBelow {
+    margin-top: -6px;
+    margin-bottom: 2px;
+  }
+
+  .jw-depositWalletMetaBelow .jw-adminUsersModal__infoBlock {
+    margin-top: 0;
+  }
+
+  .jw-depositEditSlipCurrent {
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .jw-depositEditSlipThumbBtn {
+    display: inline-block;
+    padding: 0;
+    margin: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    border-radius: 4px;
+    line-height: 0;
+    vertical-align: top;
+  }
+
+  .jw-depositEditSlipThumbBtn:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+  }
+
+  .jw-depositEditSlipThumbBtn:hover .jw-adminCompaniesFilePreview {
+    opacity: 0.92;
+    box-shadow: 0 0 0 2px #159447;
+  }
+
+  /* Deposit slip fullscreen-style viewer */
+  .jw-depositSlipModal {
+    position: relative;
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px 18px 14px;
+    max-width: min(920px, 92vw);
+    width: 100%;
+    max-height: min(90vh, calc(100dvh - 2rem));
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  }
+
+  .jw-depositSlipModal__headerRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-shrink: 0;
+    margin-bottom: 10px;
+    padding-right: 2px;
+  }
+
+  .jw-depositSlipModal__headerRow .jw-adminUsersModal__title {
+    margin: 0;
+  }
+
+  .jw-depositSlipModal__zoom {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .jw-depositSlipModal__zoomBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #f5f5f5;
+    color: #333;
+    cursor: pointer;
+  }
+
+  .jw-depositSlipModal__zoomBtn:hover:not(:disabled) {
+    background: #eaeaea;
+  }
+
+  .jw-depositSlipModal__zoomBtn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .jw-depositSlipModal__scroll {
+    flex: 1;
+    min-height: 0;
+    max-height: min(78vh, calc(100dvh - 10rem));
+    overflow: auto;
+    width: 100%;
+    text-align: center;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .jw-depositSlipModal__img {
+    display: block;
+    margin: 0 auto;
+    height: auto;
+    object-fit: contain;
+  }
+
+  .jw-depositSlipModal__error {
+    padding: 32px 16px;
+    color: #666;
+    font-size: 14px;
+  }
+
+  .jw-depositSlipModal__actions {
+    flex-shrink: 0;
+    margin-top: 12px;
+    padding-top: 4px;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: flex-end;
   }
   
   .jw-adminUsersModal__eye {

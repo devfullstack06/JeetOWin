@@ -13,7 +13,11 @@ export default function TicketPanel({
   if (ticket?.status === "APPROVED") rows.push(["Approved at:", fmt(ticket.approvedAt)]);
   if (ticket?.status === "REJECTED") rows.push(["Rejected at:", fmt(ticket.rejectedAt)]);
 
-  rows.push(["Ticket:", ticket?.id || "-"]);
+  rows.push(["Ticket No.:", ticket?.id || "-"]);
+  rows.push([
+    "Created by:",
+    ticket?.createdByUsername ? String(ticket.createdByUsername) : "-",
+  ]);
   rows.push(["Transaction:", ticket?.type === "WITHDRAW" ? "Withdraw" : "Deposit"]);
   rows.push(["Wallet:", ticket?.walletCompanyName || "-"]);
   rows.push(["Name:", ticket?.accountTitle || "-"]);

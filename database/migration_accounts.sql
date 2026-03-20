@@ -26,12 +26,30 @@ ON DUPLICATE KEY UPDATE name = name;
   FROM payment_wallets p
   WHERE NOT EXISTS (SELECT 1 FROM accounts a WHERE a.type = 'payment_wallet' AND a.reference_id = p.id);
 
--- 4. Add account_id columns to general_entries
-ALTER TABLE general_entries
-  ADD COLUMN from_account_id INT NULL AFTER from_account,
-  ADD COLUMN to_account_id INT NULL AFTER to_account,
-  ADD KEY idx_from_account_id (from_account_id),
-  ADD KEY idx_to_account_id (to_account_id);
+-- 4. Add account_id columns to general_entries (skip if already in migration_general_entries.sql)
+SET @db := DATABASE();
+
+SET @need_from := (
+  SELECT COUNT(*) FROM information_schema.COLUMNS
+  WHERE TABLE_SCHEMA = @db AND TABLE_NAME = 'general_entries' AND COLUMN_NAME = 'from_account_id'
+);
+SET @stmt := IF(@need_from = 0,
+  'ALTER TABLE general_entries ADD COLUMN from_account_id INT NULL AFTER from_account, ADD KEY idx_from_account_id (from_account_id)',
+  'SELECT 1');
+PREPARE ge_from_id FROM @stmt;
+EXECUTE ge_from_id;
+DEALLOCATE PREPARE ge_from_id;
+
+SET @need_to := (
+  SELECT COUNT(*) FROM information_schema.COLUMNS
+  WHERE TABLE_SCHEMA = @db AND TABLE_NAME = 'general_entries' AND COLUMN_NAME = 'to_account_id'
+);
+SET @stmt := IF(@need_to = 0,
+  'ALTER TABLE general_entries ADD COLUMN to_account_id INT NULL AFTER to_account, ADD KEY idx_to_account_id (to_account_id)',
+  'SELECT 1');
+PREPARE ge_to_id FROM @stmt;
+EXECUTE ge_to_id;
+DEALLOCATE PREPARE ge_to_id;
 
 -- 5. Backfill: Admin Account
 UPDATE general_entries SET from_account_id = 1 WHERE from_account = 'Admin Account' AND from_account_id IS NULL;

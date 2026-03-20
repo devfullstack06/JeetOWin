@@ -1,6 +1,12 @@
 const fs = require("fs");
 const path = require("path");
 const { pool } = require("../../config/database");
+const { ADMIN_LEDGER_ACCOUNT_ID } = require("../../constants/ledgerAccounts");
+const {
+  allocateGeneralEntryTransactionNumber,
+  GE_TXN_SERIES,
+} = require("../../utils/generalEntryTransactionNumber");
+const { insertGeneralEntry } = require("../../utils/generalEntryPersistence");
 
 const QR_UPLOAD_DIR = path.resolve(__dirname, "../../uploads/qr");
 
@@ -67,6 +73,11 @@ exports.getAdminPaymentWallets = async (req, res) => {
     if (status === "active" || status === "inactive") {
       where.push("p.status = ?");
       params.push(status);
+    }
+    const companyId = req.query.companyId != null && Number.isFinite(Number(req.query.companyId)) ? Number(req.query.companyId) : null;
+    if (companyId != null) {
+      where.push("p.wallet_company_id = ?");
+      params.push(companyId);
     }
 
     const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
@@ -351,16 +362,16 @@ exports.updateAdminPaymentWallet = async (req, res) => {
   }
 };
 
-const ADMIN_ACCOUNT_ID = 1;
+const ADMIN_ACCOUNT_ID = ADMIN_LEDGER_ACCOUNT_ID;
 
-async function getOrCreatePaymentWalletAccountId(pwId, name, number) {
-  const [rows] = await pool.query(
+async function getOrCreatePaymentWalletAccountId(pwId, name, number, db = pool) {
+  const [rows] = await db.query(
     "SELECT id FROM accounts WHERE type = 'payment_wallet' AND reference_id = ? LIMIT 1",
     [pwId]
   );
   if (rows?.length) return rows[0].id;
   const displayName = `${(name || "").trim()} (${(number || "").trim()})`.trim() || `Payment Wallet #${pwId}`;
-  const [ins] = await pool.query(
+  const [ins] = await db.query(
     "INSERT INTO accounts (name, type, reference_id) VALUES (?, 'payment_wallet', ?)",
     [displayName, pwId]
   );
@@ -372,6 +383,7 @@ async function getOrCreatePaymentWalletAccountId(pwId, name, number) {
  * Body: { amount, notes? } - add to balance, optional notes stored in general_entries
  */
 exports.topUpAdminPaymentWallet = async (req, res) => {
+  let conn;
   try {
     const id = normalizePositiveInt(req.params.id, 0);
     const amount = parseDecimal(req.body?.amount, 0);
@@ -388,35 +400,43 @@ exports.topUpAdminPaymentWallet = async (req, res) => {
     const newBalance = Number(r.balance) + amount;
     const toAccountDisplay = `${r.name || ""} (${r.number || ""})`.trim() || `Payment Wallet #${id}`;
 
-    await pool.query("UPDATE payment_wallets SET balance = ? WHERE id = ?", [newBalance, id]);
+    conn = await pool.getConnection();
+    await conn.beginTransaction();
 
-    const trxId = `PW-TOPUP-${id}-${Date.now()}`;
-    let toAccountId;
+    const transactionNumber = await allocateGeneralEntryTransactionNumber(conn, GE_TXN_SERIES.TOPUP);
+    await conn.query("UPDATE payment_wallets SET balance = ? WHERE id = ?", [newBalance, id]);
+
+    let toAccountId = null;
     try {
-      toAccountId = await getOrCreatePaymentWalletAccountId(id, r.name, r.number);
-      await pool.query(
-        `INSERT INTO general_entries (trx_id, from_account, from_account_id, to_account, to_account_id, amount, narration)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [trxId, "Admin Account", ADMIN_ACCOUNT_ID, toAccountDisplay, toAccountId, amount, notes || null]
-      );
+      toAccountId = await getOrCreatePaymentWalletAccountId(id, r.name, r.number, conn);
     } catch (e) {
-      if (e.code === "ER_NO_SUCH_TABLE" || e.code === "ER_BAD_FIELD_ERROR") {
-        await pool.query(
-          `INSERT INTO general_entries (trx_id, from_account, to_account, amount, narration) VALUES (?, ?, ?, ?, ?)`,
-          [trxId, "Admin Account", toAccountDisplay, amount, notes || null]
-        );
-      } else throw e;
+      if (e.code !== "ER_NO_SUCH_TABLE" && e.code !== "ER_BAD_FIELD_ERROR") throw e;
     }
+    await insertGeneralEntry(conn, {
+      transactionNumber,
+      fromAccount: "Admin Account",
+      fromAccountId: ADMIN_ACCOUNT_ID,
+      toAccount: toAccountDisplay,
+      toAccountId,
+      amount,
+      narration: notes || null,
+    });
 
-    await pool.query(
+    await conn.query(
       "UPDATE admin_account_balance SET balance = balance - ? WHERE id = 1",
       [amount]
     ).catch((e) => { if (e.code !== "ER_NO_SUCH_TABLE") throw e; });
 
+    await conn.commit();
     return res.status(200).json({ message: "Top-up successful.", balance: newBalance });
   } catch (err) {
+    if (conn) {
+      try { await conn.rollback(); } catch (_) {}
+    }
     console.error("topUpAdminPaymentWallet error:", err);
     return res.status(500).json({ message: "Failed to top up." });
+  } finally {
+    if (conn) conn.release();
   }
 };
 
@@ -425,6 +445,7 @@ exports.topUpAdminPaymentWallet = async (req, res) => {
  * Body: { amount, notes? } - subtract from balance, optional notes stored in general_entries
  */
 exports.deductAdminPaymentWallet = async (req, res) => {
+  let conn;
   try {
     const id = normalizePositiveInt(req.params.id, 0);
     const amount = parseDecimal(req.body?.amount, 0);
@@ -445,35 +466,44 @@ exports.deductAdminPaymentWallet = async (req, res) => {
     }
     const fromAccountDisplay = `${r.name || ""} (${r.number || ""})`.trim() || `Payment Wallet #${id}`;
 
-    await pool.query("UPDATE payment_wallets SET balance = ? WHERE id = ?", [newBalance, id]);
+    conn = await pool.getConnection();
+    await conn.beginTransaction();
 
-    const trxId = `PW-DEDUCT-${id}-${Date.now()}`;
+    const transactionNumber = await allocateGeneralEntryTransactionNumber(conn, GE_TXN_SERIES.DEDUCT);
+    await conn.query("UPDATE payment_wallets SET balance = ? WHERE id = ?", [newBalance, id]);
+
+    let fromAccountId = null;
     try {
-      const fromAccountId = await getOrCreatePaymentWalletAccountId(id, r.name, r.number);
-      await pool.query(
-        `INSERT INTO general_entries (trx_id, from_account, from_account_id, to_account, to_account_id, amount, narration)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [trxId, fromAccountDisplay, fromAccountId, "Admin Account", ADMIN_ACCOUNT_ID, amount, notes || null]
-      );
+      fromAccountId = await getOrCreatePaymentWalletAccountId(id, r.name, r.number, conn);
     } catch (e) {
-      if (e.code === "ER_NO_SUCH_TABLE" || e.code === "ER_BAD_FIELD_ERROR") {
-        await pool.query(
-          `INSERT INTO general_entries (trx_id, from_account, to_account, amount, narration) VALUES (?, ?, ?, ?, ?)`,
-          [trxId, fromAccountDisplay, "Admin Account", amount, notes || null]
-        );
-      } else throw e;
+      if (e.code !== "ER_NO_SUCH_TABLE" && e.code !== "ER_BAD_FIELD_ERROR") throw e;
     }
+    await insertGeneralEntry(conn, {
+      transactionNumber,
+      fromAccount: fromAccountDisplay,
+      fromAccountId,
+      toAccount: "Admin Account",
+      toAccountId: ADMIN_ACCOUNT_ID,
+      amount,
+      narration: notes || null,
+    });
 
-    await pool.query(
+    await conn.query(
       "UPDATE admin_account_balance SET balance = balance + ? WHERE id = 1",
       [amount]
     ).catch((e) => {
       if (e.code !== "ER_NO_SUCH_TABLE") throw e;
     });
 
+    await conn.commit();
     return res.status(200).json({ message: "Deduction successful.", balance: newBalance });
   } catch (err) {
+    if (conn) {
+      try { await conn.rollback(); } catch (_) {}
+    }
     console.error("deductAdminPaymentWallet error:", err);
     return res.status(500).json({ message: "Failed to deduct." });
+  } finally {
+    if (conn) conn.release();
   }
 };

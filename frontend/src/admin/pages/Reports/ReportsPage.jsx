@@ -23,6 +23,13 @@ function buildQuery(params) {
   return search.toString();
 }
 
+function formatAccountTypeLabel(t) {
+  if (t == null || t === "") return "—";
+  const s = String(t);
+  if (s === "payment_wallet") return "Payment wallet";
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 function GeneralEntriesTable({ rows, loading, onAction }) {
   const isLoading = loading || (rows.length === 1 && rows[0]?.id === "loading-row");
   const isEmpty = !loading && rows.length === 1 && rows[0]?.id === "empty-row";
@@ -33,8 +40,11 @@ function GeneralEntriesTable({ rows, loading, onAction }) {
         <thead>
           <tr>
             <th>Date</th>
+            <th>Transaction No.</th>
             <th>From</th>
+            <th>Type</th>
             <th>To</th>
+            <th>Type</th>
             <th>Narration</th>
             <th>Amount</th>
             <th>Action</th>
@@ -44,14 +54,14 @@ function GeneralEntriesTable({ rows, loading, onAction }) {
           {isLoading ? (
             Array.from({ length: 5 }).map((_, i) => (
               <tr key={`sk-${i}`}>
-                <td colSpan={6}>
+                <td colSpan={9}>
                   <div className="jw-adminSkeleton" style={{ height: 20 }} />
                 </td>
               </tr>
             ))
           ) : isEmpty ? (
             <tr>
-              <td colSpan={6} className="jw-adminEmpty">
+              <td colSpan={9} className="jw-adminEmpty">
                 No results found
               </td>
             </tr>
@@ -59,8 +69,11 @@ function GeneralEntriesTable({ rows, loading, onAction }) {
             rows.map((r) => (
               <tr key={r.id}>
                 <td>{formatAdminDateTime(r.createdAt)}</td>
+                <td>{r.transactionNumber || "—"}</td>
                 <td>{r.fromAccount || "—"}</td>
+                <td>{formatAccountTypeLabel(r.fromAccountType)}</td>
                 <td>{r.toAccount || "—"}</td>
+                <td>{formatAccountTypeLabel(r.toAccountType)}</td>
                 <td className="jw-adminTd__narration">
                   {r.narration ? String(r.narration).slice(0, 60) + (r.narration.length > 60 ? "…" : "") : "—"}
                 </td>
@@ -100,29 +113,42 @@ function EntryDetailModal({ open, entry, narration, onNarrationChange, saving, e
           <div className="jw-adminUsersModal__title">Transaction details</div>
         </div>
         <div className="jw-adminUsersModal__body">
-          <div className="jw-adminUsersModal__field">
-            <label className="jw-adminUsersModal__label">Trx ID</label>
-            <div className="jw-adminUsersModal__readOnly">{entry?.trxId || "—"}</div>
-          </div>
-          <div className="jw-adminUsersModal__field">
-            <label className="jw-adminUsersModal__label">Date</label>
-            <div className="jw-adminUsersModal__readOnly">{formatAdminDateTime(entry?.createdAt)}</div>
-          </div>
-          <div className="jw-adminUsersModal__field">
-            <label className="jw-adminUsersModal__label">From</label>
-            <div className="jw-adminUsersModal__readOnly">{entry?.fromAccount || "—"}</div>
-          </div>
-          <div className="jw-adminUsersModal__field">
-            <label className="jw-adminUsersModal__label">To</label>
-            <div className="jw-adminUsersModal__readOnly">{entry?.toAccount || "—"}</div>
-          </div>
-          <div className="jw-adminUsersModal__field">
-            <label className="jw-adminUsersModal__label">Amount</label>
-            <div className="jw-adminUsersModal__readOnly">{Number(entry?.amount)?.toLocaleString() ?? "0"}</div>
-          </div>
-          <div className="jw-adminUsersModal__field">
-            <label className="jw-adminUsersModal__label">Narration (editable)</label>
+          <dl className="jw-adminReportsTransactionInfo" aria-label="Transaction information">
+            <div className="jw-adminReportsTransactionInfo__row">
+              <dt>Transaction No.</dt>
+              <dd>{entry?.transactionNumber || "—"}</dd>
+            </div>
+            <div className="jw-adminReportsTransactionInfo__row">
+              <dt>Date</dt>
+              <dd>{formatAdminDateTime(entry?.createdAt)}</dd>
+            </div>
+            <div className="jw-adminReportsTransactionInfo__row">
+              <dt>From</dt>
+              <dd>{entry?.fromAccount || "—"}</dd>
+            </div>
+            <div className="jw-adminReportsTransactionInfo__row">
+              <dt>From type</dt>
+              <dd>{formatAccountTypeLabel(entry?.fromAccountType)}</dd>
+            </div>
+            <div className="jw-adminReportsTransactionInfo__row">
+              <dt>To</dt>
+              <dd>{entry?.toAccount || "—"}</dd>
+            </div>
+            <div className="jw-adminReportsTransactionInfo__row">
+              <dt>To type</dt>
+              <dd>{formatAccountTypeLabel(entry?.toAccountType)}</dd>
+            </div>
+            <div className="jw-adminReportsTransactionInfo__row">
+              <dt>Amount</dt>
+              <dd>{Number(entry?.amount)?.toLocaleString() ?? "0"}</dd>
+            </div>
+          </dl>
+          <div className="jw-adminUsersModal__field jw-adminReportsTransactionNarration">
+            <label className="jw-adminUsersModal__label" htmlFor="jw-ge-narration">
+              Narration
+            </label>
             <textarea
+              id="jw-ge-narration"
               className="jw-adminUsersModal__input jw-adminUsersModal__textarea"
               value={narration}
               onChange={(e) => onNarrationChange?.(e.target.value)}
@@ -168,13 +194,16 @@ export default function ReportsPage() {
   const [geFilters, setGeFilters] = useState({
     from: "",
     to: "",
+    fromType: "",
+    toType: "",
     minAmount: "",
     maxAmount: "",
     startDate: "",
     endDate: "",
-    trxId: "",
+    transactionNumber: "",
   });
   const [geApplied, setGeApplied] = useState({});
+  const [geAccountTypes, setGeAccountTypes] = useState([]);
   const [gePage, setGePage] = useState(1);
   const [gePageSize, setGePageSize] = useState(25);
   const [geRows, setGeRows] = useState([]);
@@ -201,11 +230,13 @@ export default function ReportsPage() {
     const query = buildQuery({
       from: geApplied.from,
       to: geApplied.to,
+      fromType: geApplied.fromType,
+      toType: geApplied.toType,
       minAmount: geApplied.minAmount,
       maxAmount: geApplied.maxAmount,
       dateFrom: geApplied.startDate,
       dateTo: geApplied.endDate,
-      trxId: geApplied.trxId,
+      transactionNumber: geApplied.transactionNumber,
       page: gePage,
       pageSize: gePageSize,
     });
@@ -242,6 +273,27 @@ export default function ReportsPage() {
     fetchGeneralEntries();
   }, [activeTab, fetchGeneralEntries]);
 
+  useEffect(() => {
+    if (activeTab !== "general-entries") return;
+    let ignore = false;
+    const token = localStorage.getItem("token") || "";
+    fetch("/api/admin/general-entries/account-types", {
+      method: "GET",
+      headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (ignore) return;
+        setGeAccountTypes(Array.isArray(data?.types) ? data.types : []);
+      })
+      .catch(() => {
+        if (!ignore) setGeAccountTypes([]);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [activeTab]);
+
   const onGeSubmit = () => {
     setGeApplied({ ...geFilters });
     setGePage(1);
@@ -251,11 +303,13 @@ export default function ReportsPage() {
     setGeFilters({
       from: "",
       to: "",
+      fromType: "",
+      toType: "",
       minAmount: "",
       maxAmount: "",
       startDate: "",
       endDate: "",
-      trxId: "",
+      transactionNumber: "",
     });
     setGeApplied({});
     setGePage(1);
@@ -312,6 +366,21 @@ export default function ReportsPage() {
           placeholder="Account debited"
         />
       </AdminFilterField>
+      <AdminFilterField label="From type">
+        <select
+          className="jw-adminInput"
+          value={geFilters.fromType}
+          onChange={(e) => setGeFilters((f) => ({ ...f, fromType: e.target.value }))}
+          aria-label="Filter by from account type"
+        >
+          <option value="">All types</option>
+          {geAccountTypes.map((t) => (
+            <option key={t} value={t}>
+              {formatAccountTypeLabel(t)}
+            </option>
+          ))}
+        </select>
+      </AdminFilterField>
       <AdminFilterField label="To">
         <AdminInput
           value={geFilters.to}
@@ -319,11 +388,26 @@ export default function ReportsPage() {
           placeholder="Account credited"
         />
       </AdminFilterField>
-      <AdminFilterField label="Trx ID">
+      <AdminFilterField label="To type">
+        <select
+          className="jw-adminInput"
+          value={geFilters.toType}
+          onChange={(e) => setGeFilters((f) => ({ ...f, toType: e.target.value }))}
+          aria-label="Filter by to account type"
+        >
+          <option value="">All types</option>
+          {geAccountTypes.map((t) => (
+            <option key={`to-${t}`} value={t}>
+              {formatAccountTypeLabel(t)}
+            </option>
+          ))}
+        </select>
+      </AdminFilterField>
+      <AdminFilterField label="Transaction No.">
         <AdminInput
-          value={geFilters.trxId}
-          onChange={(v) => setGeFilters((f) => ({ ...f, trxId: v }))}
-          placeholder="Transaction ID"
+          value={geFilters.transactionNumber}
+          onChange={(v) => setGeFilters((f) => ({ ...f, transactionNumber: v }))}
+          placeholder="e.g. PWT569001, DP569001"
         />
       </AdminFilterField>
       <AdminFilterField label="Min. Amount">
