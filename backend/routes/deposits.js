@@ -85,14 +85,31 @@ router.get("/:id", authenticateToken, requireClient, async (req, res) => {
     const id = Number(req.params.id);
     if (!Number.isFinite(id) || id <= 0) return res.status(400).json({ error: "Invalid ticket id." });
 
-    const [rows] = await pool.query(
-      `SELECT dt.id, dt.client_id, dt.status, dt.trx_id, dt.reason, dt.slip_path, dt.created_at, dt.updated_at,
-              creator.username AS created_by_username
-       FROM deposit_tickets dt
-       LEFT JOIN users creator ON creator.id = dt.created_by_user_id
-       WHERE dt.id = ? LIMIT 1`,
-      [id]
-    );
+    let rows;
+    try {
+      [rows] = await pool.query(
+        `SELECT dt.id, dt.client_id, dt.status, dt.trx_id, dt.reason, dt.slip_path, dt.created_at, dt.updated_at,
+                creator.username AS created_by_username,
+                COALESCE(wc.deposit_process_minutes, 10) AS depositProcessMinutes
+         FROM deposit_tickets dt
+         LEFT JOIN users creator ON creator.id = dt.created_by_user_id
+         LEFT JOIN wallet_companies wc ON wc.id = dt.wallet_company_id
+         WHERE dt.id = ? LIMIT 1`,
+        [id]
+      );
+    } catch (qErr) {
+      if (qErr.code === "ER_BAD_FIELD_ERROR") {
+        [rows] = await pool.query(
+          `SELECT dt.id, dt.client_id, dt.status, dt.trx_id, dt.reason, dt.slip_path, dt.created_at, dt.updated_at,
+                  creator.username AS created_by_username
+           FROM deposit_tickets dt
+           LEFT JOIN users creator ON creator.id = dt.created_by_user_id
+           WHERE dt.id = ? LIMIT 1`,
+          [id]
+        );
+        if (rows?.length) rows[0].depositProcessMinutes = 10;
+      } else throw qErr;
+    }
     if (!rows.length) return res.status(404).json({ error: "Ticket not found." });
     const r = rows[0];
     if (Number(r.client_id) !== Number(req.user.userId)) {
@@ -108,6 +125,7 @@ router.get("/:id", authenticateToken, requireClient, async (req, res) => {
       reason: r.reason || null,
       slipPath: r.slip_path || null,
       createdByUsername: r.created_by_username != null ? String(r.created_by_username) : null,
+      depositProcessMinutes: Number(r.depositProcessMinutes) || 10,
     });
   } catch (e) {
     console.error("[deposits] GET /:id error:", e);

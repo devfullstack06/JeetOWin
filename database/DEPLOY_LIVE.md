@@ -39,6 +39,10 @@ Your working tree **has not been committed** yet. Summary:
 | `migration_accounts_client_type.sql` | Adds `client` to `accounts.type` + backfill rows |
 | `migration_accounts_strip_client_prefix.sql` | Safe re-run — strips `Client: ` prefix |
 | `migration_client_accounts_suggested_username.sql` | **Idempotent** — adds `suggested_username` on `client_accounts` |
+| `migration_client_wallets.sql` | Creates `client_wallets` (IF NOT EXISTS; no-op if exists) |
+| `migration_withdraw_tickets.sql` | Creates `withdraw_tickets`; adds WD to `general_entry_sequences`; adds `min_withdraw`, `deposit_process_minutes`, `withdraw_process_minutes` to `wallet_companies` |
+| `migration_withdraw_tickets_evidence.sql` | **Idempotent** — adds `evidence_path` to `withdraw_tickets` for optional rejection evidence image |
+| `migration_withdraw_tickets_slip.sql` | **Idempotent** — adds `slip_path` to `withdraw_tickets` for optional payout slip on approve |
 
 ---
 
@@ -70,6 +74,20 @@ mysql -u YOUR_USER -p YOUR_DATABASE < database/migration_deposit_tickets_created
 
 ```bash
 mysql -u YOUR_USER -p YOUR_DATABASE < database/migration_client_accounts_suggested_username.sql
+```
+
+**Client wallets** (if `client_wallets` does not exist):
+
+```bash
+mysql -u YOUR_USER -p YOUR_DATABASE < database/migration_client_wallets.sql
+```
+
+**Withdraw tickets** (requires `client_wallets` table to exist):
+
+```bash
+mysql -u YOUR_USER -p YOUR_DATABASE < database/migration_withdraw_tickets.sql
+mysql -u YOUR_USER -p YOUR_DATABASE < database/migration_withdraw_tickets_evidence.sql
+mysql -u YOUR_USER -p YOUR_DATABASE < database/migration_withdraw_tickets_slip.sql
 ```
 
 **Optional** (only if you still use legacy optional scripts from `run_migrations.sh`):

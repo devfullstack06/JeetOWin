@@ -29,7 +29,7 @@ export default function LandingHeader({
   const [ctaLabel, setCtaLabel] = useState("Sign Up");
 
   // ✅ balance UI state
-  const [isBalanceHidden, setIsBalanceHidden] = useState(true); // default hidden
+  const [isBalanceHidden, setIsBalanceHidden] = useState(false); // shown by default
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {

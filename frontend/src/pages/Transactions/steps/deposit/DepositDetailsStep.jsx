@@ -23,6 +23,7 @@ export default function DepositDetailsStep({
   onClear,
 
   onSubmit,
+  submitting,
   errors,
 }) {
   const minAmount = activeWallet?.minAmount ?? 500;
@@ -143,8 +144,9 @@ export default function DepositDetailsStep({
             type="button"
             className="jw-txBtn is-submit is-green"
             onClick={onSubmit}
+            disabled={submitting}
           >
-            Submit
+            {submitting ? "Submitting…" : "Submit"}
           </button>
         </div>
       )}

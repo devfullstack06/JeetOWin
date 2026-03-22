@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import AdminPageShell from "../../components/AdminPageShell/AdminPageShell";
 import AdminTabs from "../../components/AdminTabs/AdminTabs";
 import DepositTab from "./DepositTab";
+import WithdrawTab from "./WithdrawTab";
 
 const TABS = [
   { key: "deposit", label: "Deposit" },
@@ -35,6 +36,11 @@ export default function TransactionsPage() {
 
   return activeTab === "deposit" ? (
     <DepositTab
+      title="Transactions"
+      tabs={<AdminTabs tabs={TABS} activeKey={activeTab} onChange={handleTabChange} />}
+    />
+  ) : activeTab === "withdraw" ? (
+    <WithdrawTab
       title="Transactions"
       tabs={<AdminTabs tabs={TABS} activeKey={activeTab} onChange={handleTabChange} />}
     />

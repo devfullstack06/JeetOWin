@@ -146,6 +146,13 @@ export default function LoggedInLayout({ activeId = "dashboard", children }) {
     fetchBalance();
   }, [fetchBalance]);
 
+  // ✅ refresh balance when triggered (e.g. after withdraw submit)
+  useEffect(() => {
+    const onRefresh = () => fetchBalance();
+    window.addEventListener("jw:refresh-balance", onRefresh);
+    return () => window.removeEventListener("jw:refresh-balance", onRefresh);
+  }, [fetchBalance]);
+
   // ✅ idle auto-logout
   useEffect(() => {
     const stop = startIdleLogout({

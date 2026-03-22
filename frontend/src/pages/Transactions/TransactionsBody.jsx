@@ -17,8 +17,8 @@ import {
   fetchDepositTicketStatus,
   createWithdrawTicket,
   fetchTransactionTicket,
-  devSetTicketStatus,
 } from "./api/transactionsApi";
+import { apiFetch } from "../../services/api";
 
 // reuse existing Wallets APIs
 import {
@@ -31,11 +31,6 @@ export default function TransactionsBody({ initialTab }) {
   const navigate = useNavigate();
   const location = useLocation();
   usePageTitle("Transactions");
-
-  // dev helper (optional)
-  useEffect(() => {
-    window.jwDevSetTicketStatus = devSetTicketStatus;
-  }, []);
 
   const tabFromPath = useMemo(() => {
     if (location.pathname === "/withdraw") return "withdraw";
@@ -74,6 +69,7 @@ export default function TransactionsBody({ initialTab }) {
   const [depTicketId, setDepTicketId] = useState(null);
   const [depTicket, setDepTicket] = useState(null);
   const [depErrors, setDepErrors] = useState({});
+  const [depSubmitting, setDepSubmitting] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -88,6 +84,7 @@ export default function TransactionsBody({ initialTab }) {
           iconKey: x.icon_key ?? x.iconKey,
           iconSvg: x.iconSvg,
           sortOrder: x.sort_order ?? x.sortOrder ?? 0,
+          depositProcessMinutes: x.depositProcessMinutes ?? x.deposit_process_minutes ?? 10,
         }));
         comps.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
         setDepositCompanies(comps);
@@ -170,6 +167,7 @@ export default function TransactionsBody({ initialTab }) {
   const [wdTicketId, setWdTicketId] = useState(null);
   const [wdTicket, setWdTicket] = useState(null);
   const [wdErrors, setWdErrors] = useState({});
+  const [wdSubmitting, setWdSubmitting] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -186,6 +184,8 @@ export default function TransactionsBody({ initialTab }) {
           iconKey: x.icon_key ?? x.iconKey,
           iconSvg: x.iconSvg,
           sortOrder: x.sort_order ?? x.sortOrder ?? 0,
+          minWithdraw: x.minWithdraw ?? x.min_withdraw ?? 500,
+          withdrawProcessMinutes: x.withdrawProcessMinutes ?? x.withdraw_process_minutes ?? 15,
         }));
 
         comps.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
@@ -216,8 +216,23 @@ export default function TransactionsBody({ initialTab }) {
     );
   }, [wdWallets, wdCompanyId]);
 
-  const wdMinAmount = 500; // later admin config per wallet company
-  const wdQuickAmounts = [500, 1000, 5000, 10000]; // later admin config per wallet company
+  const selectedWdCompany = useMemo(
+    () => walletCompanies.find((c) => Number(c.id) === Number(wdCompanyId)),
+    [walletCompanies, wdCompanyId]
+  );
+  const wdMinAmount = selectedWdCompany?.minWithdraw ?? 500;
+  const wdQuickAmounts = useMemo(
+    () => [500, 1000, 5000, 10000].filter((a) => a >= wdMinAmount),
+    [wdMinAmount]
+  );
+
+  const [wdBalance, setWdBalance] = useState(null);
+  useEffect(() => {
+    if (activeTab !== "withdraw") return;
+    apiFetch("/api/client/dashboard")
+      .then((data) => setWdBalance(data?.balance ?? 0))
+      .catch(() => setWdBalance(0));
+  }, [activeTab, wdStep]);
 
   const clearWithdrawForm = () => {
     setWdAmount("");
@@ -286,6 +301,7 @@ export default function TransactionsBody({ initialTab }) {
     setDepErrors(nextErr);
     if (Object.keys(nextErr).length) return;
 
+    setDepSubmitting(true);
     try {
       const res = await createDepositTicket({
         walletCompanyId: depCompanyId,
@@ -294,11 +310,14 @@ export default function TransactionsBody({ initialTab }) {
         slip: depSlipFile || undefined,
       });
 
-      const companyName = activeDepositCompanies.find((c) => c.id === depCompanyId)?.name || "Deposit";
+      const selectedDepCompany = activeDepositCompanies.find((c) => c.id === depCompanyId);
+      const companyName = selectedDepCompany?.name || "Deposit";
+      const depProcessMins = selectedDepCompany?.depositProcessMinutes ?? 10;
       setDepTicket({
         id: res.ticketId,
         type: "DEPOSIT",
         status: "PROCESSING",
+        depositProcessMinutes: depProcessMins,
         createdAt: res.createdAt,
         createdByUsername: res.createdByUsername ?? null,
         walletCompanyName: companyName,
@@ -319,6 +338,8 @@ export default function TransactionsBody({ initialTab }) {
       setDepErrors(
         isMaxDepositMsg ? { quickAmount: msg } : { submit: msg },
       );
+    } finally {
+      setDepSubmitting(false);
     }
   };
 
@@ -338,24 +359,19 @@ export default function TransactionsBody({ initialTab }) {
     setWdErrors(nextErr);
     if (Object.keys(nextErr).length) return;
 
+    setWdSubmitting(true);
     const selectedWallet = wdFilteredWallets.find(
       (w) => w.id === wdSelectedWalletId,
     );
     if (!selectedWallet) {
       setWdErrors({ wallet: "Selected wallet not found." });
+      setWdSubmitting(false);
       return;
     }
 
-    const companyName =
-      walletCompanies.find((c) => c.id === wdCompanyId)?.name || "Withdraw";
-
     try {
       const res = await createWithdrawTicket({
-        walletCompanyName: companyName,
-        accountTitle:
-          selectedWallet.account_title || selectedWallet.accountTitle || "-",
-        accountNumber:
-          selectedWallet.account_number || selectedWallet.accountNumber || "-",
+        clientWalletId: wdSelectedWalletId,
         amount: amtNum,
       });
 
@@ -363,10 +379,13 @@ export default function TransactionsBody({ initialTab }) {
       setWdTicketId(res.ticket.id);
       setWdStep("process");
       setWdErrors({});
+      window.dispatchEvent(new CustomEvent("jw:refresh-balance"));
     } catch (e) {
       setWdErrors({
         submit: e?.message || "Failed to create withdraw ticket.",
       });
+    } finally {
+      setWdSubmitting(false);
     }
   };
 
@@ -408,15 +427,26 @@ export default function TransactionsBody({ initialTab }) {
             rejectedAt: res.status === "rejected" ? res.updatedAt : null,
             reason: res.reason || null,
             createdByUsername: res.createdByUsername ?? prev?.createdByUsername ?? null,
+            depositProcessMinutes: res.depositProcessMinutes ?? prev?.depositProcessMinutes ?? 10,
           }));
-          if (res.status === "approved") setDepStep("approved");
+          if (res.status === "approved") {
+            setDepStep("approved");
+            window.dispatchEvent(new CustomEvent("jw:refresh-balance"));
+          }
           if (res.status === "rejected") setDepStep("rejected");
         } else if (isWdPolling) {
           const res = await fetchTransactionTicket(ticketId);
-          const t = res?.ticket;
+          if (res == null) return; // 404
+          const t = res.ticket;
           setWdTicket(t);
-          if (t?.status === "APPROVED") setWdStep("approved");
-          if (t?.status === "REJECTED") setWdStep("rejected");
+          if (t?.status === "APPROVED") {
+            setWdStep("approved");
+            window.dispatchEvent(new CustomEvent("jw:refresh-balance"));
+          }
+          if (t?.status === "REJECTED") {
+            setWdStep("rejected");
+            window.dispatchEvent(new CustomEvent("jw:refresh-balance"));
+          }
         }
       } catch {
         // silent
@@ -507,6 +537,7 @@ export default function TransactionsBody({ initialTab }) {
               onPickSlip={onPickDepositSlip}
               onClear={clearDepositForm}
               onSubmit={submitDeposit}
+              submitting={depSubmitting}
               errors={depErrors}
             />
           )}
@@ -546,6 +577,7 @@ export default function TransactionsBody({ initialTab }) {
               }}
               minAmount={wdMinAmount}
               quickAmounts={wdQuickAmounts}
+              availableBalance={wdBalance}
               amount={wdAmount}
               setAmount={(v) => {
                 setWdAmount(v);
@@ -553,6 +585,7 @@ export default function TransactionsBody({ initialTab }) {
               }}
               onClear={clearWithdrawForm}
               onSubmit={submitWithdraw}
+              submitting={wdSubmitting}
               errors={wdErrors}
             />
           )}
@@ -562,6 +595,7 @@ export default function TransactionsBody({ initialTab }) {
               labelText={ticketLabelText}
               step={wdStep}
               ticket={wdTicket}
+              withdrawProcessMinutes={wdTicket?.withdrawProcessMinutes ?? selectedWdCompany?.withdrawProcessMinutes ?? 15}
               onClose={() => {
                 setWdStep("details");
                 clearWithdrawForm();

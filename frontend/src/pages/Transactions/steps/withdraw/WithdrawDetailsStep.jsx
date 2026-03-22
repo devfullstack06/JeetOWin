@@ -18,12 +18,14 @@ export default function WithdrawDetailsStep({
 
   minAmount,
   quickAmounts,
+  availableBalance,
 
   amount,
   setAmount,
 
   onClear,
   onSubmit,
+  submitting,
   errors,
 }) {
   const amounts = useMemo(() => {
@@ -70,6 +72,12 @@ export default function WithdrawDetailsStep({
             </div>
             {errors?.wallet && <div className="jw-txErr">{errors.wallet}</div>}
 
+            {availableBalance != null && (
+              <div className="jw-txAvailableBalance">
+                Available: Rs. {Number(availableBalance).toLocaleString()}
+              </div>
+            )}
+
             <AmountInputRow
               value={amount}
               onChange={setAmount}
@@ -88,8 +96,8 @@ export default function WithdrawDetailsStep({
           <button type="button" className="jw-txBtn is-cancel" onClick={onClear}>
             Cancel
           </button>
-          <button type="button" className="jw-txBtn is-submit is-yellow" onClick={onSubmit}>
-            Submit
+          <button type="button" className="jw-txBtn is-submit is-yellow" onClick={onSubmit} disabled={submitting}>
+            {submitting ? "Submitting…" : "Submit"}
           </button>
         </div>
       ) : null}

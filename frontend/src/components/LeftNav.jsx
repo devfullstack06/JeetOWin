@@ -36,8 +36,8 @@ export default function LeftNav({
 
   onRefreshBalance = () => {},
 }) {
-  // ✅ default balance is hidden
-  const [isBalanceHidden, setIsBalanceHidden] = useState(true);
+  // ✅ default balance is shown
+  const [isBalanceHidden, setIsBalanceHidden] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const pages = useMemo(

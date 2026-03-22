@@ -5,11 +5,12 @@ export default function DepositTicketStep({ labelText, step, ticket, onClose, on
   const isProcessing = step === "process";
   const isApproved = step === "approved";
   const isRejected = step === "rejected";
+  const processMins = ticket?.depositProcessMinutes ?? 10;
 
   const statusTitle = isProcessing ? "Processing..." : isApproved ? "Approved" : "Rejected";
 
   const statusText = isProcessing
-    ? "Your Deposit request is in process, please wait. Estimated time of this transaction is 10mins."
+    ? `Your Deposit request is in process, please wait. Estimated time of this transaction is ${processMins} mins.`
     : isApproved
       ? "Your Deposit is approved. Please refresh to check your Balance."
       : "Your Deposit is rejected. Please contact our Customer Support for further details.";

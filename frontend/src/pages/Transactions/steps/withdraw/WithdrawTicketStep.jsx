@@ -1,15 +1,16 @@
 import React from "react";
 import TicketPanel from "../../components/TicketPanel";
 
-export default function WithdrawTicketStep({ labelText, step, ticket, onClose }) {
+export default function WithdrawTicketStep({ labelText, step, ticket, withdrawProcessMinutes = 15, onClose }) {
   const isProcessing = step === "process";
   const isApproved = step === "approved";
   const isRejected = step === "rejected";
 
   const statusTitle = isProcessing ? "Processing..." : isApproved ? "Approved" : "Rejected";
 
+  const processMins = withdrawProcessMinutes ?? 15;
   const statusText = isProcessing
-    ? "Your Withdraw request is in process, please wait. Estimated time of this transaction is 30mins."
+    ? `Your Withdraw request is in process, please wait. Estimated time of this transaction is ${processMins} mins.`
     : isApproved
       ? "Your Withdraw is approved. Please check your provided account."
       : "Your Withdraw is rejected. Please contact our Customer Support for further details.";

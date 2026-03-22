@@ -13,6 +13,7 @@ const GE_TXN_SERIES = {
   TOPUP: "PWT",
   DEDUCT: "PWD",
   DEPOSIT: "DP",
+  WITHDRAW: "WD",
 };
 
 async function allocateGeneralEntryTransactionNumber(conn, seriesCode) {

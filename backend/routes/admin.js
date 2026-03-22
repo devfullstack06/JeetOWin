@@ -66,7 +66,20 @@ const {
   rejectAdminDepositTicket,
   patchAdminDepositTicket,
 } = require("../controllers/admin/depositTicketsController");
+const {
+  getAdminWithdrawTickets,
+  getAdminWithdrawTicketById,
+  getAdminClientWallets,
+  createAdminWithdrawTicket,
+  approveAdminWithdrawTicket,
+  rejectAdminWithdrawTicket,
+  patchAdminWithdrawTicket,
+} = require("../controllers/admin/withdrawTicketsController");
 const { optionalDepositFilesUpload } = require("../middleware/uploadDepositFiles");
+const {
+  optionalWithdrawEvidenceUpload,
+  optionalWithdrawApproveFilesUpload,
+} = require("../middleware/uploadWithdrawEvidence");
 const { optionalBrandIconUpload } = require("../middleware/uploadBrandIcon");
 
 const router = express.Router();
@@ -126,5 +139,13 @@ router.post("/deposit-tickets", requireAdminAuth, optionalDepositFilesUpload, cr
 router.post("/deposit-tickets/:id/approve", requireAdminAuth, optionalDepositFilesUpload, approveAdminDepositTicket);
 router.patch("/deposit-tickets/:id/reject", requireAdminAuth, optionalDepositFilesUpload, rejectAdminDepositTicket);
 router.patch("/deposit-tickets/:id", requireAdminAuth, patchAdminDepositTicket);
+
+router.get("/withdraw-tickets", requireAdminAuth, getAdminWithdrawTickets);
+router.get("/withdraw-tickets/client-wallets", requireAdminAuth, getAdminClientWallets);
+router.get("/withdraw-tickets/:id", requireAdminAuth, getAdminWithdrawTicketById);
+router.post("/withdraw-tickets", requireAdminAuth, createAdminWithdrawTicket);
+router.post("/withdraw-tickets/:id/approve", requireAdminAuth, optionalWithdrawApproveFilesUpload, approveAdminWithdrawTicket);
+router.patch("/withdraw-tickets/:id/reject", requireAdminAuth, optionalWithdrawEvidenceUpload, rejectAdminWithdrawTicket);
+router.patch("/withdraw-tickets/:id", requireAdminAuth, patchAdminWithdrawTicket);
 
 module.exports = router;

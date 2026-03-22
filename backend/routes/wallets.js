@@ -36,7 +36,10 @@ router.get("/companies", authenticateToken, requireClient, async (req, res) => {
     }
 
     const [rows] = await pool.query(
-      `SELECT id, name, code, icon_path AS iconPath, icon_key AS iconKey, sort_order AS sortOrder
+      `SELECT id, name, code, icon_path AS iconPath, icon_key AS iconKey, sort_order AS sortOrder,
+              COALESCE(min_withdraw, 500) AS minWithdraw,
+              COALESCE(deposit_process_minutes, 10) AS depositProcessMinutes,
+              COALESCE(withdraw_process_minutes, 15) AS withdrawProcessMinutes
        FROM wallet_companies
        WHERE ${where}
        ORDER BY sort_order ASC, name ASC`
@@ -51,7 +54,13 @@ router.get("/companies", authenticateToken, requireClient, async (req, res) => {
            WHERE is_active = 1
            ORDER BY sort_order ASC, name ASC`
         );
-        return res.json({ companies: rows });
+        const withDefaults = (rows || []).map((r) => ({
+          ...r,
+          minWithdraw: 500,
+          depositProcessMinutes: 10,
+          withdrawProcessMinutes: 15,
+        }));
+        return res.json({ companies: withDefaults });
       } catch (e2) {
         console.error("[wallets] GET /companies fallback error:", e2);
         return res.status(500).json({ error: "Failed to load wallet companies" });

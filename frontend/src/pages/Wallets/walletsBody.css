@@ -232,8 +232,202 @@
 }
 
 /* =========================
-   CREATE STEP (unchanged in your file)
+   CREATE STEP
    ========================= */
+
+/* Company select: same UI as Accounts brand select (60px height, 50x50 icon + name) */
+.jw-brandSelectWrap {
+  position: relative;
+  width: 100%;
+}
+
+.jw-brandSelectTrigger.jw-select {
+  width: 100%;
+  min-height: 60px;
+  height: 60px;
+  padding: 5px 40px 5px 5px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
+  cursor: pointer;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
+  border: 0.5px solid rgba(255, 255, 255, 0.75);
+  border-radius: 10px;
+  outline: none;
+}
+
+.jw-brandSelectTriggerInner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+}
+
+.jw-brandSelectIconWrap {
+  flex-shrink: 0;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: transparent;
+}
+
+.jw-brandSelectIcon {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+}
+
+.jw-brandSelectIconPlaceholder {
+  width: 50px;
+  height: 50px;
+  background: transparent;
+}
+
+.jw-brandSelectName {
+  font-size: 14px;
+  font-weight: 510;
+  color: rgba(255, 255, 255, 0.9);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jw-brandSelectPlaceholder {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 14px;
+}
+
+.jw-brandSelectChevron {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.jw-brandSelectList {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  margin-top: 4px;
+  max-height: 280px;
+  overflow-y: auto;
+  background: #0a1a3a;
+  border: 0.5px solid rgba(255, 255, 255, 0.75);
+  border-radius: 10px;
+  z-index: 100;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.jw-brandSelectOption {
+  width: 100%;
+  min-height: 60px;
+  padding: 5px 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  font-weight: 510;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.jw-brandSelectOption:hover,
+.jw-brandSelectOption[aria-selected="true"] {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.jw-brandSelectOption .jw-brandSelectIconWrap {
+  flex-shrink: 0;
+}
+
+/* Form fields (Create step) */
+.jw-accountsForm {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.jw-accountsFormFields {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.jw-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: 10px;
+}
+
+.jw-input {
+  width: 100%;
+  min-height: 40px;
+  padding: 10px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
+  border: 0.5px solid rgba(255, 255, 255, 0.75);
+  border-radius: 10px;
+  outline: none;
+  font-size: 12px;
+  font-weight: 510;
+}
+
+.jw-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.jw-fieldError {
+  font-size: 12px;
+  color: #ffb3b3;
+}
+
+.jw-accountsFormActions {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.jw-btn {
+  width: 150px;
+  height: 50px;
+  border-radius: 12px;
+  border: 0;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: 600;
+  color: #000;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.8);
+  max-width: 150px;
+}
+
+.jw-btnCancel {
+  background: #be3838;
+}
+
+.jw-btnSubmit {
+  background: #00ca52;
+}
+
 .jw-walletFormOuter {
   padding: 10px;
   flex: 1;
