@@ -1,9 +1,9 @@
 import React, { useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import AdminPageShell from "../../components/AdminPageShell/AdminPageShell";
 import AdminTabs from "../../components/AdminTabs/AdminTabs";
 import DepositTab from "./DepositTab";
 import WithdrawTab from "./WithdrawTab";
+import TransfersTab from "./TransfersTab";
 
 const TABS = [
   { key: "deposit", label: "Deposit" },
@@ -28,12 +28,6 @@ export default function TransactionsPage() {
     if (key === "transfers") navigate("/admin/transactions/transfers");
   };
 
-  const placeholder = (
-    <div className="jw-adminPlaceholder" style={{ padding: 24, textAlign: "center", color: "#666" }}>
-      Coming soon
-    </div>
-  );
-
   return activeTab === "deposit" ? (
     <DepositTab
       title="Transactions"
@@ -45,10 +39,9 @@ export default function TransactionsPage() {
       tabs={<AdminTabs tabs={TABS} activeKey={activeTab} onChange={handleTabChange} />}
     />
   ) : (
-    <AdminPageShell
+    <TransfersTab
       title="Transactions"
       tabs={<AdminTabs tabs={TABS} activeKey={activeTab} onChange={handleTabChange} />}
-      table={placeholder}
     />
   );
 }

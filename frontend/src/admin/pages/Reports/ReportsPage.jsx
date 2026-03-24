@@ -25,8 +25,11 @@ function buildQuery(params) {
 
 function formatAccountTypeLabel(t) {
   if (t == null || t === "") return "—";
-  const s = String(t);
+  const s = String(t).toLowerCase();
   if (s === "payment_wallet") return "Payment wallet";
+  if (s === "brand_company") return "Brand company";
+  if (s === "master") return "Master";
+  if (s === "affiliate") return "Affiliate";
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 

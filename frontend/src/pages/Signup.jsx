@@ -11,6 +11,8 @@ import {
   Wallet,
   Megaphone,
   MessageCircle,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import AuthTabs from "../components/AuthTabs";
 import Logo from "../components/Logo";
@@ -26,6 +28,8 @@ export default function Signup() {
   const [mobile, setMobile] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [referralCode, setReferralCode] = useState("");
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -251,28 +255,50 @@ export default function Signup() {
 
               {/* Password */}
               <label className="jw-field">
-                <input
-                  className="jw-input"
-                  type="password"
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  autoComplete="new-password"
-                  disabled={loading}
-                />
+                <div className="jw-passwordWrap">
+                  <input
+                    className="jw-input"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="new-password"
+                    disabled={loading}
+                  />
+                  <button
+                    type="button"
+                    className="jw-passwordToggle"
+                    onClick={() => setShowPassword((v) => !v)}
+                    disabled={loading}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff size={20} aria-hidden /> : <Eye size={20} aria-hidden />}
+                  </button>
+                </div>
               </label>
 
               {/* Confirm Password */}
               <label className="jw-field">
-                <input
-                  className="jw-input"
-                  type="password"
-                  placeholder="Confirm Password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  autoComplete="new-password"
-                  disabled={loading}
-                />
+                <div className="jw-passwordWrap">
+                  <input
+                    className="jw-input"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Confirm Password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    autoComplete="new-password"
+                    disabled={loading}
+                  />
+                  <button
+                    type="button"
+                    className="jw-passwordToggle"
+                    onClick={() => setShowConfirmPassword((v) => !v)}
+                    disabled={loading}
+                    aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                  >
+                    {showConfirmPassword ? <EyeOff size={20} aria-hidden /> : <Eye size={20} aria-hidden />}
+                  </button>
+                </div>
               </label>
 
               {/* Terms & Conditions Checkbox */}

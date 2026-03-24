@@ -80,7 +80,21 @@ const {
   optionalWithdrawEvidenceUpload,
   optionalWithdrawApproveFilesUpload,
 } = require("../middleware/uploadWithdrawEvidence");
+const {
+  optionalTransferRejectEvidenceUpload,
+  optionalTransferApproveEvidenceUpload,
+} = require("../middleware/uploadTransferEvidence");
 const { optionalBrandIconUpload } = require("../middleware/uploadBrandIcon");
+const {
+  getAdminTransferTickets,
+  getAdminTransferTicketById,
+  getAdminTransferBrandCompaniesForBrand,
+  getAdminTransferClientAccountsForClient,
+  createAdminTransferTicket,
+  approveAdminTransferTicket,
+  rejectAdminTransferTicket,
+  patchAdminTransferTicket,
+} = require("../controllers/admin/transferTicketsController");
 
 const router = express.Router();
 
@@ -147,5 +161,32 @@ router.post("/withdraw-tickets", requireAdminAuth, createAdminWithdrawTicket);
 router.post("/withdraw-tickets/:id/approve", requireAdminAuth, optionalWithdrawApproveFilesUpload, approveAdminWithdrawTicket);
 router.patch("/withdraw-tickets/:id/reject", requireAdminAuth, optionalWithdrawEvidenceUpload, rejectAdminWithdrawTicket);
 router.patch("/withdraw-tickets/:id", requireAdminAuth, patchAdminWithdrawTicket);
+
+router.get(
+  "/transfer-tickets/brand-companies",
+  requireAdminAuth,
+  getAdminTransferBrandCompaniesForBrand
+);
+router.get(
+  "/transfer-tickets/client-accounts",
+  requireAdminAuth,
+  getAdminTransferClientAccountsForClient
+);
+router.get("/transfer-tickets", requireAdminAuth, getAdminTransferTickets);
+router.get("/transfer-tickets/:id", requireAdminAuth, getAdminTransferTicketById);
+router.post("/transfer-tickets", requireAdminAuth, createAdminTransferTicket);
+router.post(
+  "/transfer-tickets/:id/approve",
+  requireAdminAuth,
+  optionalTransferApproveEvidenceUpload,
+  approveAdminTransferTicket
+);
+router.patch(
+  "/transfer-tickets/:id/reject",
+  requireAdminAuth,
+  optionalTransferRejectEvidenceUpload,
+  rejectAdminTransferTicket
+);
+router.patch("/transfer-tickets/:id", requireAdminAuth, patchAdminTransferTicket);
 
 module.exports = router;

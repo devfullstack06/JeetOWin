@@ -18,7 +18,14 @@ function parseDecimal(value, defaultVal = null) {
   return n;
 }
 
-const ACCOUNT_TYPES = new Set(["admin", "payment_wallet", "client"]);
+const ACCOUNT_TYPES = new Set([
+  "admin",
+  "payment_wallet",
+  "client",
+  "brand_company", // legacy
+  "master",
+  "affiliate",
+]);
 
 function normalizeAccountTypeFilter(value) {
   const s = String(value || "").trim().toLowerCase();

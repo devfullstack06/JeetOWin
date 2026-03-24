@@ -1,4 +1,5 @@
 import React from "react";
+import { formatTransferAmountPk, formatTransferClientAccountUsername } from "../transferAmountFormat";
 
 export default function TransferRejectedStep({ ticket, onGoToHistory }) {
   const t = ticket || {};
@@ -30,12 +31,12 @@ export default function TransferRejectedStep({ ticket, onGoToHistory }) {
               <div className="jw-transferDetailValue">{t.brand || "-"}</div>
             </div>
             <div className="jw-transferDetailRow">
-              <div>Username:</div>
-              <div className="jw-transferDetailValue">{t.username || "-"}</div>
+              <div>Account:</div>
+              <div className="jw-transferDetailValue">{formatTransferClientAccountUsername(t)}</div>
             </div>
             <div className="jw-transferDetailRow">
               <div>Amount:</div>
-              <div className="jw-transferDetailValue">{t.amount || "-"}</div>
+              <div className="jw-transferDetailValue">{formatTransferAmountPk(t.amount)}</div>
             </div>
             <div className="jw-transferDetailRow">
               <div>Status:</div>

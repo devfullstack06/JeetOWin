@@ -17,6 +17,25 @@ import {
   createTransferTicket,
   fetchTransferTicketStatus,
 } from "./api/transfersApi";
+import { formatTransferAmountPk } from "./transferAmountFormat";
+
+/** API may return `{ name, iconPath }[]` or legacy string[]. */
+function normalizeClientTransferBrands(raw) {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((item) => {
+      if (typeof item === "string") return { name: item, iconPath: null };
+      const name = item?.name != null ? String(item.name) : "";
+      const iconPath =
+        item?.iconPath != null
+          ? String(item.iconPath)
+          : item?.icon_path != null
+            ? String(item.icon_path)
+            : null;
+      return { name, iconPath: iconPath || null };
+    })
+    .filter((b) => b.name);
+}
 
 function formatCreatedLabel(isoOrDate) {
   if (!isoOrDate) return "-";
@@ -26,8 +45,14 @@ function formatCreatedLabel(isoOrDate) {
   const mm = String(d.getMinutes()).padStart(2, "0");
   const dd = String(d.getDate()).padStart(2, "0");
   const mo = String(d.getMonth() + 1).padStart(2, "0");
-  const yy = String(d.getFullYear()).slice(-2);
-  return `${hh}:${mm} ${dd}-${mo}-${yy}`;
+  /** DD:MM hh:mm — day:month then 24h time */
+  return `${dd}:${mo} ${hh}:${mm}`;
+}
+
+function formatTransferDirectionLabel(direction) {
+  const d = String(direction || "").trim().toUpperCase();
+  if (d === "IN" || d === "OUT") return d;
+  return "—";
 }
 
 function mapStatus(s) {
@@ -90,10 +115,11 @@ export default function TransfersBody() {
   const historyItems = useMemo(() => {
     return (historyRaw || []).slice(0, 10).map((t) => ({
       id: t.id,
-      username: t.username,
+      clientAccountUsername: t.clientAccountUsername ?? null,
       created: formatCreatedLabel(t.createdAt),
+      typeLabel: formatTransferDirectionLabel(t.direction),
       brand: t.brand,
-      amount: String(t.amount || ""),
+      amount: formatTransferAmountPk(t.amount),
       status: mapStatus(t.status),
       direction: t.direction,
     }));
@@ -113,7 +139,7 @@ export default function TransfersBody() {
         if (cancelled) return;
 
         if (bRes.status === "fulfilled") {
-          setBrands(bRes.value?.brands ?? []);
+          setBrands(normalizeClientTransferBrands(bRes.value?.brands ?? []));
         } else {
           setBrands([]);
           setErrors((p) => ({ ...p, brands: "Failed to load brands." }));
@@ -158,11 +184,13 @@ export default function TransfersBody() {
             ticket: String(ticketId),
             transfer: tr.direction || prev?.transfer || "",
             brand: tr.brand || prev?.brand || "",
-            username: tr.username || prev?.username || "",
+            clientAccountUsername:
+              tr.clientAccountUsername ?? prev?.clientAccountUsername ?? "",
             amount: tr.amount || prev?.amount || "",
             status: "completed",
           }));
           setStep("completed");
+          window.dispatchEvent(new CustomEvent("jw:refresh-balance"));
           return;
         }
 
@@ -174,6 +202,7 @@ export default function TransfersBody() {
             status: "rejected",
           }));
           setStep("rejected");
+          window.dispatchEvent(new CustomEvent("jw:refresh-balance"));
         }
       } catch (e) {
         console.error("[Transfers] poll status failed:", e);
@@ -203,10 +232,11 @@ export default function TransfersBody() {
         ticket: String(newTicketId || ""),
         transfer: payload.direction,
         brand: payload.brand,
-        username: payload.username,
+        clientAccountUsername: payload.username,
         amount: payload.amount,
         status: "processing",
       });
+      window.dispatchEvent(new CustomEvent("jw:refresh-balance"));
     } catch (err) {
       setStep("create");
       setErrors((prev) => ({

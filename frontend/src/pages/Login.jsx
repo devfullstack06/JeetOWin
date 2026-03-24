@@ -10,6 +10,8 @@ import {
   Wallet,
   Megaphone,
   MessageCircle,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import AuthTabs from "../components/AuthTabs";
 import Logo from "../components/Logo";
@@ -22,6 +24,7 @@ export default function Login() {
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -146,15 +149,26 @@ export default function Login() {
               </label>
 
               <label className="jw-field">
-                <input
-                  className="jw-input"
-                  type="password"
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  autoComplete="current-password"
-                  disabled={loading}
-                />
+                <div className="jw-passwordWrap">
+                  <input
+                    className="jw-input"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="current-password"
+                    disabled={loading}
+                  />
+                  <button
+                    type="button"
+                    className="jw-passwordToggle"
+                    onClick={() => setShowPassword((v) => !v)}
+                    disabled={loading}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff size={20} aria-hidden /> : <Eye size={20} aria-hidden />}
+                  </button>
+                </div>
               </label>
 
               <button

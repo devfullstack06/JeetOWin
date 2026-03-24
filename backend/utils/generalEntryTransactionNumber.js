@@ -4,8 +4,8 @@
  * Requires table general_entry_sequences (see database migration).
  *
  * @param {*} conn mysql2 pool connection (use inside a transaction for atomicity with the insert).
- * @param {'PWT'|'PWD'|'DP'} seriesCode
- * @returns {Promise<string>} e.g. PWT569001
+ * @param {string} seriesCode e.g. PWT, TRI, TRO
+ * @returns {Promise<string>} e.g. PWT569001, TRI569001
  */
 const INITIAL_LAST = 569000; // first allocated value after increment = 569001
 
@@ -14,6 +14,10 @@ const GE_TXN_SERIES = {
   DEDUCT: "PWD",
   DEPOSIT: "DP",
   WITHDRAW: "WD",
+  /** Transfer IN: client → brand company */
+  TRANSFER_IN: "TRI",
+  /** Transfer OUT: brand company → client */
+  TRANSFER_OUT: "TRO",
 };
 
 async function allocateGeneralEntryTransactionNumber(conn, seriesCode) {

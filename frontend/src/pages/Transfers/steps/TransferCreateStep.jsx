@@ -1,11 +1,42 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { fetchTransferAccountsByBrand } from "../api/transfersApi";
+import { getWalletIconUrl } from "../../../utils/walletIconUrl";
+import { digitsOnlyFromInput, formatDigitsPkForInput } from "../transferAmountFormat";
+
+function TransferBrandLogo({ iconSrc, label }) {
+  const [imgFailed, setImgFailed] = useState(false);
+  if (iconSrc && !imgFailed) {
+    return (
+      <img
+        src={iconSrc}
+        alt=""
+        className="jw-transferBrandLogoImg"
+        onError={() => setImgFailed(true)}
+      />
+    );
+  }
+  return label.slice(0, 2).toUpperCase();
+}
 
 export default function TransferCreateStep({ onCancel, onSubmit, brandsAvailable = [] }) {
-  const brands = useMemo(
-    () => (brandsAvailable || []).map((name) => ({ id: name, label: name })),
-    [brandsAvailable]
-  );
+  const brands = useMemo(() => {
+    return (brandsAvailable || [])
+      .map((entry) => {
+        const label =
+          typeof entry === "string" ? entry : entry?.name != null ? String(entry.name) : "";
+        const iconPath =
+          typeof entry === "string"
+            ? null
+            : entry?.iconPath != null
+              ? String(entry.iconPath)
+              : entry?.icon_path != null
+                ? String(entry.icon_path)
+                : null;
+        const iconSrc = getWalletIconUrl({ iconPath: iconPath || undefined });
+        return { id: label, label, iconSrc };
+      })
+      .filter((b) => b.label);
+  }, [brandsAvailable]);
 
   const [selectedBrand, setSelectedBrand] = useState(brands[0]?.label || "");
   const [accounts, setAccounts] = useState([]);
@@ -13,7 +44,8 @@ export default function TransferCreateStep({ onCancel, onSubmit, brandsAvailable
 
   const [activeAccountId, setActiveAccountId] = useState(null);
   const [direction, setDirection] = useState(null); // "IN" | "OUT"
-  const [amount, setAmount] = useState("");
+  /** Digits only (no commas); display uses formatDigitsPkForInput */
+  const [amountDigits, setAmountDigits] = useState("");
   const [error, setError] = useState("");
 
   // choose first brand when brands load
@@ -59,18 +91,18 @@ export default function TransferCreateStep({ onCancel, onSubmit, brandsAvailable
     setError("");
     setActiveAccountId(accountId);
     setDirection(dir);
-    setAmount("");
+    setAmountDigits("");
   };
 
   function cancelRowAction() {
     setError("");
     setActiveAccountId(null);
     setDirection(null);
-    setAmount("");
+    setAmountDigits("");
   }
 
   const handleSubmit = (account) => {
-    const cleaned = (amount || "").replace(/[^0-9]/g, "");
+    const cleaned = digitsOnlyFromInput(amountDigits);
     if (!cleaned || Number(cleaned) <= 0) {
       setError("Please enter amount.");
       return;
@@ -116,7 +148,7 @@ export default function TransferCreateStep({ onCancel, onSubmit, brandsAvailable
                   onClick={() => setSelectedBrand(b.label)}
                 >
                   <div className="jw-transferBrandLogo" aria-hidden="true">
-                    {b.label.slice(0, 2).toUpperCase()}
+                    <TransferBrandLogo iconSrc={b.iconSrc} label={b.label} />
                   </div>
                   <div className="jw-transferBrandLabel">{b.label}</div>
                 </button>
@@ -127,7 +159,7 @@ export default function TransferCreateStep({ onCancel, onSubmit, brandsAvailable
 
         {/* TABLE HEADER */}
         <div className="jw-transferTableHeader">
-          <div>Username</div>
+          <div>Account</div>
           <div className="jw-transferTableHeaderRight">Action</div>
         </div>
 
@@ -187,10 +219,10 @@ export default function TransferCreateStep({ onCancel, onSubmit, brandsAvailable
                         type="text"
                         inputMode="numeric"
                         placeholder="Enter Amount"
-                        value={amount}
+                        value={formatDigitsPkForInput(amountDigits)}
                         onChange={(e) => {
                           setError("");
-                          setAmount(e.target.value);
+                          setAmountDigits(digitsOnlyFromInput(e.target.value));
                         }}
                       />
 
