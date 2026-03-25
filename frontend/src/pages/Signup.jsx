@@ -22,6 +22,7 @@ import usePageTitle from "../hooks/usePageTitle";
 export default function Signup() {
   const navigate = useNavigate();
   usePageTitle("Signup");
+  const [loginBanners, setLoginBanners] = useState({ desktop: "", mobile: "" });
 
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
@@ -35,6 +36,7 @@ export default function Signup() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const hasLoginBanner = !!(loginBanners.mobile || loginBanners.desktop);
 
   // Auto-redirect if already logged in (client)
   useEffect(() => {
@@ -44,6 +46,28 @@ export default function Signup() {
       navigate("/home", { replace: true });
     }
   }, [navigate]);
+
+  useEffect(() => {
+    let ignore = false;
+    fetch("/api/home-banner-slides/login-banners")
+      .then((res) => {
+        if (!res.ok) throw new Error("failed");
+        return res.json();
+      })
+      .then((data) => {
+        if (ignore) return;
+        setLoginBanners({
+          desktop: String(data?.desktop || ""),
+          mobile: String(data?.mobile || ""),
+        });
+      })
+      .catch(() => {
+        if (!ignore) setLoginBanners({ desktop: "", mobile: "" });
+      });
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   // Handle mobile input: strip non-digits, limit to 10 chars, must start with "3"
   function handleMobileChange(e) {
@@ -185,9 +209,19 @@ export default function Signup() {
       <div className="jw-body">
         <aside className="jw-leftNav">{/* later */}</aside>
 
-        <main className="jw-mainArea">
+        <main
+          className="jw-mainArea"
+          style={{
+            "--jw-login-desktop-bg": loginBanners.desktop ? `url("${loginBanners.desktop}")` : "none",
+          }}
+        >
           <section className="jw-bannerStage">
-            <img className="jw-bannerImg" src="/banner1.jpg" alt="Banner" />
+            {hasLoginBanner ? (
+              <picture>
+                <source media="(min-width: 769px)" srcSet={loginBanners.desktop || undefined} />
+                <img className="jw-bannerImg" src={loginBanners.mobile || loginBanners.desktop || undefined} alt="Banner" />
+              </picture>
+            ) : null}
           </section>
 
           <section className="jw-loginPanel">

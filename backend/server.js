@@ -25,6 +25,7 @@ const walletsRouter = require("./routes/wallets");
 const depositsRouter = require("./routes/deposits");
 const withdrawsRouter = require("./routes/withdraws");
 const socialLinksRouter = require("./routes/socialLinks");
+const homeBannerSlidesRouter = require("./routes/homeBannerSlides");
 
 const app = express();
 
@@ -57,6 +58,7 @@ app.use("/api/wallets", walletsRouter);
 app.use("/api/deposits", depositsRouter);
 app.use("/api/withdraws", withdrawsRouter);
 app.use("/api/social-links", socialLinksRouter);
+app.use("/api/home-banner-slides", homeBannerSlidesRouter);
 app.use("/api/admin", adminRouter);
 // Choose port from environment or default to 3000
 const PORT = process.env.PORT || 3000;

@@ -14,6 +14,7 @@ import { adminNavGroups } from "../../adminNav";
 import "../Users/usersPage.css";
 import "../Wallets/walletsPage.css";
 import "./contentPage.css";
+import MainBannerTab from "./MainBannerTab";
 
 function buildQuery(params) {
   const search = new URLSearchParams();
@@ -617,6 +618,8 @@ export default function ContentPage() {
                 loading={loading}
               />
             </>
+          ) : activeTab === "main-banner" ? (
+            <MainBannerTab />
           ) : (
             <div className="jw-adminContentPlaceholder">{contentTabs.find((t) => t.key === activeTab)?.label ?? activeTab} — Coming soon.</div>
           )

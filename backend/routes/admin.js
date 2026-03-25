@@ -34,6 +34,14 @@ const {
   updateAdminSocialLink,
 } = require("../controllers/admin/socialLinksController");
 const { optionalSocialIconUpload } = require("../middleware/uploadSocialIcon");
+const { optionalHomeBannerImagesUpload, optionalLoginBannerImagesUpload } = require("../middleware/uploadHomeBannerImages");
+const {
+  getAdminHomeBannerSlides,
+  createAdminHomeBannerSlide,
+  updateAdminHomeBannerSlide,
+  deleteAdminHomeBannerSlide,
+  updateAdminLoginBanners,
+} = require("../controllers/admin/homeBannerSlidesController");
 const {
   getAdminBrands,
   createAdminBrand,
@@ -126,6 +134,12 @@ router.patch("/general-entries/:id", requireAdminAuth, updateAdminGeneralEntryNa
 router.get("/social-links", requireAdminAuth, getAdminSocialLinks);
 router.post("/social-links", requireAdminAuth, optionalSocialIconUpload, createAdminSocialLink);
 router.patch("/social-links/:id", requireAdminAuth, optionalSocialIconUpload, updateAdminSocialLink);
+
+router.get("/home-banner-slides", requireAdminAuth, getAdminHomeBannerSlides);
+router.post("/home-banner-slides", requireAdminAuth, optionalHomeBannerImagesUpload, createAdminHomeBannerSlide);
+router.patch("/home-banner-slides/:id", requireAdminAuth, optionalHomeBannerImagesUpload, updateAdminHomeBannerSlide);
+router.delete("/home-banner-slides/:id", requireAdminAuth, deleteAdminHomeBannerSlide);
+router.patch("/login-banners", requireAdminAuth, optionalLoginBannerImagesUpload, updateAdminLoginBanners);
 
 router.get("/brands", requireAdminAuth, getAdminBrands);
 router.get("/brands/for-accounts", requireAdminAuth, getAdminBrandsForAccounts);
