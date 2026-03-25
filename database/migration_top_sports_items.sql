@@ -1,0 +1,14 @@
+-- Top Sports content managed from Admin > Content > Top Sports
+USE jeetowin;
+
+CREATE TABLE IF NOT EXISTS top_sports_items (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(120) NOT NULL,
+  image_path VARCHAR(255) NOT NULL,
+  link_url VARCHAR(1000) NULL,
+  open_in_new_tab TINYINT(1) NOT NULL DEFAULT 0,
+  sort_order INT NOT NULL DEFAULT 0,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);

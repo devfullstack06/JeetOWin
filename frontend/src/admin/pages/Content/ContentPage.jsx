@@ -15,6 +15,8 @@ import "../Users/usersPage.css";
 import "../Wallets/walletsPage.css";
 import "./contentPage.css";
 import MainBannerTab from "./MainBannerTab";
+import TopSportsTab from "./TopSportsTab";
+import TrendingGamesTab from "./TrendingGamesTab";
 
 function buildQuery(params) {
   const search = new URLSearchParams();
@@ -620,6 +622,10 @@ export default function ContentPage() {
             </>
           ) : activeTab === "main-banner" ? (
             <MainBannerTab />
+          ) : activeTab === "top-sports" ? (
+            <TopSportsTab />
+          ) : activeTab === "trending" ? (
+            <TrendingGamesTab />
           ) : (
             <div className="jw-adminContentPlaceholder">{contentTabs.find((t) => t.key === activeTab)?.label ?? activeTab} — Coming soon.</div>
           )

@@ -35,6 +35,8 @@ const {
 } = require("../controllers/admin/socialLinksController");
 const { optionalSocialIconUpload } = require("../middleware/uploadSocialIcon");
 const { optionalHomeBannerImagesUpload, optionalLoginBannerImagesUpload } = require("../middleware/uploadHomeBannerImages");
+const { optionalTopSportsImageUpload } = require("../middleware/uploadTopSportsImage");
+const { optionalTrendingGamesImageUpload } = require("../middleware/uploadTrendingGamesImage");
 const {
   getAdminHomeBannerSlides,
   createAdminHomeBannerSlide,
@@ -42,6 +44,18 @@ const {
   deleteAdminHomeBannerSlide,
   updateAdminLoginBanners,
 } = require("../controllers/admin/homeBannerSlidesController");
+const {
+  getAdminTopSportsItems,
+  createAdminTopSportsItem,
+  updateAdminTopSportsItem,
+  deleteAdminTopSportsItem,
+} = require("../controllers/admin/topSportsController");
+const {
+  getAdminTrendingGamesItems,
+  createAdminTrendingGamesItem,
+  updateAdminTrendingGamesItem,
+  deleteAdminTrendingGamesItem,
+} = require("../controllers/admin/trendingGamesController");
 const {
   getAdminBrands,
   createAdminBrand,
@@ -140,6 +154,15 @@ router.post("/home-banner-slides", requireAdminAuth, optionalHomeBannerImagesUpl
 router.patch("/home-banner-slides/:id", requireAdminAuth, optionalHomeBannerImagesUpload, updateAdminHomeBannerSlide);
 router.delete("/home-banner-slides/:id", requireAdminAuth, deleteAdminHomeBannerSlide);
 router.patch("/login-banners", requireAdminAuth, optionalLoginBannerImagesUpload, updateAdminLoginBanners);
+router.get("/top-sports", requireAdminAuth, getAdminTopSportsItems);
+router.post("/top-sports", requireAdminAuth, optionalTopSportsImageUpload, createAdminTopSportsItem);
+router.patch("/top-sports/:id", requireAdminAuth, optionalTopSportsImageUpload, updateAdminTopSportsItem);
+router.delete("/top-sports/:id", requireAdminAuth, deleteAdminTopSportsItem);
+
+router.get("/trending-games", requireAdminAuth, getAdminTrendingGamesItems);
+router.post("/trending-games", requireAdminAuth, optionalTrendingGamesImageUpload, createAdminTrendingGamesItem);
+router.patch("/trending-games/:id", requireAdminAuth, optionalTrendingGamesImageUpload, updateAdminTrendingGamesItem);
+router.delete("/trending-games/:id", requireAdminAuth, deleteAdminTrendingGamesItem);
 
 router.get("/brands", requireAdminAuth, getAdminBrands);
 router.get("/brands/for-accounts", requireAdminAuth, getAdminBrandsForAccounts);

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, ZoomIn, ZoomOut } from "lucide-react";
 import AdminFilterBar, { AdminFilterField, AdminButton } from "../../components/AdminFilterBar/AdminFilterBar";
 import "../Users/usersPage.css";
 import "../Wallets/walletsPage.css";
@@ -112,6 +112,57 @@ function BannerImageMetaLine({ info }) {
   return (
     <div className="jw-adminBannerImageMeta">
       {info.width} × {info.height} px — aspect ratio {info.aspectLabel}
+    </div>
+  );
+}
+
+function ImageZoomModal({ open, src, title, onClose }) {
+  const [zoomPct, setZoomPct] = useState(100);
+  const [imgError, setImgError] = useState(false);
+  useEffect(() => {
+    if (open) {
+      setZoomPct(100);
+      setImgError(false);
+    }
+  }, [open, src]);
+  if (!open || !src) return null;
+  const zoomOut = () => setZoomPct((z) => Math.max(50, z - 25));
+  const zoomIn = () => setZoomPct((z) => Math.min(200, z + 25));
+  return (
+    <div className="jw-adminUsersModalOverlay jw-adminUsersModalOverlay--belowHeader" onClick={onClose}>
+      <div className="jw-depositSlipModal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label={title || "Image preview"}>
+        <div className="jw-depositSlipModal__headerRow">
+          <div className="jw-adminUsersModal__title">{title || "Image preview"}</div>
+          <div className="jw-depositSlipModal__zoom">
+            <button type="button" className="jw-depositSlipModal__zoomBtn" aria-label="Zoom out" onClick={zoomOut} disabled={zoomPct <= 50}>
+              <ZoomOut size={16} />
+            </button>
+            <button type="button" className="jw-depositSlipModal__zoomBtn" aria-label="Zoom in" onClick={zoomIn} disabled={zoomPct >= 200}>
+              <ZoomIn size={16} />
+            </button>
+          </div>
+        </div>
+        <div className="jw-depositSlipModal__scroll">
+          {imgError ? (
+            <div className="jw-depositSlipModal__error">Image could not be loaded.</div>
+          ) : (
+            <img
+              src={src}
+              alt={title || ""}
+              className="jw-depositSlipModal__img"
+              style={{
+                width: zoomPct === 100 ? "auto" : `${zoomPct}%`,
+                maxWidth: zoomPct === 100 ? "100%" : "none",
+                maxHeight: zoomPct === 100 ? "min(72vh, calc(100dvh - 12rem))" : "none",
+              }}
+              onError={() => setImgError(true)}
+            />
+          )}
+        </div>
+        <div className="jw-depositSlipModal__actions">
+          <button type="button" className="jw-adminUsersModal__btn is-light" onClick={onClose}>Close</button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -432,6 +483,7 @@ export default function MainBannerTab() {
   const [loginError, setLoginError] = useState("");
   const [loginDesktop, setLoginDesktop] = useState(null);
   const [loginMobile, setLoginMobile] = useState(null);
+  const [imageZoom, setImageZoom] = useState({ open: false, src: "", title: "" });
 
   const createDesktopMeta = useImageFileMeta(createDesktop);
   const createMobileMeta = useImageFileMeta(createMobile);
@@ -738,10 +790,18 @@ export default function MainBannerTab() {
                   <td>{r.sortOrder}</td>
                   <td>{r.title}</td>
                   <td>
-                    {r.imageDesktopPath ? <img src={r.imageDesktopPath} alt="" className="jw-adminBannerThumb" /> : "—"}
+                    {r.imageDesktopPath ? (
+                      <button type="button" className="jw-adminBannerThumbBtn" onClick={() => setImageZoom({ open: true, src: r.imageDesktopPath, title: `${r.title || "Slide"} - Desktop` })}>
+                        <img src={r.imageDesktopPath} alt="" className="jw-adminBannerThumb" />
+                      </button>
+                    ) : "—"}
                   </td>
                   <td>
-                    {r.imageMobilePath ? <img src={r.imageMobilePath} alt="" className="jw-adminBannerThumb" /> : <span className="jw-adminBannerThumbHint">desktop</span>}
+                    {r.imageMobilePath ? (
+                      <button type="button" className="jw-adminBannerThumbBtn" onClick={() => setImageZoom({ open: true, src: r.imageMobilePath, title: `${r.title || "Slide"} - Mobile` })}>
+                        <img src={r.imageMobilePath} alt="" className="jw-adminBannerThumb" />
+                      </button>
+                    ) : <span className="jw-adminBannerThumbHint">desktop</span>}
                   </td>
                   <td className="jw-adminTd__url">{r.linkUrl ? r.linkUrl : "—"}</td>
                   <td>{r.openInNewTab ? "New tab" : "Same tab"}</td>
@@ -816,6 +876,12 @@ export default function MainBannerTab() {
         onMobileFile={setLoginMobile}
         onCancel={closeLoginBanners}
         onConfirm={handleLoginBannersSave}
+      />
+      <ImageZoomModal
+        open={imageZoom.open}
+        src={imageZoom.src}
+        title={imageZoom.title}
+        onClose={() => setImageZoom({ open: false, src: "", title: "" })}
       />
     </>
   );

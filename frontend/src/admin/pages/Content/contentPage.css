@@ -24,10 +24,10 @@
 }
 
 .jw-adminBannerThumb--modal {
-  width: 100%;
-  max-width: 280px;
-  height: auto;
-  max-height: 120px;
+  width: auto;
+  max-width: 100%;
+  height: 120px;
+  object-fit: contain;
   margin-bottom: 8px;
 }
 
@@ -56,4 +56,42 @@
   margin-top: 8px;
   font-size: 13px;
   color: #333;
+}
+
+.jw-adminBannerThumbBtn {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: zoom-in;
+}
+
+.jw-adminImageZoomRow {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.jw-adminImageZoomBtn {
+  border: 1px solid rgba(11, 42, 109, 0.28);
+  background: rgba(255, 255, 255, 0.9);
+  color: #0b2a6d;
+  width: 34px;
+  height: 30px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.jw-adminImageZoomWrap {
+  max-height: 72vh;
+  overflow: auto;
+}
+
+.jw-adminImageZoomImg {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  margin: 0 auto;
+  transform-origin: top center;
 }

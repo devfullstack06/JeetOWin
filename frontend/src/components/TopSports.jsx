@@ -1,31 +1,37 @@
-import React, { useEffect, useLayoutEffect, useRef } from "react";
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import "./topSports.css";
 
-/**
- * Where to upload images for now:
- * ✅ Put them here:
- *   frontend/public/top-sports/
- *
- * Example:
- *   frontend/public/top-sports/cricket.png
- *
- * Then use:
- *   "/top-sports/cricket.png"
- */
-
-const DEFAULT_ITEMS = [
-  { id: "cricket", src: "/top-sports/cricket.png" },
-  { id: "soccer", src: "/top-sports/soccer.png" },
-  { id: "tennis", src: "/top-sports/tennis.png" },
-  { id: "horseracing", src: "/top-sports/horseracing.png" },
-];
-
-export default function TopSports({ items = DEFAULT_ITEMS, title = "Top Sports" }) {
-  const safeItems = items?.length ? items : DEFAULT_ITEMS;
+export default function TopSports({ items = undefined, title = "Top Sports" }) {
+  const [remoteItems, setRemoteItems] = useState(undefined);
+  const safeItems = useMemo(() => {
+    if (Array.isArray(items)) return items;
+    if (remoteItems === undefined) return [];
+    return Array.isArray(remoteItems) ? remoteItems : [];
+  }, [items, remoteItems]);
 
   const viewportRef = useRef(null);
   const stepRef = useRef(0);
   const autoTimerRef = useRef(null);
+
+  useEffect(() => {
+    if (Array.isArray(items)) return;
+    let ignore = false;
+    fetch("/api/top-sports")
+      .then((res) => {
+        if (!res.ok) throw new Error("failed");
+        return res.json();
+      })
+      .then((data) => {
+        if (ignore) return;
+        setRemoteItems(Array.isArray(data.items) ? data.items : []);
+      })
+      .catch(() => {
+        if (!ignore) setRemoteItems([]);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [items]);
 
   // Measure how much "1 card" is (card width + gap) using real DOM sizes
   const measureStep = () => {
@@ -101,6 +107,7 @@ export default function TopSports({ items = DEFAULT_ITEMS, title = "Top Sports" 
   };
 
   useEffect(() => {
+    if (!safeItems.length) return;
     startAuto();
     return () => stopAuto();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -131,6 +138,10 @@ export default function TopSports({ items = DEFAULT_ITEMS, title = "Top Sports" 
         </div>
       </div>
 
+      {!safeItems.length ? (
+        <div style={{ color: "#4f5b78", fontSize: 13, padding: "6px 0" }}>No Top Sports items configured.</div>
+      ) : null}
+
       {/* ✅ Native scroll container = no width expansion issues + smooth */}
       <div
         className="jw-topSportsViewport"
@@ -143,20 +154,24 @@ export default function TopSports({ items = DEFAULT_ITEMS, title = "Top Sports" 
         <div className="jw-topSportsTrack">
           {safeItems.map((it, idx) => (
             <button
-              key={`${it.id}-${idx}`} /* ✅ always unique */
+              key={`${it.id}-${idx}`}
               type="button"
               className="jw-topSportsCard"
               aria-label={it.id}
               onClick={() => {
-                // no action for now; popup later
+                const raw = String(it.linkUrl || "").trim();
+                if (!raw) return;
+                if (!(raw.startsWith("/") || /^https?:\/\//i.test(raw))) return;
+                if (it.openInNewTab) window.open(raw, "_blank", "noopener,noreferrer");
+                else window.location.assign(raw);
               }}
             >
               <img
                 className="jw-topSportsImg"
-                src={it.src}
-                alt={it.id}
+                src={it.imagePath || it.src}
+                alt={it.name || it.id}
                 loading="lazy"
-                onLoad={measureStep} /* ✅ re-measure once images load */
+                onLoad={measureStep}
               />
             </button>
           ))}

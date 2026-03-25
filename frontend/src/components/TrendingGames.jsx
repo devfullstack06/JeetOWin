@@ -1,31 +1,40 @@
-import React, { useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import "./trendingGames.css";
 
 export default function TrendingGames({
   title = "Trending Games",
-  imageFiles = [
-    "1.avif",
-    "2.avif",
-    "3.avif",
-    "4.png",
-    "5.png",
-    "6.png",
-    "7.png",
-    "8.png",
-  ],
+  items = undefined,
 }) {
-  const items = useMemo(
-    () =>
-      imageFiles.map((file, idx) => ({
-        id: `tg-${idx}`,
-        src: `/trending-games/${file}`,
-      })),
-    [imageFiles]
-  );
+  const [remoteItems, setRemoteItems] = useState(undefined);
+  const safeItems = useMemo(() => {
+    if (Array.isArray(items)) return items;
+    if (remoteItems === undefined) return [];
+    return Array.isArray(remoteItems) ? remoteItems : [];
+  }, [items, remoteItems]);
 
   const viewportRef = useRef(null);
   const stepRef = useRef(0);
   const autoTimerRef = useRef(null);
+
+  useEffect(() => {
+    if (Array.isArray(items)) return;
+    let ignore = false;
+    fetch("/api/trending-games")
+      .then((res) => {
+        if (!res.ok) throw new Error("failed");
+        return res.json();
+      })
+      .then((data) => {
+        if (ignore) return;
+        setRemoteItems(Array.isArray(data.items) ? data.items : []);
+      })
+      .catch(() => {
+        if (!ignore) setRemoteItems([]);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [items]);
 
   /* Measure 1 tile width + gap (same as TopSports) */
   const measureStep = () => {
@@ -96,10 +105,11 @@ export default function TrendingGames({
   };
 
   useEffect(() => {
+    if (!safeItems.length) return;
     startAuto();
     return () => stopAuto();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items.length]);
+  }, [safeItems.length]);
 
   return (
     <section className="jw-trending" aria-label={title}>
@@ -126,6 +136,10 @@ export default function TrendingGames({
         </div>
       </div>
 
+      {!safeItems.length ? (
+        <div style={{ color: "#4f5b78", fontSize: 13, padding: "6px 0" }}>No Trending items configured.</div>
+      ) : null}
+
       <div
         className="jw-trendingScroller"
         ref={viewportRef}
@@ -134,17 +148,24 @@ export default function TrendingGames({
         onTouchStart={stopAuto}
         onTouchEnd={startAuto}
       >
-        {items.map((it, idx) => (
+        {safeItems.map((it, idx) => (
           <button
             key={`${it.id}-${idx}`}
             type="button"
             className="jw-trendingTile"
-            aria-label={it.id}
+            aria-label={it.name || String(it.id)}
+            onClick={() => {
+              const raw = String(it.linkUrl || "").trim();
+              if (!raw) return;
+              if (!(raw.startsWith("/") || /^https?:\/\//i.test(raw))) return;
+              if (it.openInNewTab) window.open(raw, "_blank", "noopener,noreferrer");
+              else window.location.assign(raw);
+            }}
           >
             <img
               className="jw-trendingImg"
-              src={it.src}
-              alt={it.id}
+              src={it.imagePath || it.src}
+              alt={it.name || String(it.id)}
               loading="lazy"
               onLoad={measureStep}
             />
