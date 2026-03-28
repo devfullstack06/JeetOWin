@@ -2,10 +2,13 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 const { pool } = require("../../config/database");
-const { UPLOADS_HOME_BANNERS } = require("../../middleware/uploadHomeBannerImages");
-const LOGIN_BANNERS_DIR = path.join(__dirname, "..", "..", "..", "frontend", "public");
-const LOGIN_DESKTOP_NAME = "banner-login-desktop.jpg";
-const LOGIN_MOBILE_NAME = "banner-login-mobile.jpg";
+const {
+  UPLOADS_HOME_BANNERS,
+  UPLOADS_LOGIN_PAGE_BANNERS,
+} = require("../../middleware/uploadHomeBannerImages");
+
+const LOGIN_PAGE_BANNER_ROW_ID = 1;
+const LOGIN_PAGE_BANNERS_URL_PREFIX = "/uploads/login-page-banners/";
 
 function extFromMime(mime) {
   const m = (mime || "").toLowerCase();
@@ -48,6 +51,57 @@ function deleteHomeBannerFile(storedPath) {
   } catch (e) {
     console.error("deleteHomeBannerFile:", e.message, full);
   }
+}
+
+function deleteLoginPageBannerFile(storedPath) {
+  if (!storedPath || typeof storedPath !== "string" || !storedPath.startsWith(LOGIN_PAGE_BANNERS_URL_PREFIX)) return;
+  const baseName = path.basename(storedPath.split("?")[0]);
+  if (!baseName || baseName.includes(path.sep) || baseName.startsWith("..")) return;
+  const full = path.join(UPLOADS_LOGIN_PAGE_BANNERS, baseName);
+  const rel = path.relative(UPLOADS_LOGIN_PAGE_BANNERS, full);
+  if (rel.startsWith("..") || path.isAbsolute(rel)) return;
+  try {
+    if (fs.existsSync(full)) fs.unlinkSync(full);
+  } catch (e) {
+    console.error("deleteLoginPageBannerFile:", e.message, full);
+  }
+}
+
+function uniqueLoginPageBannerBase(slot) {
+  const s = String(slot).replace(/[^a-z]/gi, "") || "img";
+  return `lb-${s}-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`;
+}
+
+/** Multer memory buffer can be Buffer or array-like; normalize for save. */
+function multerFileBytes(file) {
+  if (!file) return null;
+  const b = file.buffer;
+  if (Buffer.isBuffer(b) && b.length > 0) return b;
+  if (b != null && typeof b.length === "number" && b.length > 0) {
+    try {
+      const buf = Buffer.from(b);
+      return buf.length > 0 ? buf : null;
+    } catch (_) {
+      return null;
+    }
+  }
+  return null;
+}
+
+function saveLoginPageBannerBuffer(buffer, mimetype) {
+  const ext = extFromMime(mimetype);
+  if (!ext) return { error: "Invalid image type." };
+  if (!Buffer.isBuffer(buffer) || buffer.length === 0) return { error: "Empty image file." };
+  const baseName = `${uniqueLoginPageBannerBase("banner")}${ext}`;
+  const fullPath = path.join(UPLOADS_LOGIN_PAGE_BANNERS, baseName);
+  try {
+    fs.mkdirSync(UPLOADS_LOGIN_PAGE_BANNERS, { recursive: true });
+    fs.writeFileSync(fullPath, buffer);
+  } catch (e) {
+    console.error("saveLoginPageBannerBuffer:", e.message);
+    return { error: "Failed to save image." };
+  }
+  return { path: `${LOGIN_PAGE_BANNERS_URL_PREFIX}${baseName}` };
 }
 
 function normalizePositiveInt(value, fallback) {
@@ -441,28 +495,96 @@ exports.updateAdminHomeBannerSlide = async (req, res) => {
 
 /**
  * PATCH /api/admin/login-banners
- * Replaces frontend public assets used by login page:
- * - /banner-login-desktop.jpg
- * - /banner-login-mobile.jpg
+ * Stores images under /uploads/login-page-banners/ and updates login_page_banner row (id=1).
+ * Each uploaded slot replaces the previous file for that slot only.
  */
 exports.updateAdminLoginBanners = async (req, res) => {
   try {
     const desktopFile = req.files?.loginDesktop?.[0];
     const mobileFile = req.files?.loginMobile?.[0];
     if (!desktopFile && !mobileFile) {
-      return res.status(400).json({ message: "Please choose desktop and/or mobile login banner image." });
+      return res.status(400).json({
+        message:
+          "No image files received. Use a recent API build, restart node server.js after deploy, and ensure the request is multipart (do not set Content-Type manually on FormData).",
+      });
     }
-    fs.mkdirSync(LOGIN_BANNERS_DIR, { recursive: true });
-    if (desktopFile?.buffer?.length) {
-      fs.writeFileSync(path.join(LOGIN_BANNERS_DIR, LOGIN_DESKTOP_NAME), desktopFile.buffer);
+
+    const desktopBytes = desktopFile ? multerFileBytes(desktopFile) : null;
+    const mobileBytes = mobileFile ? multerFileBytes(mobileFile) : null;
+    if (desktopFile && !desktopBytes) {
+      return res.status(400).json({
+        message:
+          "Desktop image upload was empty or unreadable. Restart the API server so login banner routes use the latest code, then try again.",
+      });
     }
-    if (mobileFile?.buffer?.length) {
-      fs.writeFileSync(path.join(LOGIN_BANNERS_DIR, LOGIN_MOBILE_NAME), mobileFile.buffer);
+    if (mobileFile && !mobileBytes) {
+      return res.status(400).json({
+        message:
+          "Mobile image upload was empty or unreadable. Restart the API server so login banner routes use the latest code, then try again.",
+      });
     }
+
+    let rows;
+    try {
+      [rows] = await pool.query(
+        "SELECT image_desktop_path, image_mobile_path FROM login_page_banner WHERE id = ?",
+        [LOGIN_PAGE_BANNER_ROW_ID]
+      );
+    } catch (err) {
+      if (err.code === "ER_NO_SUCH_TABLE") {
+        return res.status(503).json({ message: "Login page banner table missing. Run migration_login_page_banner.sql." });
+      }
+      throw err;
+    }
+
+    if (!rows?.length) {
+      await pool.query(
+        "INSERT INTO login_page_banner (id, image_desktop_path, image_mobile_path) VALUES (?, NULL, NULL)",
+        [LOGIN_PAGE_BANNER_ROW_ID]
+      );
+      [rows] = await pool.query(
+        "SELECT image_desktop_path, image_mobile_path FROM login_page_banner WHERE id = ?",
+        [LOGIN_PAGE_BANNER_ROW_ID]
+      );
+    }
+
+    const cur = rows[0];
+    let nextDesktop = cur.image_desktop_path || null;
+    let nextMobile = cur.image_mobile_path || null;
+
+    if (desktopBytes) {
+      const saved = saveLoginPageBannerBuffer(desktopBytes, desktopFile.mimetype);
+      if (saved.error) return res.status(400).json({ message: saved.error });
+      if (nextDesktop) deleteLoginPageBannerFile(nextDesktop);
+      nextDesktop = saved.path;
+    }
+
+    if (mobileBytes) {
+      const saved = saveLoginPageBannerBuffer(mobileBytes, mobileFile.mimetype);
+      if (saved.error) return res.status(400).json({ message: saved.error });
+      if (nextMobile) deleteLoginPageBannerFile(nextMobile);
+      nextMobile = saved.path;
+    }
+
+    await pool.query(
+      "UPDATE login_page_banner SET image_desktop_path = ?, image_mobile_path = ? WHERE id = ?",
+      [nextDesktop, nextMobile, LOGIN_PAGE_BANNER_ROW_ID]
+    );
+
+    const [[updated]] = await pool.query(
+      "SELECT image_desktop_path, image_mobile_path, updated_at FROM login_page_banner WHERE id = ?",
+      [LOGIN_PAGE_BANNER_ROW_ID]
+    );
+    const v = updated?.updated_at ? new Date(updated.updated_at).getTime() : Date.now();
+    const d = updated?.image_desktop_path ? `${updated.image_desktop_path}?v=${v}` : "";
+    const m = updated?.image_mobile_path ? `${updated.image_mobile_path}?v=${v}` : "";
+
     return res.status(200).json({
       ok: true,
-      desktopPath: `/banner-login-desktop.jpg?v=${Date.now()}`,
-      mobilePath: `/banner-login-mobile.jpg?v=${Date.now()}`,
+      desktopPath: d,
+      mobilePath: m,
+      desktop: d,
+      mobile: m,
     });
   } catch (err) {
     console.error("updateAdminLoginBanners:", err);
@@ -471,25 +593,34 @@ exports.updateAdminLoginBanners = async (req, res) => {
 };
 
 /**
- * GET /api/login-banners
- * Public endpoint used by Login page to resolve current banner URLs.
+ * GET /api/home-banner-slides/login-banners
+ * Public: URLs from login_page_banner + cache-bust from updated_at.
  */
 exports.getPublicLoginBanners = async (req, res) => {
   try {
-    const desktopPath = path.join(LOGIN_BANNERS_DIR, LOGIN_DESKTOP_NAME);
-    const mobilePath = path.join(LOGIN_BANNERS_DIR, LOGIN_MOBILE_NAME);
-    let desktopVersion = Date.now();
-    let mobileVersion = Date.now();
+    let rows;
     try {
-      desktopVersion = fs.statSync(desktopPath).mtimeMs || desktopVersion;
-    } catch (_) {}
-    try {
-      mobileVersion = fs.statSync(mobilePath).mtimeMs || mobileVersion;
-    } catch (_) {}
-    return res.status(200).json({
-      desktop: `/banner-login-desktop.jpg?v=${Math.floor(desktopVersion)}`,
-      mobile: `/banner-login-mobile.jpg?v=${Math.floor(mobileVersion)}`,
-    });
+      [rows] = await pool.query(
+        "SELECT image_desktop_path, image_mobile_path, updated_at FROM login_page_banner WHERE id = ?",
+        [LOGIN_PAGE_BANNER_ROW_ID]
+      );
+    } catch (err) {
+      if (err.code === "ER_NO_SUCH_TABLE") {
+        return res.status(200).json({ desktop: "", mobile: "" });
+      }
+      throw err;
+    }
+
+    const r = rows?.[0];
+    if (!r) {
+      return res.status(200).json({ desktop: "", mobile: "" });
+    }
+
+    const v = r.updated_at ? new Date(r.updated_at).getTime() : Date.now();
+    const desktop = r.image_desktop_path ? `${r.image_desktop_path}?v=${v}` : "";
+    const mobile = r.image_mobile_path ? `${r.image_mobile_path}?v=${v}` : "";
+
+    return res.status(200).json({ desktop, mobile });
   } catch (err) {
     console.error("getPublicLoginBanners:", err);
     return res.status(500).json({ message: "Failed to load login banners." });

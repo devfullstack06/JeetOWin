@@ -6,10 +6,11 @@ const path = require("path");
 const fs = require("fs");
 
 const UPLOADS_HOME_BANNERS = path.join(__dirname, "..", "uploads", "home-banners");
+const UPLOADS_LOGIN_PAGE_BANNERS = path.join(__dirname, "..", "uploads", "login-page-banners");
 const MAX_SIZE = 3 * 1024 * 1024;
 
 const ALLOWED_MIMES = new Set(["image/jpeg", "image/png", "image/webp"]);
-const ALLOWED_LOGIN_BANNER_MIMES = new Set(["image/jpeg", "image/jpg", "image/pjpeg"]);
+const ALLOWED_LOGIN_BANNER_MIMES = ALLOWED_MIMES;
 
 function ensureUploadsHomeBannersDir() {
   try {
@@ -17,6 +18,16 @@ function ensureUploadsHomeBannersDir() {
     return true;
   } catch (e) {
     console.error("uploadHomeBannerImages ensure dir:", e.message);
+    return false;
+  }
+}
+
+function ensureUploadsLoginPageBannersDir() {
+  try {
+    fs.mkdirSync(UPLOADS_LOGIN_PAGE_BANNERS, { recursive: true });
+    return true;
+  } catch (e) {
+    console.error("uploadHomeBannerImages login-page dir:", e.message);
     return false;
   }
 }
@@ -60,6 +71,7 @@ function optionalHomeBannerImagesUpload(req, res, next) {
 module.exports = {
   optionalHomeBannerImagesUpload,
   UPLOADS_HOME_BANNERS,
+  UPLOADS_LOGIN_PAGE_BANNERS,
 };
 
 const uploadLoginBanners = multer({
@@ -68,7 +80,7 @@ const uploadLoginBanners = multer({
   fileFilter(req, file, cb) {
     const mime = (file.mimetype || "").toLowerCase();
     if (!ALLOWED_LOGIN_BANNER_MIMES.has(mime)) {
-      return cb(new Error("Login banners must be JPEG/JPG images."));
+      return cb(new Error("Login banners must be JPEG, PNG, or WebP images."));
     }
     cb(null, true);
   },
@@ -80,6 +92,9 @@ const uploadLoginBanners = multer({
 function optionalLoginBannerImagesUpload(req, res, next) {
   const contentType = (req.headers["content-type"] || "").toLowerCase();
   if (!contentType.includes("multipart/form-data")) return next();
+  if (!ensureUploadsLoginPageBannersDir()) {
+    return res.status(500).json({ message: "Failed to prepare login banner uploads directory." });
+  }
   uploadLoginBanners(req, res, (err) => {
     if (err) {
       if (err.code === "LIMIT_FILE_SIZE") {

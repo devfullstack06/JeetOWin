@@ -416,6 +416,9 @@ function LoginBannersModal({
   mobileInfo,
   desktopPreviewUrl,
   mobilePreviewUrl,
+  currentDesktopUrl,
+  currentMobileUrl,
+  loadingCurrent,
   onDesktopFile,
   onMobileFile,
   onCancel,
@@ -424,6 +427,10 @@ function LoginBannersModal({
   if (!open) return null;
   const desktopErr = !!(desktopFile && desktopFile.size > MAX_BYTES);
   const mobileErr = !!(mobileFile && mobileFile.size > MAX_BYTES);
+  const showDesktopPreview = desktopPreviewUrl || (!desktopFile && currentDesktopUrl);
+  const showMobilePreview = mobilePreviewUrl || (!mobileFile && currentMobileUrl);
+  const desktopIsNewSelection = !!(desktopFile && desktopPreviewUrl);
+  const mobileIsNewSelection = !!(mobileFile && mobilePreviewUrl);
   return (
     <div className="jw-adminUsersModalOverlay jw-adminUsersModalOverlay--belowHeader" onClick={onCancel}>
       <div className="jw-adminUsersModal jw-adminUsersModal--scrollable" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Login Page">
@@ -431,21 +438,38 @@ function LoginBannersModal({
           <div className="jw-adminUsersModal__title">Login Page</div>
         </div>
         <div className="jw-adminUsersModal__body">
+          {loadingCurrent ? <div className="jw-adminUsersModal__hint" style={{ marginBottom: 8 }}>Loading current banners…</div> : null}
           <div className="jw-adminUsersModal__field">
-            <label className="jw-adminUsersModal__label">Desktop login banner (JPEG/JPG)</label>
-            <input type="file" accept="image/jpeg,image/jpg" className="jw-adminUsersModal__input" onChange={(e) => onDesktopFile(e.target.files?.[0] || null)} />
-            {desktopPreviewUrl ? <img src={desktopPreviewUrl} alt="" className="jw-adminBannerThumb jw-adminBannerThumb--modal" /> : null}
+            <label className="jw-adminUsersModal__label">Desktop login banner (JPEG/PNG/WebP)</label>
+            <input type="file" accept="image/jpeg,image/png,image/webp" className="jw-adminUsersModal__input" onChange={(e) => onDesktopFile(e.target.files?.[0] || null)} />
+            {!loadingCurrent && showDesktopPreview ? (
+              <>
+                <span className="jw-adminUsersModal__hint">{desktopIsNewSelection ? "New selection" : "Current on login / sign-up"}</span>
+                <img src={desktopPreviewUrl || currentDesktopUrl} alt="" className="jw-adminBannerThumb jw-adminBannerThumb--modal" />
+              </>
+            ) : null}
+            {!loadingCurrent && !showDesktopPreview ? (
+              <div className="jw-adminUsersModal__hint">No desktop banner configured yet.</div>
+            ) : null}
             <BannerImageMetaLine info={desktopInfo} />
             {desktopErr ? <div className="jw-adminUsersModal__error">{SIZE_ERR}</div> : null}
           </div>
           <div className="jw-adminUsersModal__field">
-            <label className="jw-adminUsersModal__label">Mobile login banner (JPEG/JPG)</label>
-            <input type="file" accept="image/jpeg,image/jpg" className="jw-adminUsersModal__input" onChange={(e) => onMobileFile(e.target.files?.[0] || null)} />
-            {mobilePreviewUrl ? <img src={mobilePreviewUrl} alt="" className="jw-adminBannerThumb jw-adminBannerThumb--modal" /> : null}
+            <label className="jw-adminUsersModal__label">Mobile login banner (JPEG/PNG/WebP)</label>
+            <input type="file" accept="image/jpeg,image/png,image/webp" className="jw-adminUsersModal__input" onChange={(e) => onMobileFile(e.target.files?.[0] || null)} />
+            {!loadingCurrent && showMobilePreview ? (
+              <>
+                <span className="jw-adminUsersModal__hint">{mobileIsNewSelection ? "New selection" : "Current on login / sign-up"}</span>
+                <img src={mobilePreviewUrl || currentMobileUrl} alt="" className="jw-adminBannerThumb jw-adminBannerThumb--modal" />
+              </>
+            ) : null}
+            {!loadingCurrent && !showMobilePreview ? (
+              <div className="jw-adminUsersModal__hint">No mobile banner configured yet (desktop image is used on small screens if empty).</div>
+            ) : null}
             <BannerImageMetaLine info={mobileInfo} />
             {mobileErr ? <div className="jw-adminUsersModal__error">{SIZE_ERR}</div> : null}
           </div>
-          <div className="jw-adminUsersModal__hint">This updates `/banner-login-desktop.jpg` and `/banner-login-mobile.jpg` used by login page.</div>
+          <div className="jw-adminUsersModal__hint">Replaces the current login and sign-up banners (stored in the database; each new upload overwrites that slot).</div>
           {errorText ? <div className="jw-adminUsersModal__error">{errorText}</div> : null}
         </div>
         <div className="jw-adminUsersModal__actions">
@@ -483,6 +507,8 @@ export default function MainBannerTab() {
   const [loginError, setLoginError] = useState("");
   const [loginDesktop, setLoginDesktop] = useState(null);
   const [loginMobile, setLoginMobile] = useState(null);
+  const [loginBannerCurrentUrls, setLoginBannerCurrentUrls] = useState({ desktop: "", mobile: "" });
+  const [loginBannerUrlsLoading, setLoginBannerUrlsLoading] = useState(false);
   const [imageZoom, setImageZoom] = useState({ open: false, src: "", title: "" });
 
   const createDesktopMeta = useImageFileMeta(createDesktop);
@@ -528,6 +554,30 @@ export default function MainBannerTab() {
   }, []);
 
   useEffect(() => fetchItems(), [fetchItems]);
+
+  useEffect(() => {
+    if (!loginOpen) return undefined;
+    let ignore = false;
+    setLoginBannerUrlsLoading(true);
+    fetch("/api/home-banner-slides/login-banners")
+      .then((res) => (res.ok ? res.json() : {}))
+      .then((data) => {
+        if (ignore) return;
+        setLoginBannerCurrentUrls({
+          desktop: String(data?.desktop || ""),
+          mobile: String(data?.mobile || ""),
+        });
+      })
+      .catch(() => {
+        if (!ignore) setLoginBannerCurrentUrls({ desktop: "", mobile: "" });
+      })
+      .finally(() => {
+        if (!ignore) setLoginBannerUrlsLoading(false);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [loginOpen]);
 
   const openCreate = () => {
     setCreateForm({ title: "", sortOrder: "", isActive: "yes", linkUrl: "", openInNewTab: "same" });
@@ -705,7 +755,7 @@ export default function MainBannerTab() {
     const token = localStorage.getItem("token") || "";
     try {
       const res = await fetch("/api/admin/login-banners", {
-        method: "PATCH",
+        method: "POST",
         headers: token ? { Authorization: `Bearer ${token}` } : {},
         body: fd,
       });
@@ -714,6 +764,12 @@ export default function MainBannerTab() {
         setLoginError(data?.message || "Failed to update login banners.");
         setLoginSaving(false);
         return;
+      }
+      if (data?.desktop != null || data?.mobile != null) {
+        setLoginBannerCurrentUrls({
+          desktop: String(data.desktop ?? ""),
+          mobile: String(data.mobile ?? ""),
+        });
       }
       setLoginOpen(false);
       setLoginDesktop(null);
@@ -872,6 +928,9 @@ export default function MainBannerTab() {
         mobileInfo={loginMobileInfo}
         desktopPreviewUrl={loginDesktopPreviewUrl}
         mobilePreviewUrl={loginMobilePreviewUrl}
+        currentDesktopUrl={loginBannerCurrentUrls.desktop}
+        currentMobileUrl={loginBannerCurrentUrls.mobile}
+        loadingCurrent={loginBannerUrlsLoading}
         onDesktopFile={setLoginDesktop}
         onMobileFile={setLoginMobile}
         onCancel={closeLoginBanners}

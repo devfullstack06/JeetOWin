@@ -153,6 +153,7 @@ router.get("/home-banner-slides", requireAdminAuth, getAdminHomeBannerSlides);
 router.post("/home-banner-slides", requireAdminAuth, optionalHomeBannerImagesUpload, createAdminHomeBannerSlide);
 router.patch("/home-banner-slides/:id", requireAdminAuth, optionalHomeBannerImagesUpload, updateAdminHomeBannerSlide);
 router.delete("/home-banner-slides/:id", requireAdminAuth, deleteAdminHomeBannerSlide);
+router.post("/login-banners", requireAdminAuth, optionalLoginBannerImagesUpload, updateAdminLoginBanners);
 router.patch("/login-banners", requireAdminAuth, optionalLoginBannerImagesUpload, updateAdminLoginBanners);
 router.get("/top-sports", requireAdminAuth, getAdminTopSportsItems);
 router.post("/top-sports", requireAdminAuth, optionalTopSportsImageUpload, createAdminTopSportsItem);
