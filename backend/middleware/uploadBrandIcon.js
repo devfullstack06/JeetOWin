@@ -1,6 +1,6 @@
 /**
- * Optional multer middleware for brand icon upload (admin brands/website).
- * SVG only, 2MB max, field name "icon".
+ * Optional multer for brand icon upload (admin brands/website).
+ * JPEG, PNG, WebP, GIF, SVG (+ common XML MIME for SVG), 2MB max, field name "icon".
  */
 const multer = require("multer");
 const path = require("path");
@@ -9,6 +9,18 @@ const crypto = require("crypto");
 
 const UPLOADS_BRANDS = path.join(__dirname, "..", "uploads", "brands");
 const MAX_SIZE = 2 * 1024 * 1024; // 2MB
+
+const ALLOWED_MIMES = new Set([
+  "image/jpeg",
+  "image/jpg",
+  "image/pjpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "image/svg+xml",
+  "text/xml",
+  "application/xml",
+]);
 
 function ensureUploadsBrandsDir() {
   try {
@@ -27,8 +39,8 @@ const upload = multer({
   limits: { fileSize: MAX_SIZE },
   fileFilter(req, file, cb) {
     const mime = (file.mimetype || "").toLowerCase();
-    if (mime !== "image/svg+xml") {
-      return cb(new Error("Only SVG is allowed."));
+    if (!ALLOWED_MIMES.has(mime)) {
+      return cb(new Error("Allowed types: JPEG, PNG, WebP, GIF, SVG (or XML SVG)."));
     }
     cb(null, true);
   },
@@ -51,14 +63,14 @@ function optionalBrandIconUpload(req, res, next) {
   });
 }
 
-function uniqueBrandIconFilename(prefix = "brand") {
+function uniqueBrandIconFilePrefix(prefix = "brand") {
   const slug = String(prefix).replace(/[^a-z0-9-]/gi, "-").replace(/-+/g, "-").slice(0, 24) || "brand";
   const hex = crypto.randomBytes(4).toString("hex");
-  return `${slug}-${Date.now()}-${hex}.svg`;
+  return `${slug}-${Date.now()}-${hex}`;
 }
 
 module.exports = {
   optionalBrandIconUpload,
-  uniqueBrandIconFilename,
+  uniqueBrandIconFilePrefix,
   UPLOADS_BRANDS,
 };

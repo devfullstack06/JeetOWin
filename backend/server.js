@@ -28,6 +28,7 @@ const socialLinksRouter = require("./routes/socialLinks");
 const homeBannerSlidesRouter = require("./routes/homeBannerSlides");
 const topSportsRouter = require("./routes/topSports");
 const trendingGamesRouter = require("./routes/trendingGames");
+const brandsPublicRouter = require("./routes/brandsPublic");
 
 const app = express();
 
@@ -63,6 +64,7 @@ app.use("/api/social-links", socialLinksRouter);
 app.use("/api/home-banner-slides", homeBannerSlidesRouter);
 app.use("/api/top-sports", topSportsRouter);
 app.use("/api/trending-games", trendingGamesRouter);
+app.use("/api/brands", brandsPublicRouter);
 app.use("/api/admin", adminRouter);
 // Choose port from environment or default to 3000
 const PORT = process.env.PORT || 3000;

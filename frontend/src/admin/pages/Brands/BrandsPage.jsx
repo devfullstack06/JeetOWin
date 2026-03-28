@@ -149,7 +149,9 @@ function WebsiteBrandsTable({ rows, sort, onSort, onEdit, onImageClick, loading 
 const ICON_MAX_BYTES = 2 * 1024 * 1024; // 2MB
 const ICON_SIZE_ERROR_MSG = "Icon file must be 2MB or smaller.";
 
-function CreateBrandModal({ open, form, saving, errorText, onChange, onIconFileSelect, onCancel, onConfirm, iconFile, iconSizeError }) {
+const BRAND_ICON_ACCEPT = "image/jpeg,image/png,image/webp,image/gif,image/svg+xml,.svg";
+
+function CreateBrandModal({ open, form, saving, errorText, onChange, onIconFileSelect, onCancel, onConfirm, iconFile, iconSizeError, showImagePreview }) {
   const fileInputRef = React.useRef(null);
   const [previewUrl, setPreviewUrl] = React.useState(null);
   React.useEffect(() => {
@@ -206,12 +208,20 @@ function CreateBrandModal({ open, form, saving, errorText, onChange, onIconFileS
             />
           </div>
           <div className="jw-adminUsersModal__field">
-            <label className="jw-adminUsersModal__label">Image (SVG)</label>
-            <input ref={fileInputRef} type="file" accept=".svg" className="jw-adminUsersModal__input" onChange={handleFileChange} />
-            {form.iconSvg ? <span className="jw-adminCompaniesFileOk">SVG selected</span> : null}
+            <label className="jw-adminUsersModal__label">Brand icon (JPEG, PNG, WebP, GIF, SVG)</label>
+            <input ref={fileInputRef} type="file" accept={BRAND_ICON_ACCEPT} className="jw-adminUsersModal__input" onChange={handleFileChange} />
+            {showImagePreview ? (
+              previewUrl ? (
+                <>
+                  <span className="jw-adminUsersModal__hint">Preview (home carousel)</span>
+                  <img src={previewUrl} alt="" className="jw-adminBrandModalPreview" />
+                </>
+              ) : (
+                <div className="jw-adminUsersModal__hint">Upload an icon to show on the home page carousel.</div>
+              )
+            ) : null}
             {iconFile ? (
               <div className="jw-adminCompaniesFileInfo">
-                {previewUrl ? <img src={previewUrl} alt="" className="jw-adminCompaniesFilePreview" /> : null}
                 <span className="jw-adminCompaniesFileName">{iconFile.name}</span>
                 <span className="jw-adminUsersModal__hint">{(iconFile.size / 1024).toFixed(1)} KB</span>
                 {iconSizeError ? <div className="jw-adminUsersModal__error">{ICON_SIZE_ERROR_MSG}</div> : null}
@@ -231,7 +241,7 @@ function CreateBrandModal({ open, form, saving, errorText, onChange, onIconFileS
   );
 }
 
-function EditBrandModal({ open, brand, form, saving, errorText, onChange, onIconFileSelect, onCancel, onConfirm, iconFile, iconSizeError }) {
+function EditBrandModal({ open, brand, form, saving, errorText, onChange, onIconFileSelect, onCancel, onConfirm, iconFile, iconSizeError, showImagePreview }) {
   const fileInputRef = React.useRef(null);
   const [previewUrl, setPreviewUrl] = React.useState(null);
   React.useEffect(() => {
@@ -247,6 +257,7 @@ function EditBrandModal({ open, brand, form, saving, errorText, onChange, onIcon
     onIconFileSelect?.(file);
     onChange("iconSvg", "selected");
   };
+  const currentIconSrc = getWalletIconUrl(brand);
   return (
     <div className="jw-adminUsersModalOverlay jw-adminUsersModalOverlay--belowHeader" onClick={onCancel}>
       <div className="jw-adminUsersModal jw-adminUsersModal--scrollable" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Edit Brand">
@@ -287,12 +298,25 @@ function EditBrandModal({ open, brand, form, saving, errorText, onChange, onIcon
             />
           </div>
           <div className="jw-adminUsersModal__field">
-            <label className="jw-adminUsersModal__label">Image (SVG)</label>
-            <input ref={fileInputRef} type="file" accept=".svg" className="jw-adminUsersModal__input" onChange={handleFileChange} />
-            {form.iconSvg ? <span className="jw-adminCompaniesFileOk">New SVG selected</span> : brand.iconPath ? <span className="jw-adminCompaniesFileOk">Current image on file</span> : null}
+            <label className="jw-adminUsersModal__label">Brand icon (JPEG, PNG, WebP, GIF, SVG)</label>
+            <input ref={fileInputRef} type="file" accept={BRAND_ICON_ACCEPT} className="jw-adminUsersModal__input" onChange={handleFileChange} />
+            {showImagePreview ? (
+              previewUrl ? (
+                <>
+                  <span className="jw-adminUsersModal__hint">New selection (home carousel)</span>
+                  <img src={previewUrl} alt="" className="jw-adminBrandModalPreview" />
+                </>
+              ) : currentIconSrc ? (
+                <>
+                  <span className="jw-adminUsersModal__hint">Current image (home carousel)</span>
+                  <img src={currentIconSrc} alt="" className="jw-adminBrandModalPreview" />
+                </>
+              ) : (
+                <div className="jw-adminUsersModal__hint">No icon uploaded yet. Add one to show on the home carousel.</div>
+              )
+            ) : null}
             {iconFile ? (
               <div className="jw-adminCompaniesFileInfo">
-                {previewUrl ? <img src={previewUrl} alt="" className="jw-adminCompaniesFilePreview" /> : null}
                 <span className="jw-adminCompaniesFileName">{iconFile.name}</span>
                 <span className="jw-adminUsersModal__hint">{(iconFile.size / 1024).toFixed(1)} KB</span>
                 {iconSizeError ? <div className="jw-adminUsersModal__error">{ICON_SIZE_ERROR_MSG}</div> : null}
@@ -1033,6 +1057,7 @@ export default function BrandsPage() {
         onConfirm={handleCreateConfirm}
         iconFile={createIconFile}
         iconSizeError={!!(createIconFile && createIconFile.size > ICON_MAX_BYTES)}
+        showImagePreview={createForm.availableHome === "yes"}
       />
       <EditBrandModal
         open={editOpen}
@@ -1046,6 +1071,7 @@ export default function BrandsPage() {
         onConfirm={handleEditConfirm}
         iconFile={editIconFile}
         iconSizeError={!!(editIconFile && editIconFile.size > ICON_MAX_BYTES)}
+        showImagePreview={editForm.availableHome === "yes"}
       />
       <ImagePopupModal open={imagePopup.open} src={imagePopup.src} name={imagePopup.name} onClose={() => setImagePopup({ open: false, src: null, name: "" })} />
 

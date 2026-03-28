@@ -1,10 +1,11 @@
 const fs = require("fs");
 const path = require("path");
+const sharp = require("sharp");
 const { pool } = require("../../config/database");
 const { sanitizeSvg } = require("../../utils/svgSanitize");
 const { optimizeSvg } = require("../../utils/svgOptimize");
 const { generatePngFromSvg } = require("../../utils/svgToPng");
-const { uniqueBrandIconFilename, UPLOADS_BRANDS } = require("../../middleware/uploadBrandIcon");
+const { uniqueBrandIconFilePrefix, UPLOADS_BRANDS } = require("../../middleware/uploadBrandIcon");
 
 function ensureUploadsBrandsDir() {
   try {
@@ -16,22 +17,50 @@ function ensureUploadsBrandsDir() {
   }
 }
 
-function processBrandIconBuffer(buffer, baseName) {
+function isLikelySvgBuffer(buffer, mimetype) {
+  const m = (mimetype || "").toLowerCase();
+  if (m === "image/svg+xml" || m === "text/xml" || m === "application/xml") return true;
+  const slice = buffer.slice(0, Math.min(buffer.length, 512));
+  const head = slice.toString("utf8").trimStart().toLowerCase();
+  if (head.startsWith("<svg")) return true;
+  if (head.startsWith("<?xml") && head.includes("<svg")) return true;
+  return false;
+}
+
+async function processBrandIconUpload(buffer, mimetype, prefix) {
   if (!Buffer.isBuffer(buffer) || buffer.length === 0) return { error: "Empty icon file." };
-  const raw = buffer.toString("utf8");
-  const sanitized = sanitizeSvg(raw);
-  if (!sanitized.ok) return { error: sanitized.error || "Invalid SVG." };
-  const optimized = optimizeSvg(sanitized.data);
   if (!ensureUploadsBrandsDir()) return { error: "Failed to create uploads directory." };
-  const svgPath = path.join(UPLOADS_BRANDS, baseName);
-  try {
-    fs.writeFileSync(svgPath, optimized, "utf8");
-  } catch (e) {
-    console.error("processBrandIconBuffer write:", e.message);
-    return { error: "Failed to save icon file." };
+
+  if (isLikelySvgBuffer(buffer, mimetype)) {
+    const raw = buffer.toString("utf8");
+    const sanitized = sanitizeSvg(raw);
+    if (!sanitized.ok) return { error: sanitized.error || "Invalid SVG." };
+    const optimized = optimizeSvg(sanitized.data);
+    const baseName = `${prefix}.svg`;
+    const svgPath = path.join(UPLOADS_BRANDS, baseName);
+    try {
+      fs.writeFileSync(svgPath, optimized, "utf8");
+    } catch (e) {
+      console.error("processBrandIconUpload svg write:", e.message);
+      return { error: "Failed to save icon file." };
+    }
+    generatePngFromSvg(svgPath, Buffer.from(optimized, "utf8")).catch(() => {});
+    return { iconPath: `/uploads/brands/${baseName}` };
   }
-  generatePngFromSvg(svgPath, Buffer.from(optimized, "utf8")).catch(() => {});
-  return { iconPath: `/uploads/brands/${baseName}` };
+
+  try {
+    const meta = await sharp(buffer).metadata();
+    if (!meta.width || !meta.height) return { error: "Invalid image file." };
+    const extMap = { jpeg: ".jpg", png: ".png", webp: ".webp", gif: ".gif" };
+    const ext = extMap[meta.format] || ".png";
+    const baseName = `${prefix}${ext}`;
+    const fullPath = path.join(UPLOADS_BRANDS, baseName);
+    await sharp(buffer).toFile(fullPath);
+    return { iconPath: `/uploads/brands/${baseName}` };
+  } catch (e) {
+    console.error("processBrandIconUpload raster:", e.message);
+    return { error: "Invalid or unsupported image file." };
+  }
 }
 
 function deleteOldBrandIconFile(oldPath) {
@@ -166,6 +195,37 @@ exports.getAdminBrands = async (req, res) => {
 };
 
 /**
+ * GET /api/brands/home — public; brands shown on client home carousel (available_home = 1).
+ */
+exports.getPublicBrandsForHome = async (req, res) => {
+  try {
+    let rows;
+    try {
+      [rows] = await pool.query(
+        `SELECT id, name, icon_path, sort_order
+         FROM brands
+         WHERE available_home = 1
+         ORDER BY sort_order ASC, name ASC, id ASC`
+      );
+    } catch (e) {
+      if (e.code === "ER_NO_SUCH_TABLE") return res.status(200).json({ items: [] });
+      throw e;
+    }
+    const items = (rows || [])
+      .map((r) => ({
+        id: r.id,
+        name: r.name || "",
+        iconPath: r.icon_path != null ? String(r.icon_path).trim() : "",
+      }))
+      .filter((r) => r.iconPath);
+    return res.status(200).json({ items });
+  } catch (err) {
+    console.error("getPublicBrandsForHome error:", err);
+    return res.status(500).json({ message: "Failed to load brands.", items: [] });
+  }
+};
+
+/**
  * POST /api/admin/brands
  */
 exports.createAdminBrand = async (req, res) => {
@@ -184,8 +244,8 @@ exports.createAdminBrand = async (req, res) => {
 
     let iconPathFromFile = null;
     if (iconFile && iconFile.buffer && iconFile.buffer.length > 0) {
-      const baseName = uniqueBrandIconFilename(name);
-      const result = processBrandIconBuffer(iconFile.buffer, baseName);
+      const prefix = uniqueBrandIconFilePrefix(name);
+      const result = await processBrandIconUpload(iconFile.buffer, iconFile.mimetype, prefix);
       if (result.error) return res.status(400).json({ message: result.error });
       iconPathFromFile = result.iconPath;
     }
@@ -265,8 +325,8 @@ exports.updateAdminBrand = async (req, res) => {
 
     let iconPathFromFile = null;
     if (iconFile && iconFile.buffer && iconFile.buffer.length > 0) {
-      const baseName = uniqueBrandIconFilename(`id-${id}`);
-      const result = processBrandIconBuffer(iconFile.buffer, baseName);
+      const prefix = uniqueBrandIconFilePrefix(`id-${id}`);
+      const result = await processBrandIconUpload(iconFile.buffer, iconFile.mimetype, prefix);
       if (result.error) return res.status(400).json({ message: result.error });
       iconPathFromFile = result.iconPath;
     }

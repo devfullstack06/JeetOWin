@@ -1,31 +1,38 @@
-import React, { useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import "./brandsAvailable.css";
 
-export default function BrandsAvailable({
-  title = "Brands Available",
-  imageFiles = [
-    "b (1).png",
-    "b (2).png",
-    "b (3).png",
-    "b (4).png",
-    "b (5).png",
-    "b (6).png",
-  ],
-}) {
-  const items = useMemo(
-    () =>
-      imageFiles.map((file, idx) => ({
-        id: `brand-${idx}`,
-        src: `/brands-available/${file}`,
-      })),
-    [imageFiles]
-  );
+export default function BrandsAvailable({ title = "Brands Available", items: itemsProp = undefined }) {
+  const [remoteItems, setRemoteItems] = useState(undefined);
+  const items = useMemo(() => {
+    if (Array.isArray(itemsProp)) return itemsProp;
+    if (remoteItems === undefined) return [];
+    return Array.isArray(remoteItems) ? remoteItems : [];
+  }, [itemsProp, remoteItems]);
+
+  useEffect(() => {
+    if (Array.isArray(itemsProp)) return;
+    let ignore = false;
+    fetch("/api/brands/home")
+      .then((res) => {
+        if (!res.ok) throw new Error("failed");
+        return res.json();
+      })
+      .then((data) => {
+        if (ignore) return;
+        setRemoteItems(Array.isArray(data.items) ? data.items : []);
+      })
+      .catch(() => {
+        if (!ignore) setRemoteItems([]);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [itemsProp]);
 
   const viewportRef = useRef(null);
   const stepRef = useRef(0);
   const autoTimerRef = useRef(null);
 
-  /* Measure one tile + gap (same as TopSports) */
   const measureStep = () => {
     const viewport = viewportRef.current;
     if (!viewport) return;
@@ -92,6 +99,7 @@ export default function BrandsAvailable({
   };
 
   useEffect(() => {
+    if (!items.length) return undefined;
     startAuto();
     return () => stopAuto();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -122,6 +130,10 @@ export default function BrandsAvailable({
         </div>
       </div>
 
+      {!items.length ? (
+        <div style={{ color: "#4f5b78", fontSize: 13, padding: "6px 0" }}>No brands configured for home.</div>
+      ) : null}
+
       <div
         className="jw-brandsScroller"
         ref={viewportRef}
@@ -135,12 +147,12 @@ export default function BrandsAvailable({
             key={`${it.id}-${idx}`}
             type="button"
             className="jw-brandsTile"
-            aria-label={it.id}
+            aria-label={it.name || String(it.id)}
           >
             <img
               className="jw-brandsImg"
-              src={it.src}
-              alt={it.id}
+              src={it.iconPath || it.src}
+              alt={it.name || ""}
               loading="lazy"
               onLoad={measureStep}
             />
