@@ -6,6 +6,7 @@ const router = express.Router();
 const authenticateToken = require('../middleware/auth');
 const roleCheck = require('../middleware/roleCheck');
 const { getDashboard, getTransactions } = require('../controllers/clientController');
+const { getClientHistory } = require('../controllers/clientHistoryController');
 
 /**
  * GET /api/client/dashboard
@@ -28,6 +29,12 @@ router.get('/dashboard', authenticateToken, roleCheck('client'), getDashboard);
  * 3. getTransactions - Fetches transactions from database and returns them
  */
 router.get('/transactions', authenticateToken, roleCheck('client'), getTransactions);
+
+/**
+ * GET /api/client/history
+ * Ledger history (DP / WD / TRI / TRO) for History page.
+ */
+router.get('/history', authenticateToken, roleCheck('client'), getClientHistory);
 
 /**
  * Example: Route accessible by multiple roles

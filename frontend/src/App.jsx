@@ -17,6 +17,7 @@ import ContactUsPage from "./pages/contactUs/ContactUsPage";
 import PromotionsPage from "./pages/Promotions/PromotionsPage";
 import NotificationsPage from "./pages/Notifications/NotificationsPage";
 import TransactionsPage from "./pages/Transactions/TransactionsPage";
+import HistoryPage from "./pages/History/HistoryPage";
 
 // ==========================
 // ADMIN
@@ -203,6 +204,7 @@ export default function App() {
             <Route path="home" element={<Home />} />
             <Route path="accounts" element={<AccountsPage />} />
             <Route path="transfers" element={<TransfersPage />} />
+            <Route path="history" element={<HistoryPage />} />
             <Route path="wallets" element={<WalletsPage />} />
             <Route path="dashboard" element={<Home />} />
             <Route path="contact" element={<ContactUsPage />} />

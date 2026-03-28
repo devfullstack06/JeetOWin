@@ -90,6 +90,7 @@ export default function LoggedInLayout({ activeId = "dashboard", children }) {
       dashboard: "/home",
       accounts: "/accounts",
       transfers: "/transfers",
+      history: "/history",
       wallets: "/wallets",
       promotions: "/promotions",
       referral: "/referral",

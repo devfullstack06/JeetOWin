@@ -1,0 +1,158 @@
+.jw-historyTabsRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+}
+
+.jw-historyTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.jw-historyTab {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(0, 0, 0, 0.15);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.jw-historyTab.is-active {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.55);
+  color: #fff;
+}
+
+.jw-historyFilterToggle {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(0, 0, 0, 0.2);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.jw-historyFilterToggle.is-active {
+  border-color: #00ca52;
+  background: rgba(0, 202, 82, 0.2);
+}
+
+.jw-historyFilterPanel {
+  margin: 0 10px;
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.jw-historyFilterGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 600px) {
+  .jw-historyFilterGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.jw-historyFilterField label {
+  display: block;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 4px;
+}
+
+.jw-historySelect,
+.jw-historyTrxInput {
+  width: 100%;
+  min-height: 40px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(0, 0, 0, 0.2);
+  padding: 0 10px;
+  font-size: 14px;
+  color: #fff;
+}
+
+.jw-historySelect option {
+  color: #111;
+  background: #fff;
+}
+
+.jw-historyTableWrap {
+  margin: 0 4px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.jw-historyTable {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.jw-historyTable th,
+.jw-historyTable td {
+  text-align: left;
+  padding: 10px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  vertical-align: middle;
+}
+
+.jw-historyTable th {
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+  white-space: nowrap;
+}
+
+.jw-historyTable td {
+  color: #fff;
+}
+
+.jw-historyTable tr.is-opening td {
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 510;
+}
+
+.jw-historyType {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.jw-historyNotice {
+  margin: 0 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  background: rgba(0, 0, 0, 0.25);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.jw-historyNotice.is-warn {
+  border: 1px solid rgba(255, 193, 7, 0.45);
+}
+
+.jw-historyEmpty {
+  text-align: center;
+  padding: 28px 16px;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 15px;
+}
