@@ -52,6 +52,7 @@ import AdminFilterBar, {
   AdminInput,
   AdminButton,
 } from "../../components/AdminFilterBar/AdminFilterBar";
+import AdminAutoRefresh from "../../components/AdminFilterBar/AdminAutoRefresh";
 import AdminDateRange from "../../components/AdminDateRange/AdminDateRange";
 import AdminPagination from "../../components/AdminPagination/AdminPagination";
 import { formatAdminDateTime } from "../../utils/adminDateUtils";
@@ -1331,8 +1332,17 @@ export default function AccountsPage() {
     }
   };
 
+  const ticketPendingApplied =
+    String(ticketApplied.state || "pending").toLowerCase() === "pending";
+
   const ticketFiltersBar = (
-    <AdminFilterBar onClear={onTicketClear} onSubmit={onTicketSubmit}>
+    <AdminFilterBar
+      actionsAddon={
+        ticketPendingApplied ? <AdminAutoRefresh onRefresh={fetchTickets} /> : null
+      }
+      onClear={onTicketClear}
+      onSubmit={onTicketSubmit}
+    >
       <AdminFilterField label="Ticket ID">
         <AdminInput
           value={ticketFilters.ticketId}

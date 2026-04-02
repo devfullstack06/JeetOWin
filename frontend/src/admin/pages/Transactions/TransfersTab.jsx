@@ -6,6 +6,7 @@ import AdminFilterBar, {
   AdminInput,
   AdminButton,
 } from "../../components/AdminFilterBar/AdminFilterBar";
+import AdminAutoRefresh from "../../components/AdminFilterBar/AdminAutoRefresh";
 import AdminDateRange from "../../components/AdminDateRange/AdminDateRange";
 import AdminPagination from "../../components/AdminPagination/AdminPagination";
 import { formatAdminDateTime } from "../../utils/adminDateUtils";
@@ -1639,7 +1640,15 @@ export default function TransfersTab({ title, tabs }) {
   };
 
   const filtersBar = (
-    <AdminFilterBar onClear={onClear} onSubmit={onSubmitFilters}>
+    <AdminFilterBar
+      actionsAddon={
+        statusFilter === "pending" ? (
+          <AdminAutoRefresh onRefresh={fetchTickets} />
+        ) : null
+      }
+      onClear={onClear}
+      onSubmit={onSubmitFilters}
+    >
       <AdminFilterField label="Ticket">
         <AdminInput
           value={filters.ticket}
