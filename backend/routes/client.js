@@ -7,6 +7,7 @@ const authenticateToken = require('../middleware/auth');
 const roleCheck = require('../middleware/roleCheck');
 const { getDashboard, getTransactions } = require('../controllers/clientController');
 const { getClientHistory } = require('../controllers/clientHistoryController');
+const { getClientHistoryTickets } = require('../controllers/clientHistoryTicketsController');
 
 /**
  * GET /api/client/dashboard
@@ -29,6 +30,12 @@ router.get('/dashboard', authenticateToken, roleCheck('client'), getDashboard);
  * 3. getTransactions - Fetches transactions from database and returns them
  */
 router.get('/transactions', authenticateToken, roleCheck('client'), getTransactions);
+
+/**
+ * GET /api/client/history/tickets
+ * Deposit / withdraw / transfer tickets for History page (Deposits, Withdraws, Transfers tabs).
+ */
+router.get('/history/tickets', authenticateToken, roleCheck('client'), getClientHistoryTickets);
 
 /**
  * GET /api/client/history

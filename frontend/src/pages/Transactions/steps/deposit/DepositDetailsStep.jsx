@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import TransactionsTabs from "../../components/TransactionsTabs";
 import CompanyTilesRow from "../../components/CompanyTilesRow";
 import AmountInputRow from "../../components/AmountInputRow";
@@ -26,6 +27,7 @@ export default function DepositDetailsStep({
   submitting,
   errors,
 }) {
+  const navigate = useNavigate();
   const minAmount = activeWallet?.minAmount ?? 500;
 
   const quickAmounts = useMemo(() => {
@@ -48,8 +50,19 @@ export default function DepositDetailsStep({
       <div className="jw-txStepContentWithButtons">
       <div className="jw-txStepContainer">
         <div className="jw-txStepTitleContainer">
-          <div className="jw-txStepTitle is-deposit">Deposit</div>
-          <div className="jw-txStepSub">Select Payment Method</div>
+          <div className="jw-txStepTitleMain">
+            <div className="jw-txStepTitle is-deposit">Deposit</div>
+            <div className="jw-txStepSub">Select Payment Method</div>
+          </div>
+          <div className="jw-txStepTitleAction">
+            <button
+              type="button"
+              className="jw-txHistoryBtn"
+              onClick={() => navigate("/history?tab=deposits")}
+            >
+              History
+            </button>
+          </div>
         </div>
         <div className="jw-txStepContent">
           <CompanyTilesRow

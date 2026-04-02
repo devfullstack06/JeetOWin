@@ -742,8 +742,32 @@
 
 .jw-txStepTitleContainer {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.jw-txStepTitleMain {
+  display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
+}
+
+.jw-txStepTitleAction {
+  flex-shrink: 0;
+}
+
+.jw-txHistoryBtn {
+  height: 34px;
+  min-width: 88px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(0, 0, 0, 0.2);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .jw-txStepContent {

@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import TransactionsTabs from "../../components/TransactionsTabs";
 import CompanyTilesRow from "../../components/CompanyTilesRow";
 import AmountInputRow from "../../components/AmountInputRow";
@@ -28,6 +29,7 @@ export default function WithdrawDetailsStep({
   submitting,
   errors,
 }) {
+  const navigate = useNavigate();
   const amounts = useMemo(() => {
     return quickAmounts?.length ? quickAmounts : [500, 1000, 5000, 10000];
   }, [quickAmounts]);
@@ -39,8 +41,19 @@ export default function WithdrawDetailsStep({
       <div className="jw-txStepContentWithButtons">
       <div className="jw-txStepContainer">
       <div className="jw-txStepTitleContainer">
-        <div className="jw-txStepTitle is-withdraw">Withdraw</div>
-      <div className="jw-txStepSub">Select Your Wallet</div>
+        <div className="jw-txStepTitleMain">
+          <div className="jw-txStepTitle is-withdraw">Withdraw</div>
+          <div className="jw-txStepSub">Select Your Wallet</div>
+        </div>
+        <div className="jw-txStepTitleAction">
+          <button
+            type="button"
+            className="jw-txHistoryBtn"
+            onClick={() => navigate("/history?tab=withdraws")}
+          >
+            History
+          </button>
+        </div>
       </div>
       <div className="jw-txStepContent">
         <CompanyTilesRow
