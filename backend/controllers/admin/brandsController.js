@@ -90,9 +90,28 @@ function parseYesNo(value) {
   return s === "yes" || s === "true" || s === "1" ? 1 : 0;
 }
 
+/** Positive integer minutes for transfer timers; default when omitted. */
+function parseProcessMinutes(raw, defaultIfEmpty = 15) {
+  if (raw === undefined || raw === null || raw === "") return defaultIfEmpty;
+  const n = Math.floor(Number(raw));
+  if (!Number.isFinite(n) || n < 1) return null;
+  return n;
+}
+
+/** For PATCH: undefined = omit column; any other value must be a positive integer. */
+function parseProcessMinutesPatch(raw) {
+  if (raw === undefined) return undefined;
+  if (raw === null || raw === "") return null;
+  const n = Math.floor(Number(raw));
+  if (!Number.isFinite(n) || n < 1) return null;
+  return n;
+}
+
 const SORT_MAP = { name: "name", accounts: "available_accounts", home: "available_home", sortOrder: "sort_order" };
 
 function buildItem(row) {
+  const inM = row.in_process_minutes != null ? Number(row.in_process_minutes) : null;
+  const outM = row.out_process_minutes != null ? Number(row.out_process_minutes) : null;
   return {
     id: row.id,
     name: row.name || "",
@@ -105,6 +124,8 @@ function buildItem(row) {
     createdAt: row.created_at,
     total: Number(row.total_masters) || 0,
     active: Number(row.active_masters) || 0,
+    inProcessMinutes: Number.isFinite(inM) ? inM : 15,
+    outProcessMinutes: Number.isFinite(outM) ? outM : 15,
   };
 }
 
@@ -146,7 +167,10 @@ exports.getAdminBrands = async (req, res) => {
 
     const offset = (page - 1) * pageSize;
     const selectWithCounts =
-      `SELECT id, name, available_accounts, available_home, sort_order, icon_path, created_at,
+      `SELECT id, name, available_accounts, available_home, sort_order,
+        COALESCE(in_process_minutes, 15) AS in_process_minutes,
+        COALESCE(out_process_minutes, 15) AS out_process_minutes,
+        icon_path, created_at,
         (SELECT COUNT(*) FROM brand_companies bc WHERE bc.brand_id = brands.id) AS total_masters,
         (SELECT COUNT(*) FROM brand_companies bc WHERE bc.brand_id = brands.id AND bc.is_active = 1) AS active_masters
        FROM brands ${whereSql}
@@ -161,7 +185,10 @@ exports.getAdminBrands = async (req, res) => {
       if (e.code === "ER_NO_SUCH_TABLE") {
         try {
           [rows] = await pool.query(
-            `SELECT id, name, available_accounts, available_home, sort_order, icon_path, created_at
+            `SELECT id, name, available_accounts, available_home, sort_order,
+              COALESCE(in_process_minutes, 15) AS in_process_minutes,
+              COALESCE(out_process_minutes, 15) AS out_process_minutes,
+              icon_path, created_at
              FROM brands ${whereSql}
              ORDER BY ${sortColumn} ${sortDir}, id ASC
              LIMIT ? OFFSET ?`,
@@ -240,6 +267,21 @@ exports.createAdminBrand = async (req, res) => {
     const iconSvg = req.body?.iconSvg != null ? String(req.body.iconSvg) : null;
     const iconFile = req.file;
 
+    const inProcessMinutes = parseProcessMinutes(
+      req.body?.inProcessMinutes ?? req.body?.in_process_minutes,
+      15
+    );
+    const outProcessMinutes = parseProcessMinutes(
+      req.body?.outProcessMinutes ?? req.body?.out_process_minutes,
+      15
+    );
+    if (inProcessMinutes === null) {
+      return res.status(400).json({ message: "IN process minutes must be a positive whole number (1 or greater)." });
+    }
+    if (outProcessMinutes === null) {
+      return res.status(400).json({ message: "OUT process minutes must be a positive whole number (1 or greater)." });
+    }
+
     if (!name) return res.status(400).json({ message: "Name is required." });
 
     let iconPathFromFile = null;
@@ -264,9 +306,9 @@ exports.createAdminBrand = async (req, res) => {
     let result;
     try {
       [result] = await pool.query(
-        `INSERT INTO brands (name, available_accounts, available_home, sort_order, icon_path)
-         VALUES (?, ?, ?, ?, ?)`,
-        [name, availableAccounts, availableHome, nextOrder, iconPathFromFile]
+        `INSERT INTO brands (name, available_accounts, available_home, sort_order, in_process_minutes, out_process_minutes, icon_path)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [name, availableAccounts, availableHome, nextOrder, inProcessMinutes, outProcessMinutes, iconPathFromFile]
       );
     } catch (e) {
       if (e.code === "ER_NO_SUCH_TABLE") return res.status(503).json({ message: "Brands table not set up. Run database/migration_brands.sql." });
@@ -292,7 +334,10 @@ exports.createAdminBrand = async (req, res) => {
     }
 
     const [rows] = await pool.query(
-      "SELECT id, name, available_accounts, available_home, sort_order, icon_path, created_at FROM brands WHERE id = ?",
+      `SELECT id, name, available_accounts, available_home, sort_order,
+        COALESCE(in_process_minutes, 15) AS in_process_minutes,
+        COALESCE(out_process_minutes, 15) AS out_process_minutes,
+        icon_path, created_at FROM brands WHERE id = ?`,
       [insertId]
     );
     const row = rows[0];
@@ -323,6 +368,17 @@ exports.updateAdminBrand = async (req, res) => {
     const iconSvg = body.iconSvg !== undefined ? String(body.iconSvg) : undefined;
     const iconFile = req.file;
 
+    const inPatchRaw = body.inProcessMinutes ?? body.in_process_minutes;
+    const outPatchRaw = body.outProcessMinutes ?? body.out_process_minutes;
+    const inProcessMinutesPatch = parseProcessMinutesPatch(inPatchRaw);
+    const outProcessMinutesPatch = parseProcessMinutesPatch(outPatchRaw);
+    if (inPatchRaw !== undefined && inProcessMinutesPatch === null) {
+      return res.status(400).json({ message: "IN process minutes must be a positive whole number (1 or greater)." });
+    }
+    if (outPatchRaw !== undefined && outProcessMinutesPatch === null) {
+      return res.status(400).json({ message: "OUT process minutes must be a positive whole number (1 or greater)." });
+    }
+
     let iconPathFromFile = null;
     if (iconFile && iconFile.buffer && iconFile.buffer.length > 0) {
       const prefix = uniqueBrandIconFilePrefix(`id-${id}`);
@@ -334,7 +390,10 @@ exports.updateAdminBrand = async (req, res) => {
     let existing;
     try {
       [existing] = await pool.query(
-        "SELECT id, name, available_accounts, available_home, sort_order, icon_path FROM brands WHERE id = ?",
+        `SELECT id, name, available_accounts, available_home, sort_order,
+          COALESCE(in_process_minutes, 15) AS in_process_minutes,
+          COALESCE(out_process_minutes, 15) AS out_process_minutes,
+          icon_path FROM brands WHERE id = ?`,
         [id]
       );
     } catch (e) {
@@ -350,6 +409,14 @@ exports.updateAdminBrand = async (req, res) => {
     if (availableHome !== null) { updates.push("available_home = ?"); params.push(availableHome); }
     if (sortOrder !== null && sortOrder >= 0) { updates.push("sort_order = ?"); params.push(sortOrder); }
     if (iconPathFromFile !== null) { updates.push("icon_path = ?"); params.push(iconPathFromFile); }
+    if (inProcessMinutesPatch !== undefined) {
+      updates.push("in_process_minutes = ?");
+      params.push(inProcessMinutesPatch);
+    }
+    if (outProcessMinutesPatch !== undefined) {
+      updates.push("out_process_minutes = ?");
+      params.push(outProcessMinutesPatch);
+    }
 
     if (updates.length === 0 && iconSvg === undefined) {
       return res.status(200).json({ message: "No changes.", item: buildItem(existing[0]) });
@@ -379,7 +446,10 @@ exports.updateAdminBrand = async (req, res) => {
     }
 
     const [rows] = await pool.query(
-      "SELECT id, name, available_accounts, available_home, sort_order, icon_path, created_at FROM brands WHERE id = ?",
+      `SELECT id, name, available_accounts, available_home, sort_order,
+        COALESCE(in_process_minutes, 15) AS in_process_minutes,
+        COALESCE(out_process_minutes, 15) AS out_process_minutes,
+        icon_path, created_at FROM brands WHERE id = ?`,
       [id]
     );
     return res.status(200).json({ message: "Brand updated.", item: buildItem(rows[0]) });

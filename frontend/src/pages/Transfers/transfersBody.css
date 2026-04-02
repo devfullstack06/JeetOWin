@@ -17,7 +17,7 @@
     background: linear-gradient(360deg, #14379c 22%, #071336 100%);
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
     color: #fff;
   
     font-family: inherit;
@@ -225,77 +225,109 @@
    STEP 2: Create Transfer UI (mock-like)
    ========================= */
 
-   .jw-transferBrandsHead {
+  .jw-transfersFormPanel {
+    padding: 0 10px 10px;
+  }
+
+  /* Create step: same row layout as Transactions .jw-txStepTitleContainer */
+  .jw-transfersFormPanel .jw-txStepTitleContainer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 2px 2px 0;
+  }
+
+  .jw-transfersFormPanel .jw-txStepTitleMain {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    padding: 2px 2px 0;
+    min-width: 0;
   }
-  
-  .jw-transferBrandsTitle {
+
+  .jw-transfersFormPanel .jw-txStepTitleAction {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+  }
+
+  .jw-transfersFormPanel .jw-txStepTitle {
     font-size: 18px;
     font-weight: 700;
+    margin-top: 2px;
   }
-  
-  .jw-transferBrandsSub {
+
+  .jw-transfersFormPanel .jw-txStepSub {
     font-size: 12px;
     color: rgba(255, 255, 255, 0.75);
   }
-  
-  .jw-transferBrandRow {
+
+  .jw-transfersFormPanel .jw-txHistoryBtn {
+    height: 34px;
+    min-width: 88px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    background: rgba(0, 0, 0, 0.2);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  /* Brand tiles: match Transactions .jw-txTilesRow / .jw-txTile */
+  .jw-transfersFormPanel .jw-txTilesRow {
     display: flex;
-    gap: 12px;
-    overflow: auto;
-    padding: 10px 2px;
+    gap: 14px;
+    overflow-x: auto;
+    padding: 8px 0 6px;
     -webkit-overflow-scrolling: touch;
   }
-  
-  .jw-transferBrandTile {
-    min-width: 92px;
-    border: 0;
-    border-radius: 14px;
-    padding: 10px 10px 12px;
-    cursor: pointer;
-  
-    background: rgba(0, 0, 0, 0.22);
-    color: #fff;
-  
+
+  .jw-transfersFormPanel .jw-txTile {
+    min-width: 86px;
+    height: 86px;
+    border-radius: 16px;
+    background: #071336;
+    border: 1px solid rgba(255, 255, 255, 0.1);
     display: flex;
     flex-direction: column;
+    justify-content: center;
     align-items: center;
-    gap: 8px;
-  }
-  
-  .jw-transferBrandTile.is-active {
-    outline: 1px solid rgba(255, 255, 255, 0.55);
-    background: rgba(0, 0, 0, 0.32);
-  }
-  
-  .jw-transferBrandLogo {
-    width: 54px;
-    height: 54px;
-    border-radius: 14px;
-    display: grid;
-    place-items: center;
-    font-weight: 800;
-    background: transparent;
-    overflow: hidden;
+    gap: 6px;
+    cursor: pointer;
+    color: #fff;
     flex-shrink: 0;
   }
 
-  .jw-transferBrandLogoImg {
+  .jw-transfersFormPanel .jw-txTile.is-active {
+    border-color: rgba(255, 255, 255, 0.55);
+  }
+
+  .jw-transfersFormPanel .jw-txTileIcon {
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 12px;
+  }
+
+  .jw-transfersFormPanel .jw-txTileIcon--img img {
     width: 100%;
     height: 100%;
     object-fit: contain;
-    display: block;
-    border-radius: 12px;
   }
-  
-  .jw-transferBrandLabel {
-    font-size: 11px;
-    opacity: 0.9;
+
+  .jw-transfersFormPanel .jw-txTileLabel {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.85);
+    text-align: center;
+    line-height: 1.1;
   }
-  
+
   /* header row: Username | Action */
   .jw-transferTableHeader {
     display: flex;
@@ -352,7 +384,7 @@
     height: 28px;
     border: 0;
     border-radius: 12px;
-    font-weight: 800;
+    font-weight: 600;
     cursor: pointer;
     color: #000;
   }
@@ -425,7 +457,7 @@
     cursor: pointer;
     background: #00ca52;
     color: #000;
-    font-weight: 900;
+    font-weight: 600;
   }
   
   .jw-transferInlineError {
@@ -515,6 +547,13 @@
     color: #fff;
     font-weight: 700;
     text-align: right;
+  }
+
+  /* Same pattern as admin .jw-adminTd__date (DD-MM-YY 12h); color stays light for dark panel */
+  .jw-transferDetailValue--dateLikeAdmin {
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
   }
   
   /* Buttons (reuse Accounts sizes) */

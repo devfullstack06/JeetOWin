@@ -27,12 +27,6 @@ async function jsonFetch(url, options = {}) {
   return data;
 }
 
-export async function fetchTransferHistory(limit = 10) {
-  return jsonFetch(`/api/transfers/history?limit=${encodeURIComponent(limit)}`, {
-    method: "GET",
-  });
-}
-
 export async function fetchTransferBrands() {
   return jsonFetch("/api/transfers/brands", { method: "GET" });
 }

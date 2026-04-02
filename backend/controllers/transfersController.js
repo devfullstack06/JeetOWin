@@ -230,12 +230,17 @@ async function getTransferBrands(req, res) {
 
   try {
     const [rows] = await pool.query(
-      "SELECT name, icon_path FROM brands WHERE is_active = 1 ORDER BY name ASC"
+      `SELECT name, icon_path,
+        COALESCE(in_process_minutes, 15) AS in_process_minutes,
+        COALESCE(out_process_minutes, 15) AS out_process_minutes
+       FROM brands WHERE is_active = 1 ORDER BY name ASC`
     );
     return res.json({
       brands: rows.map((r) => ({
         name: r.name,
         iconPath: r.icon_path != null ? String(r.icon_path) : null,
+        inProcessMinutes: Number(r.in_process_minutes) || 15,
+        outProcessMinutes: Number(r.out_process_minutes) || 15,
       })),
     });
   } catch (e) {

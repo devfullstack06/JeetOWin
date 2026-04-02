@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 import "./transfersBody.css";
 import usePageTitle from "../../hooks/usePageTitle";
 
-import TransferHistoryStep from "./steps/TransferHistoryStep";
 import TransferCreateStep from "./steps/TransferCreateStep";
 import TransferProcessingStep from "./steps/TransferProcessingStep";
 import TransferCompletedStep from "./steps/TransferCompletedStep";
@@ -13,18 +12,18 @@ import TransferRejectedStep from "./steps/TransferRejectedStep";
 
 import {
   fetchTransferBrands,
-  fetchTransferHistory,
   createTransferTicket,
   fetchTransferTicketStatus,
 } from "./api/transfersApi";
-import { formatTransferAmountPk } from "./transferAmountFormat";
 
 /** API may return `{ name, iconPath }[]` or legacy string[]. */
 function normalizeClientTransferBrands(raw) {
   if (!Array.isArray(raw)) return [];
   return raw
     .map((item) => {
-      if (typeof item === "string") return { name: item, iconPath: null };
+      if (typeof item === "string") {
+        return { name: item, iconPath: null, inProcessMinutes: 15, outProcessMinutes: 15 };
+      }
       const name = item?.name != null ? String(item.name) : "";
       const iconPath =
         item?.iconPath != null
@@ -32,45 +31,35 @@ function normalizeClientTransferBrands(raw) {
           : item?.icon_path != null
             ? String(item.icon_path)
             : null;
-      return { name, iconPath: iconPath || null };
+      const inPm =
+        item?.inProcessMinutes != null
+          ? Number(item.inProcessMinutes)
+          : item?.in_process_minutes != null
+            ? Number(item.in_process_minutes)
+            : 15;
+      const outPm =
+        item?.outProcessMinutes != null
+          ? Number(item.outProcessMinutes)
+          : item?.out_process_minutes != null
+            ? Number(item.out_process_minutes)
+            : 15;
+      return {
+        name,
+        iconPath: iconPath || null,
+        inProcessMinutes: Number.isFinite(inPm) && inPm >= 1 ? Math.floor(inPm) : 15,
+        outProcessMinutes: Number.isFinite(outPm) && outPm >= 1 ? Math.floor(outPm) : 15,
+      };
     })
     .filter((b) => b.name);
-}
-
-function formatCreatedLabel(isoOrDate) {
-  if (!isoOrDate) return "-";
-  const d = new Date(isoOrDate);
-  if (Number.isNaN(d.getTime())) return String(isoOrDate);
-  const hh = String(d.getHours()).padStart(2, "0");
-  const mm = String(d.getMinutes()).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  const mo = String(d.getMonth() + 1).padStart(2, "0");
-  /** DD:MM hh:mm — day:month then 24h time */
-  return `${dd}:${mo} ${hh}:${mm}`;
-}
-
-function formatTransferDirectionLabel(direction) {
-  const d = String(direction || "").trim().toUpperCase();
-  if (d === "IN" || d === "OUT") return d;
-  return "—";
-}
-
-function mapStatus(s) {
-  if (s === "approved") return "completed";
-  if (s === "rejected") return "rejected";
-  return "processing";
 }
 
 export default function TransfersBody() {
   const navigate = useNavigate();
   usePageTitle("Transfers");
 
-  const [step, setStep] = useState("history");
+  const [step, setStep] = useState("create");
 
   const [brands, setBrands] = useState([]);
-  const [brandsLoading, setBrandsLoading] = useState(true);
-
-  const [historyRaw, setHistoryRaw] = useState([]);
 
   const [ticketId, setTicketId] = useState(null);
   const [ticket, setTicket] = useState(null);
@@ -79,32 +68,23 @@ export default function TransfersBody() {
 
   const pollingRef = useRef(null);
 
-  const goToHistory = async () => {
-    setStep("history");
+  const resetToCreate = () => {
+    setStep("create");
     setTicketId(null);
     setTicket(null);
     setRejectedReason("");
     setErrors({});
-
-    try {
-      const h = await fetchTransferHistory(10);
-      setHistoryRaw(h?.transfers ?? []);
-    } catch (e) {
-      console.error("[Transfers] refresh history failed:", e);
-      setHistoryRaw([]);
-    }
   };
 
   const handleClose = () => {
-    if (step === "history") {
+    if (step === "create") {
       navigate("/home");
       return;
     }
-    goToHistory();
+    resetToCreate();
   };
 
   const sectionLabel = useMemo(() => {
-    if (step === "history") return "Transfer History";
     if (step === "create") return "Create Transfer";
     if (step === "processing") return "Processing Transfer";
     if (step === "completed") return "Transfer Completed";
@@ -112,46 +92,19 @@ export default function TransfersBody() {
     return "Transfers";
   }, [step]);
 
-  const historyItems = useMemo(() => {
-    return (historyRaw || []).slice(0, 10).map((t) => ({
-      id: t.id,
-      clientAccountUsername: t.clientAccountUsername ?? null,
-      created: formatCreatedLabel(t.createdAt),
-      typeLabel: formatTransferDirectionLabel(t.direction),
-      brand: t.brand,
-      amount: formatTransferAmountPk(t.amount),
-      status: mapStatus(t.status),
-      direction: t.direction,
-    }));
-  }, [historyRaw]);
-
   useEffect(() => {
     let cancelled = false;
 
     async function load() {
-      setBrandsLoading(true);
       try {
-        const [bRes, hRes] = await Promise.allSettled([
-          fetchTransferBrands(),
-          fetchTransferHistory(10),
-        ]);
-
+        const data = await fetchTransferBrands();
         if (cancelled) return;
-
-        if (bRes.status === "fulfilled") {
-          setBrands(normalizeClientTransferBrands(bRes.value?.brands ?? []));
-        } else {
+        setBrands(normalizeClientTransferBrands(data?.brands ?? []));
+      } catch (e) {
+        if (!cancelled) {
           setBrands([]);
           setErrors((p) => ({ ...p, brands: "Failed to load brands." }));
         }
-
-        if (hRes.status === "fulfilled") {
-          setHistoryRaw(hRes.value?.transfers ?? []);
-        } else {
-          setHistoryRaw([]);
-        }
-      } finally {
-        if (!cancelled) setBrandsLoading(false);
       }
     }
 
@@ -227,6 +180,10 @@ export default function TransfersBody() {
       const newTicketId = res?.ticketId;
       setTicketId(newTicketId);
 
+      const brandRow = brands.find((b) => b.name === payload.brand);
+      const inPm = brandRow?.inProcessMinutes ?? 15;
+      const outPm = brandRow?.outProcessMinutes ?? 15;
+
       setTicket({
         createdAt: new Date().toISOString(),
         ticket: String(newTicketId || ""),
@@ -235,6 +192,8 @@ export default function TransfersBody() {
         clientAccountUsername: payload.username,
         amount: payload.amount,
         status: "processing",
+        inProcessMinutes: inPm,
+        outProcessMinutes: outPm,
       });
       window.dispatchEvent(new CustomEvent("jw:refresh-balance"));
     } catch (err) {
@@ -268,33 +227,26 @@ export default function TransfersBody() {
           <span className="jw-transfersLine" />
         </div>
 
-        {step === "history" && (
-          <TransferHistoryStep
-            items={historyItems}
-            onCreateNew={() => setStep("create")}
-          />
-        )}
-
         {step === "create" && (
           <TransferCreateStep
-            onCancel={goToHistory}
+            onCancel={handleClose}
             onSubmit={handleCreateSubmit}
             brandsAvailable={brands}
           />
         )}
 
         {step === "processing" && (
-          <TransferProcessingStep ticket={ticket} onBack={goToHistory} />
+          <TransferProcessingStep ticket={ticket} onBack={resetToCreate} />
         )}
 
         {step === "completed" && (
-          <TransferCompletedStep ticket={ticket} onGoToHistory={goToHistory} />
+          <TransferCompletedStep ticket={ticket} onGoToHistory={resetToCreate} />
         )}
 
         {step === "rejected" && (
           <TransferRejectedStep
             ticket={{ ...ticket, reason: rejectedReason }}
-            onGoToHistory={goToHistory}
+            onGoToHistory={resetToCreate}
           />
         )}
       </div>

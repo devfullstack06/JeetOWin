@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { fetchTransferAccountsByBrand } from "../api/transfersApi";
 import { getWalletIconUrl } from "../../../utils/walletIconUrl";
 import { digitsOnlyFromInput, formatDigitsPkForInput } from "../transferAmountFormat";
@@ -7,18 +8,20 @@ function TransferBrandLogo({ iconSrc, label }) {
   const [imgFailed, setImgFailed] = useState(false);
   if (iconSrc && !imgFailed) {
     return (
-      <img
-        src={iconSrc}
-        alt=""
-        className="jw-transferBrandLogoImg"
-        onError={() => setImgFailed(true)}
-      />
+      <div className="jw-txTileIcon jw-txTileIcon--img" aria-hidden>
+        <img src={iconSrc} alt="" onError={() => setImgFailed(true)} />
+      </div>
     );
   }
-  return label.slice(0, 2).toUpperCase();
+  return (
+    <div className="jw-txTileIcon" aria-hidden>
+      {label.slice(0, 2).toUpperCase()}
+    </div>
+  );
 }
 
 export default function TransferCreateStep({ onCancel, onSubmit, brandsAvailable = [] }) {
+  const navigate = useNavigate();
   const brands = useMemo(() => {
     return (brandsAvailable || [])
       .map((entry) => {
@@ -128,13 +131,24 @@ export default function TransferCreateStep({ onCancel, onSubmit, brandsAvailable
   return (
     <div className="jw-transfersFormOuter">
       <div className="jw-transfersFormPanel">
-        {/* TOP: Brands */}
-        <div className="jw-transferBrandsHead">
-          <div className="jw-transferBrandsTitle">Brands</div>
-          <div className="jw-transferBrandsSub">Select your Account&apos;s Brand</div>
+        {/* TOP: Brands — layout matches Transactions jw-txStepTitleContainer */}
+        <div className="jw-txStepTitleContainer">
+          <div className="jw-txStepTitleMain">
+            <div className="jw-txStepTitle">Brands</div>
+            <div className="jw-txStepSub">Select your Account&apos;s Brand</div>
+          </div>
+          <div className="jw-txStepTitleAction">
+            <button
+              type="button"
+              className="jw-txHistoryBtn"
+              onClick={() => navigate("/history?tab=transfers")}
+            >
+              History
+            </button>
+          </div>
         </div>
 
-        <div className="jw-transferBrandRow" role="list" aria-label="Brands">
+        <div className="jw-txTilesRow" role="list" aria-label="Brands">
           {brands.length === 0 ? (
             <div className="jw-transfersEmpty">No brands available.</div>
           ) : (
@@ -144,13 +158,13 @@ export default function TransferCreateStep({ onCancel, onSubmit, brandsAvailable
                 <button
                   key={b.id}
                   type="button"
-                  className={`jw-transferBrandTile ${active ? "is-active" : ""}`}
+                  className={`jw-txTile ${active ? "is-active" : ""}`}
                   onClick={() => setSelectedBrand(b.label)}
+                  role="listitem"
+                  aria-label={b.label}
                 >
-                  <div className="jw-transferBrandLogo" aria-hidden="true">
-                    <TransferBrandLogo iconSrc={b.iconSrc} label={b.label} />
-                  </div>
-                  <div className="jw-transferBrandLabel">{b.label}</div>
+                  <TransferBrandLogo iconSrc={b.iconSrc} label={b.label} />
+                  <div className="jw-txTileLabel">{b.label}</div>
                 </button>
               );
             })
@@ -185,14 +199,14 @@ export default function TransferCreateStep({ onCancel, onSubmit, brandsAvailable
                           className="jw-transferBtnIn"
                           onClick={() => startRowAction(acc.id, "IN")}
                         >
-                          In
+                          IN
                         </button>
                         <button
                           type="button"
                           className="jw-transferBtnOut"
                           onClick={() => startRowAction(acc.id, "OUT")}
                         >
-                          Out
+                          OUT
                         </button>
                       </div>
                     ) : (

@@ -1,5 +1,17 @@
 /* Brands page – reuses admin table/filter styles from usersPage + walletsPage */
 
+.jw-brandProcessTh {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.jw-brandProcessTh__icon {
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
 .jw-adminBrandModalPreview {
   display: block;
   margin-top: 8px;

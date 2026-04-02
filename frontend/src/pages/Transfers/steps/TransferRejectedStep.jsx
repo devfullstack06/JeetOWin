@@ -1,4 +1,5 @@
 import React from "react";
+import { formatAdminDateTime } from "../../../admin/utils/adminDateUtils";
 import { formatTransferAmountPk, formatTransferClientAccountUsername } from "../transferAmountFormat";
 
 export default function TransferRejectedStep({ ticket, onGoToHistory }) {
@@ -16,7 +17,9 @@ export default function TransferRejectedStep({ ticket, onGoToHistory }) {
           <div className="jw-transferDetails">
             <div className="jw-transferDetailRow">
               <div>Created at:</div>
-              <div className="jw-transferDetailValue">{t.createdAt || "-"}</div>
+              <div className="jw-transferDetailValue jw-transferDetailValue--dateLikeAdmin">
+                {formatAdminDateTime(t.createdAt)}
+              </div>
             </div>
             <div className="jw-transferDetailRow">
               <div>Ticket:</div>

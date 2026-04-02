@@ -1,6 +1,6 @@
 /**
- * Global admin-side date/time format: DD-MM-YY HH:MM AM/PM
- * Use only on admin frontend; do not use on client side.
+ * Date/time format: DD-MM-YY HH:MM AM/PM (matches admin table .jw-adminTd__date).
+ * Used on admin tables; also used on client Transfers ticket detail "Created at" for parity.
  */
 
 function pad2(n) {

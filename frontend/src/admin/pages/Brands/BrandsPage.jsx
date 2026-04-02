@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Plus, X } from "lucide-react";
+import { Clock, Plus, X } from "lucide-react";
 import AdminPageShell from "../../components/AdminPageShell/AdminPageShell";
 import AdminTabs from "../../components/AdminTabs/AdminTabs";
 import AdminFilterBar, {
@@ -21,6 +21,28 @@ function buildQuery(params) {
     search.set(key, String(value));
   });
   return search.toString();
+}
+
+function formatBrandProcessMins(value) {
+  const n = value != null && Number.isFinite(Number(value)) ? Number(value) : 15;
+  return `${n} mins.`;
+}
+
+/** Valid saved value: integer >= 1; empty / invalid → null */
+function parsePositiveMinutesInput(value) {
+  if (value === "" || value === undefined || value === null) return null;
+  const n = Math.floor(Number(value));
+  if (!Number.isFinite(n) || n < 1) return null;
+  return n;
+}
+
+function onPositiveMinutesInputChange(onChange, key, e) {
+  const v = e.target.value;
+  if (v === "") onChange(key, "");
+  else {
+    const n = parseInt(v, 10);
+    if (!Number.isNaN(n) && n >= 1) onChange(key, n);
+  }
 }
 
 function SortIcon({ dir }) {
@@ -76,6 +98,22 @@ function WebsiteBrandsTable({ rows, sort, onSort, onEdit, onImageClick, loading 
     { key: "accounts", header: "Accounts", sortKey: "accounts" },
     { key: "home", header: "Home", sortKey: "home" },
     { key: "sortOrder", header: "Sort Order", sortKey: "sortOrder" },
+    {
+      key: "inProcess",
+      header: (
+        <span className="jw-brandProcessTh">
+          IN <Clock className="jw-brandProcessTh__icon" size={14} aria-hidden />
+        </span>
+      ),
+    },
+    {
+      key: "outProcess",
+      header: (
+        <span className="jw-brandProcessTh">
+          OUT <Clock className="jw-brandProcessTh__icon" size={14} aria-hidden />
+        </span>
+      ),
+    },
     { key: "total", header: "Total" },
     { key: "active", header: "Active" },
     { key: "image", header: "Image" },
@@ -104,12 +142,12 @@ function WebsiteBrandsTable({ rows, sort, onSort, onEdit, onImageClick, loading 
           {isLoading ? (
             Array.from({ length: 5 }).map((_, i) => (
               <tr key={`sk-${i}`}>
-                <td colSpan={8}><div className="jw-adminSkeleton" style={{ height: 20 }} /></td>
+                <td colSpan={10}><div className="jw-adminSkeleton" style={{ height: 20 }} /></td>
               </tr>
             ))
           ) : isEmpty ? (
             <tr>
-              <td colSpan={8} className="jw-adminEmpty">No results found</td>
+              <td colSpan={10} className="jw-adminEmpty">No results found</td>
             </tr>
           ) : (
             rows.map((r) => {
@@ -120,6 +158,8 @@ function WebsiteBrandsTable({ rows, sort, onSort, onEdit, onImageClick, loading 
                   <td>{r.forAccountsYesNo ?? (r.forAccounts ? "Yes" : "No")}</td>
                   <td>{r.forHomeYesNo ?? (r.forHome ? "Yes" : "No")}</td>
                   <td>{r.sortOrder !== undefined && r.sortOrder !== null ? r.sortOrder : "—"}</td>
+                  <td>{formatBrandProcessMins(r.inProcessMinutes ?? r.in_process_minutes)}</td>
+                  <td>{formatBrandProcessMins(r.outProcessMinutes ?? r.out_process_minutes)}</td>
                   <td>{r.total !== undefined && r.total !== null ? r.total : "0"}</td>
                   <td>{r.active !== undefined && r.active !== null ? r.active : "0"}</td>
                   <td>
@@ -205,6 +245,32 @@ function CreateBrandModal({ open, form, saving, errorText, onChange, onIconFileS
                 else { const n = parseInt(v, 10); if (!Number.isNaN(n) && n >= 0) onChange("sortOrder", n); }
               }}
               placeholder="Leave empty for auto"
+            />
+          </div>
+          <div className="jw-adminUsersModal__field">
+            <label className="jw-adminUsersModal__label">IN process minutes</label>
+            <input
+              type="number"
+              min={1}
+              step={1}
+              inputMode="numeric"
+              className="jw-adminUsersModal__input"
+              value={form.inProcessMinutes === "" ? "" : form.inProcessMinutes}
+              onChange={(e) => onPositiveMinutesInputChange(onChange, "inProcessMinutes", e)}
+              placeholder="e.g. 15"
+            />
+          </div>
+          <div className="jw-adminUsersModal__field">
+            <label className="jw-adminUsersModal__label">OUT process minutes</label>
+            <input
+              type="number"
+              min={1}
+              step={1}
+              inputMode="numeric"
+              className="jw-adminUsersModal__input"
+              value={form.outProcessMinutes === "" ? "" : form.outProcessMinutes}
+              onChange={(e) => onPositiveMinutesInputChange(onChange, "outProcessMinutes", e)}
+              placeholder="e.g. 15"
             />
           </div>
           <div className="jw-adminUsersModal__field">
@@ -295,6 +361,32 @@ function EditBrandModal({ open, brand, form, saving, errorText, onChange, onIcon
                 if (v === "") onChange("sortOrder", "");
                 else { const n = parseInt(v, 10); if (!Number.isNaN(n) && n >= 0) onChange("sortOrder", n); }
               }}
+            />
+          </div>
+          <div className="jw-adminUsersModal__field">
+            <label className="jw-adminUsersModal__label">IN process minutes</label>
+            <input
+              type="number"
+              min={1}
+              step={1}
+              inputMode="numeric"
+              className="jw-adminUsersModal__input"
+              value={form.inProcessMinutes === "" ? "" : form.inProcessMinutes}
+              onChange={(e) => onPositiveMinutesInputChange(onChange, "inProcessMinutes", e)}
+              placeholder="e.g. 15"
+            />
+          </div>
+          <div className="jw-adminUsersModal__field">
+            <label className="jw-adminUsersModal__label">OUT process minutes</label>
+            <input
+              type="number"
+              min={1}
+              step={1}
+              inputMode="numeric"
+              className="jw-adminUsersModal__input"
+              value={form.outProcessMinutes === "" ? "" : form.outProcessMinutes}
+              onChange={(e) => onPositiveMinutesInputChange(onChange, "outProcessMinutes", e)}
+              placeholder="e.g. 15"
             />
           </div>
           <div className="jw-adminUsersModal__field">
@@ -560,14 +652,29 @@ export default function BrandsPage() {
   const [errorText, setErrorText] = useState("");
 
   const [createOpen, setCreateOpen] = useState(false);
-  const [createForm, setCreateForm] = useState({ name: "", availableAccounts: "yes", availableHome: "yes", sortOrder: "", iconSvg: "" });
+  const [createForm, setCreateForm] = useState({
+    name: "",
+    availableAccounts: "yes",
+    availableHome: "yes",
+    sortOrder: "",
+    inProcessMinutes: 15,
+    outProcessMinutes: 15,
+    iconSvg: "",
+  });
   const [createIconFile, setCreateIconFile] = useState(null);
   const [createSaving, setCreateSaving] = useState(false);
   const [createError, setCreateError] = useState("");
 
   const [editOpen, setEditOpen] = useState(false);
   const [editingBrand, setEditingBrand] = useState(null);
-  const [editForm, setEditForm] = useState({ availableAccounts: "yes", availableHome: "yes", sortOrder: "", iconSvg: "" });
+  const [editForm, setEditForm] = useState({
+    availableAccounts: "yes",
+    availableHome: "yes",
+    sortOrder: "",
+    inProcessMinutes: 15,
+    outProcessMinutes: 15,
+    iconSvg: "",
+  });
   const [editIconFile, setEditIconFile] = useState(null);
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState("");
@@ -700,7 +807,15 @@ export default function BrandsPage() {
   };
 
   const openCreate = () => {
-    setCreateForm({ name: "", availableAccounts: "yes", availableHome: "yes", sortOrder: "", iconSvg: "" });
+    setCreateForm({
+      name: "",
+      availableAccounts: "yes",
+      availableHome: "yes",
+      sortOrder: "",
+      inProcessMinutes: 15,
+      outProcessMinutes: 15,
+      iconSvg: "",
+    });
     setCreateIconFile(null);
     setCreateError("");
     setCreateOpen(true);
@@ -710,6 +825,10 @@ export default function BrandsPage() {
 
   const handleCreateConfirm = async () => {
     if (!createForm.name.trim()) { setCreateError("Name is required."); return; }
+    const inM = parsePositiveMinutesInput(createForm.inProcessMinutes);
+    const outM = parsePositiveMinutesInput(createForm.outProcessMinutes);
+    if (inM == null) { setCreateError("IN process minutes must be a positive whole number (1 or greater)."); return; }
+    if (outM == null) { setCreateError("OUT process minutes must be a positive whole number (1 or greater)."); return; }
     setCreateSaving(true);
     setCreateError("");
     const token = localStorage.getItem("token") || "";
@@ -721,6 +840,8 @@ export default function BrandsPage() {
         formData.append("availableAccounts", createForm.availableAccounts);
         formData.append("availableHome", createForm.availableHome);
         if (createForm.sortOrder !== "" && createForm.sortOrder !== undefined) formData.append("sortOrder", String(createForm.sortOrder));
+        formData.append("inProcessMinutes", String(inM));
+        formData.append("outProcessMinutes", String(outM));
         formData.append("icon", createIconFile);
         res = await fetch("/api/admin/brands", {
           method: "POST",
@@ -736,6 +857,8 @@ export default function BrandsPage() {
             availableAccounts: createForm.availableAccounts,
             availableHome: createForm.availableHome,
             sortOrder: createForm.sortOrder !== "" && createForm.sortOrder !== undefined ? Number(createForm.sortOrder) : undefined,
+            inProcessMinutes: inM,
+            outProcessMinutes: outM,
             iconSvg: createForm.iconSvg && createForm.iconSvg !== "selected" ? createForm.iconSvg : undefined,
           }),
         });
@@ -754,10 +877,16 @@ export default function BrandsPage() {
 
   const openEdit = (row) => {
     setEditingBrand(row);
+    const inPm = row.inProcessMinutes ?? row.in_process_minutes;
+    const outPm = row.outProcessMinutes ?? row.out_process_minutes;
     setEditForm({
       availableAccounts: row.forAccounts ? "yes" : "no",
       availableHome: row.forHome ? "yes" : "no",
       sortOrder: row.sortOrder !== undefined && row.sortOrder !== null ? row.sortOrder : "",
+      inProcessMinutes:
+        inPm != null && Number.isFinite(Number(inPm)) && Number(inPm) >= 1 ? Math.floor(Number(inPm)) : 15,
+      outProcessMinutes:
+        outPm != null && Number.isFinite(Number(outPm)) && Number(outPm) >= 1 ? Math.floor(Number(outPm)) : 15,
       iconSvg: "",
     });
     setEditIconFile(null);
@@ -769,6 +898,10 @@ export default function BrandsPage() {
 
   const handleEditConfirm = async () => {
     if (!editingBrand?.id) return;
+    const inM = parsePositiveMinutesInput(editForm.inProcessMinutes);
+    const outM = parsePositiveMinutesInput(editForm.outProcessMinutes);
+    if (inM == null) { setEditError("IN process minutes must be a positive whole number (1 or greater)."); return; }
+    if (outM == null) { setEditError("OUT process minutes must be a positive whole number (1 or greater)."); return; }
     setEditSaving(true);
     setEditError("");
     const token = localStorage.getItem("token") || "";
@@ -779,6 +912,8 @@ export default function BrandsPage() {
         formData.append("availableAccounts", editForm.availableAccounts);
         formData.append("availableHome", editForm.availableHome);
         if (editForm.sortOrder !== "" && editForm.sortOrder !== undefined && editForm.sortOrder !== null) formData.append("sortOrder", String(editForm.sortOrder));
+        formData.append("inProcessMinutes", String(inM));
+        formData.append("outProcessMinutes", String(outM));
         formData.append("icon", editIconFile);
         res = await fetch(`/api/admin/brands/${editingBrand.id}`, {
           method: "PATCH",
@@ -786,7 +921,12 @@ export default function BrandsPage() {
           body: formData,
         });
       } else {
-        const body = { availableAccounts: editForm.availableAccounts, availableHome: editForm.availableHome };
+        const body = {
+          availableAccounts: editForm.availableAccounts,
+          availableHome: editForm.availableHome,
+          inProcessMinutes: inM,
+          outProcessMinutes: outM,
+        };
         if (editForm.sortOrder !== "" && editForm.sortOrder !== undefined && editForm.sortOrder !== null) body.sortOrder = Number(editForm.sortOrder);
         if (editForm.iconSvg && editForm.iconSvg.trim() && editForm.iconSvg !== "selected") body.iconSvg = editForm.iconSvg;
         res = await fetch(`/api/admin/brands/${editingBrand.id}`, {
