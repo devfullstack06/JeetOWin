@@ -46,13 +46,22 @@ export default function WithdrawDetailsStep({
           <div className="jw-txStepSub">Select Your Wallet</div>
         </div>
         <div className="jw-txStepTitleAction">
-          <button
-            type="button"
-            className="jw-txHistoryBtn"
-            onClick={() => navigate("/history?tab=withdraws")}
-          >
-            History
-          </button>
+          <div className="jw-txStepTitleActions jw-txStepTitleActions--withdrawCols">
+            <button
+              type="button"
+              className="jw-txHistoryBtn jw-txHistoryBtn--green"
+              onClick={() => navigate("/wallets?create=1")}
+            >
+              New Wallet +
+            </button>
+            <button
+              type="button"
+              className="jw-txHistoryBtn"
+              onClick={() => navigate("/history?tab=withdraws")}
+            >
+              History
+            </button>
+          </div>
         </div>
       </div>
       <div className="jw-txStepContent">

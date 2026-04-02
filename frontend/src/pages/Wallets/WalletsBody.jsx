@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Wallet } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import usePageTitle from "../../hooks/usePageTitle";
 
 import "./walletsBody.css";
@@ -12,6 +12,7 @@ import { createWallet, fetchMyWallets, fetchWalletCompanies } from "./api/wallet
 
 export default function WalletsBody() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   usePageTitle("My Wallets");
 
   const [step, setStep] = useState("list"); // list | create
@@ -69,6 +70,25 @@ export default function WalletsBody() {
 
     return () => { cancelled = true; };
   }, []);
+
+  useEffect(() => {
+    if (searchParams.get("create") !== "1") return;
+
+    setStep("create");
+    setErrors({});
+    (async () => {
+      try {
+        const res = await fetchWalletCompanies();
+        setCompanies(res?.companies ?? []);
+      } catch {
+        /* companies may still load from initial effect */
+      }
+    })();
+
+    const next = new URLSearchParams(searchParams);
+    next.delete("create");
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   const goToList = async () => {
     setStep("list");
