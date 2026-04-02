@@ -57,6 +57,15 @@ const {
   deleteAdminTrendingGamesItem,
 } = require("../controllers/admin/trendingGamesController");
 const {
+  getAdminLeaderboardMocks,
+  getAdminLeaderboardMockById,
+  createAdminLeaderboardMock,
+  checkLeaderboardMockUsername,
+  previewLeaderboardMockBalance,
+  getLeaderboardMockUsernames,
+  getLeaderboardMockDetailView,
+} = require("../controllers/admin/leaderboardMocksController");
+const {
   getAdminBrands,
   createAdminBrand,
   updateAdminBrand,
@@ -164,6 +173,14 @@ router.get("/trending-games", requireAdminAuth, getAdminTrendingGamesItems);
 router.post("/trending-games", requireAdminAuth, optionalTrendingGamesImageUpload, createAdminTrendingGamesItem);
 router.patch("/trending-games/:id", requireAdminAuth, optionalTrendingGamesImageUpload, updateAdminTrendingGamesItem);
 router.delete("/trending-games/:id", requireAdminAuth, deleteAdminTrendingGamesItem);
+
+router.get("/leaderboard-mocks/check-username", requireAdminAuth, checkLeaderboardMockUsername);
+router.get("/leaderboard-mocks/preview-balance", requireAdminAuth, previewLeaderboardMockBalance);
+router.get("/leaderboard-mocks/mock-usernames", requireAdminAuth, getLeaderboardMockUsernames);
+router.get("/leaderboard-mocks/detail-view", requireAdminAuth, getLeaderboardMockDetailView);
+router.get("/leaderboard-mocks", requireAdminAuth, getAdminLeaderboardMocks);
+router.get("/leaderboard-mocks/:id", requireAdminAuth, getAdminLeaderboardMockById);
+router.post("/leaderboard-mocks", requireAdminAuth, createAdminLeaderboardMock);
 
 router.get("/brands", requireAdminAuth, getAdminBrands);
 router.get("/brands/for-accounts", requireAdminAuth, getAdminBrandsForAccounts);

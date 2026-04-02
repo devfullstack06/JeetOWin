@@ -95,3 +95,31 @@
   margin: 0 auto;
   transform-origin: top center;
 }
+
+/* Leader Board — View modal: shrink to content (global modal is width 100% / max 800px) */
+.jw-adminUsersModal.jw-adminLeaderBoardViewModal {
+  width: fit-content;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Leader Board — View modal history table: compact tbody, auto column widths */
+.jw-adminLeaderBoardViewModalTable.jw-adminTableWrap {
+  overflow-x: auto;
+}
+
+.jw-adminLeaderBoardViewModalTable .jw-adminTable {
+  min-width: 500px;
+  width: max-content;
+  max-width: 100%;
+  table-layout: auto;
+}
+
+.jw-adminLeaderBoardViewModalTable .jw-adminTable thead th {
+  padding: 14px 12px;
+}
+
+.jw-adminLeaderBoardViewModalTable .jw-adminTable tbody td {
+  font-size: 12px;
+  padding: 12px;
+}

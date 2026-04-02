@@ -22,16 +22,27 @@
   max-height: 90vh;
   display: flex;
   flex-direction: column;
+  min-height: 0;
 }
 
 .jw-adminUsersModalOverlay--belowHeader .jw-adminUsersModal--scrollable {
   max-height: 100%;
 }
 
+.jw-adminUsersModal--scrollable .jw-adminUsersModal__header {
+  flex-shrink: 0;
+}
+
 .jw-adminUsersModal--scrollable .jw-adminUsersModal__body {
+  flex: 1 1 auto;
   overflow-y: auto;
   min-height: 0;
   -webkit-overflow-scrolling: touch;
+}
+
+.jw-adminUsersModal--scrollable .jw-adminUsersModal__actions {
+  flex-shrink: 0;
+  margin-top: auto;
 }
 
 .jw-adminUsersModal--scrollable .jw-adminUsersModal__actions {

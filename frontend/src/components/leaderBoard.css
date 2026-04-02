@@ -1,188 +1,340 @@
 .jw-lb {
-    width: 100%;
-    max-width: 100%;
+  width: 100%;
+  max-width: 100%;
+  border-radius: 14px;
+  padding: 12px;
+  background: linear-gradient(180deg, #0c2b6e 0%, #071a3d 100%);
+  box-shadow: 0 14px 40px rgba(7, 26, 61, 0.22);
+  margin-top: 10px;
+}
+
+/* Header */
+.jw-lbHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.jw-lbTitleWrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.jw-lbIcon {
+  color: #f3c14b;
+}
+
+.jw-lbTitle {
+  color: #ffffff;
+  font-weight: 900;
+  font-size: 18px;
+  letter-spacing: 0.2px;
+  background: transparent;
+}
+
+/* Filter */
+.jw-lbFilterWrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.jw-lbSelectedPeriod {
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.jw-lbFilterBtn {
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.65);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 10px;
+}
+.jw-lbFilterBtn:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.jw-lbFilterBtn.is-open {
+  color: #f3c14b;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Filter modal */
+.jw-lbFilterOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.jw-lbFilterModal {
+  width: 100%;
+  max-width: 320px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #0e3278 0%, #071a3d 100%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.jw-lbFilterModalHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 14px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.jw-lbFilterModalTitle {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 0.2px;
+}
+
+.jw-lbFilterModalClose {
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+  border-radius: 8px;
+}
+.jw-lbFilterModalClose:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.jw-lbFilterList {
+  list-style: none;
+  margin: 0;
+  padding: 8px;
+}
+
+.jw-lbFilterListItem {
+  margin: 0;
+}
+
+.jw-lbFilterOption {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 15px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.jw-lbFilterOption:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.jw-lbFilterOption.is-selected {
+  background: rgba(0, 202, 82, 0.18);
+  color: #fff;
+  box-shadow: inset 0 0 0 1px rgba(0, 202, 82, 0.35);
+}
+
+.jw-lbFilterOptionLabel {
+  flex: 1;
+}
+
+.jw-lbFilterOptionCheck {
+  color: #00ca52;
+  flex-shrink: 0;
+}
+
+.jw-lbFilterOptionSpacer {
+  width: 18px;
+  flex-shrink: 0;
+}
+
+/* Desktop: two panels side by side */
+.jw-lbDesktopSplit {
+  display: none;
+}
+
+.jw-lbPanel {
+  min-width: 0;
+}
+
+.jw-lbPanelHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.jw-lbPanelIcon {
+  color: #f3c14b;
+  flex-shrink: 0;
+}
+
+.jw-lbPanelTitle {
+  margin: 0;
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: 0.2px;
+}
+
+/* Tabs — mobile */
+.jw-lbTabs {
+  width: 100%;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #0d2c74 0%, #0a1f4f 100%);
+  padding: 6px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.jw-lbTab {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.jw-lbTabInner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 800;
+  font-size: 13px;
+  width: 100%;
+}
+
+.jw-lbTab.is-active {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.jw-lbTabDivider {
+  width: 1px;
+  height: 22px;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+/* Table — User | Duration | Amount */
+.jw-lbTable {
+  width: 100%;
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(4, 16, 48, 0.45);
+}
+
+.jw-lbRow {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr 0.85fr;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+}
+
+.col-user {
+  text-align: left;
+}
+
+.col-duration {
+  text-align: center;
+}
+
+.col-amount {
+  text-align: right;
+}
+
+.jw-lbHeaderRow {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(231, 238, 255, 0.85);
+  font-weight: 800;
+  font-size: 12px;
+}
+
+.jw-lbCell {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.92);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.jw-lbBody {
+  max-height: 260px;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.jw-lbBody::-webkit-scrollbar {
+  display: none;
+}
+
+.jw-lbRow.is-even {
+  background: rgba(0, 40, 120, 0.3);
+}
+.jw-lbRow.is-odd {
+  background: rgba(0, 40, 120, 0.18);
+}
+
+/* Desktop layout */
+@media (min-width: 769px) {
+  .jw-lb {
+    padding: 14px;
     border-radius: 14px;
-    padding: 12px;
-    background: linear-gradient(180deg, #0c2b6e 0%, #071a3d 100%);
-    box-shadow: 0 14px 40px rgba(7, 26, 61, 0.22);
-    margin-top: 10px;
   }
-  
-  /* Header */
-  .jw-lbHead {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 10px;
-  }
-  
-  .jw-lbTitleWrap {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-  }
-  
-  .jw-lbIcon {
-    color: #f3c14b;
-  }
-  
+
   .jw-lbTitle {
-    color: #ffffff;
-    font-weight: 900;
     font-size: 18px;
-    letter-spacing: 0.2px;
-    background: transparent;
   }
-  
-  /* Filter */
-  .jw-lbFilterBtn {
-    border: 0;
-    background: transparent;
-    color: rgba(255, 255, 255, 0.65);
-    cursor: pointer;
-    padding: 6px;
-    border-radius: 10px;
-  }
-  .jw-lbFilterBtn:hover {
-    background: rgba(255, 255, 255, 0.06);
-  }
-  
-  /* Tabs */
+
   .jw-lbTabs {
-    width: 100%;
-    border-radius: 10px;
-    background: linear-gradient(180deg, #0d2c74 0%, #0a1f4f 100%);
-    padding: 6px;
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    align-items: center;
-    margin-bottom: 10px;
-  }
-  
-  .jw-lbTab {
-    border: 0;
-    background: transparent;
-    cursor: pointer;
-    color: rgba(255, 255, 255, 0.9);
-    border-radius: 8px;
-    padding: 8px 10px;
-  }
-  
-  .jw-lbTabInner {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    font-weight: 800;
-    font-size: 13px;
-    width: 100%;
-  }
-  
-  .jw-lbTab.is-active {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08));
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
-  }
-  
-  .jw-lbTabDivider {
-    width: 1px;
-    height: 22px;
-    background: rgba(255, 255, 255, 0.35);
-  }
-  
-  /* Table */
-  .jw-lbTable {
-    width: 100%;
-    border-radius: 10px;
-    overflow: hidden;
-    background: rgba(4, 16, 48, 0.45);
-  }
-  
-  .jw-lbRow {
-    display: grid;
-    grid-template-columns: 1.2fr 1fr 0.9fr;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 10px;
-  }
-  
-  /* Mobile columns: User | Brand | Amount */
-  .col-user {
-    text-align: left;
-  }
-  .col-brand {
-    text-align: left;
-  }
-  .col-amount {
-    text-align: right;
-  }
-  
-  /* Desktop-only columns hidden by default */
-  .is-desktop {
     display: none;
   }
-  
-  .jw-lbHeaderRow {
-    background: rgba(255, 255, 255, 0.08);
-    color: rgba(231, 238, 255, 0.85);
-    font-weight: 800;
-    font-size: 12px;
+
+  .jw-lbDesktopSplit {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    align-items: start;
   }
-  
+
+  .jw-lbRow {
+    padding: 9px 12px;
+  }
+
   .jw-lbCell {
     font-size: 12px;
-    color: rgba(255, 255, 255, 0.92);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
-  
+
   .jw-lbBody {
-    max-height: 260px; /* ✅ fixed height with internal scroll */
-    overflow-y: auto;
-    overflow-x: hidden;
-  
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    max-height: 280px;
   }
-  .jw-lbBody::-webkit-scrollbar {
-    display: none;
-  }
-  
-  .jw-lbRow.is-even {
-    background: rgba(0, 40, 120, 0.30);
-  }
-  .jw-lbRow.is-odd {
-    background: rgba(0, 40, 120, 0.18);
-  }
-  
-  /* Desktop layout */
-  @media (min-width: 769px) {
-    .jw-lb {
-      padding: 14px;
-      border-radius: 14px;
-    }
-  
-    .jw-lbTitle {
-      font-size: 18px;
-    }
-  
-    .jw-lbRow {
-      /* Desktop columns: User | Time | (Payment/TopGame) | Brand | Amount */
-      grid-template-columns: 1.1fr 1fr 1.1fr 0.9fr 0.8fr;
-      padding: 9px 12px;
-    }
-  
-    .is-desktop {
-      display: block;
-    }
-  
-    .jw-lbCell {
-      font-size: 12px;
-    }
-  
-    .jw-lbBody {
-      max-height: 280px;
-    }
-  }
-  
+}

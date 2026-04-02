@@ -1,0 +1,2 @@
+-- Superseded by migration_mock_users_and_leaderboard_entries.sql (mock_users + FK).
+-- Kept for reference only.

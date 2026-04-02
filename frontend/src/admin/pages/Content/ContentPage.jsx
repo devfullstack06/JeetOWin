@@ -11,12 +11,20 @@ import AdminFilterBar, {
 import AdminPagination from "../../components/AdminPagination/AdminPagination";
 import { getWalletIconUrl } from "../../../utils/walletIconUrl";
 import { adminNavGroups } from "../../adminNav";
+import "../../components/AdminTable/adminTable.css";
 import "../Users/usersPage.css";
 import "../Wallets/walletsPage.css";
 import "./contentPage.css";
 import MainBannerTab from "./MainBannerTab";
 import TopSportsTab from "./TopSportsTab";
 import TrendingGamesTab from "./TrendingGamesTab";
+import {
+  LeaderBoardAdminProvider,
+  LeaderBoardAdminFilters,
+  LeaderBoardAdminTable,
+  LeaderBoardAdminPagination,
+  LeaderBoardAdminModals,
+} from "./LeaderBoardTab";
 
 function buildQuery(params) {
   const search = new URLSearchParams();
@@ -602,72 +610,81 @@ export default function ContentPage() {
   );
 
   return (
-    <>
-      <AdminPageShell
-        title="Content"
-        tabs={<AdminTabs tabs={contentTabs} activeKey={activeTab} onChange={(key) => navigate(`/admin/content/${key}`)} />}
-        filters={activeTab === "social-media" ? socialFilters : null}
-        table={
-          activeTab === "social-media" ? (
-            <>
-              {errorText && !loading ? <div className="jw-adminUsersPage__notice is-error">{errorText}</div> : null}
-              <SocialLinksTable
-                rows={displayRows}
-                sort={sort}
-                onSort={onSort}
-                onEdit={openEdit}
-                onImageClick={openImagePopup}
-                loading={loading}
+    <LeaderBoardAdminProvider active={activeTab === "leader-board"}>
+      <>
+        <AdminPageShell
+          title="Content"
+          tabs={<AdminTabs tabs={contentTabs} activeKey={activeTab} onChange={(key) => navigate(`/admin/content/${key}`)} />}
+          filters={
+            activeTab === "social-media" ? socialFilters : activeTab === "leader-board" ? <LeaderBoardAdminFilters /> : null
+          }
+          table={
+            activeTab === "social-media" ? (
+              <>
+                {errorText && !loading ? <div className="jw-adminUsersPage__notice is-error">{errorText}</div> : null}
+                <SocialLinksTable
+                  rows={displayRows}
+                  sort={sort}
+                  onSort={onSort}
+                  onEdit={openEdit}
+                  onImageClick={openImagePopup}
+                  loading={loading}
+                />
+              </>
+            ) : activeTab === "main-banner" ? (
+              <MainBannerTab />
+            ) : activeTab === "top-sports" ? (
+              <TopSportsTab />
+            ) : activeTab === "trending" ? (
+              <TrendingGamesTab />
+            ) : activeTab === "leader-board" ? (
+              <LeaderBoardAdminTable />
+            ) : (
+              <div className="jw-adminContentPlaceholder">{contentTabs.find((t) => t.key === activeTab)?.label ?? activeTab} — Coming soon.</div>
+            )
+          }
+          pagination={
+            activeTab === "social-media" ? (
+              <AdminPagination
+                total={total}
+                page={page}
+                pageSize={pageSize}
+                onPageChange={setPage}
+                onPageSizeChange={(n) => { setPageSize(n); setPage(1); }}
               />
-            </>
-          ) : activeTab === "main-banner" ? (
-            <MainBannerTab />
-          ) : activeTab === "top-sports" ? (
-            <TopSportsTab />
-          ) : activeTab === "trending" ? (
-            <TrendingGamesTab />
-          ) : (
-            <div className="jw-adminContentPlaceholder">{contentTabs.find((t) => t.key === activeTab)?.label ?? activeTab} — Coming soon.</div>
-          )
-        }
-        pagination={
-          activeTab === "social-media" ? (
-            <AdminPagination
-              total={total}
-              page={page}
-              pageSize={pageSize}
-              onPageChange={setPage}
-              onPageSizeChange={(n) => { setPageSize(n); setPage(1); }}
-            />
-          ) : null
-        }
-      />
-      <CreateSocialLinkModal
-        open={createOpen}
-        form={createForm}
-        saving={createSaving}
-        errorText={createError}
-        onChange={handleCreateChange}
-        onIconFileSelect={setCreateIconFile}
-        onCancel={closeCreate}
-        onConfirm={handleCreateConfirm}
-        iconFile={createIconFile}
-        iconSizeError={!!(createIconFile && createIconFile.size > ICON_MAX_BYTES)}
-      />
-      <EditSocialLinkModal
-        open={editOpen}
-        link={editingLink}
-        form={editForm}
-        saving={editSaving}
-        errorText={editError}
-        onChange={handleEditChange}
-        onIconFileSelect={setEditIconFile}
-        onCancel={closeEdit}
-        onConfirm={handleEditConfirm}
-        iconFile={editIconFile}
-        iconSizeError={!!(editIconFile && editIconFile.size > ICON_MAX_BYTES)}
-      />
-      <ImagePopupModal open={imagePopup.open} src={imagePopup.src} name={imagePopup.name} onClose={() => setImagePopup({ open: false, src: null, name: "" })} />
-    </>
+            ) : activeTab === "leader-board" ? (
+              <LeaderBoardAdminPagination />
+            ) : null
+          }
+        />
+        {activeTab === "leader-board" ? <LeaderBoardAdminModals /> : null}
+        <CreateSocialLinkModal
+          open={createOpen}
+          form={createForm}
+          saving={createSaving}
+          errorText={createError}
+          onChange={handleCreateChange}
+          onIconFileSelect={setCreateIconFile}
+          onCancel={closeCreate}
+          onConfirm={handleCreateConfirm}
+          iconFile={createIconFile}
+          iconSizeError={!!(createIconFile && createIconFile.size > ICON_MAX_BYTES)}
+        />
+        <EditSocialLinkModal
+          open={editOpen}
+          link={editingLink}
+          form={editForm}
+          saving={editSaving}
+          errorText={editError}
+          onChange={handleEditChange}
+          onIconFileSelect={setEditIconFile}
+          onCancel={closeEdit}
+          onConfirm={handleEditConfirm}
+          iconFile={editIconFile}
+          iconSizeError={!!(editIconFile && editIconFile.size > ICON_MAX_BYTES)}
+        />
+        <ImagePopupModal open={imagePopup.open} src={imagePopup.src} name={imagePopup.name} onClose={() => setImagePopup({ open: false, src: null, name: "" })} />
+      </>
+    </LeaderBoardAdminProvider>
   );
 }

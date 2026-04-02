@@ -38,7 +38,7 @@ async function register(req, res) {
       });
     }
 
-    // Check if username already exists
+    // Check if username already exists (real users or reserved mock usernames)
     const [existingUsers] = await pool.query(
       "SELECT id FROM users WHERE username = ?",
       [username.trim()],
@@ -48,6 +48,20 @@ async function register(req, res) {
       return res.status(400).json({
         error: "Username already registered",
       });
+    }
+
+    try {
+      const [existingMock] = await pool.query(
+        "SELECT id FROM mock_users WHERE LOWER(TRIM(username)) = LOWER(TRIM(?)) LIMIT 1",
+        [username.trim()],
+      );
+      if (existingMock.length > 0) {
+        return res.status(400).json({
+          error: "Username already registered",
+        });
+      }
+    } catch (mockErr) {
+      if (mockErr.code !== "ER_NO_SUCH_TABLE") throw mockErr;
     }
 
     // Get role_id for 'client' role
