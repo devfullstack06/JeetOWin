@@ -323,6 +323,14 @@ async function login(req, res) {
       });
     }
 
+    try {
+      await pool.query(`UPDATE users SET last_login_at = NOW() WHERE id = ?`, [user.id]);
+    } catch (e) {
+      if (e && e.code !== "ER_BAD_FIELD_ERROR") {
+        console.warn("[auth] last_login_at update:", e.message || e);
+      }
+    }
+
     // Create JWT token
     // Payload contains userId and role (used later for authorization)
     const token = jwt.sign(

@@ -51,7 +51,9 @@ for f in migration_accounts_client_type.sql \
   migration_client_accounts_suggested_username.sql \
   migration_withdraw_tickets.sql \
   migration_withdraw_tickets_evidence.sql \
-  migration_withdraw_tickets_slip.sql; do
+  migration_withdraw_tickets_slip.sql \
+  migration_users_last_login_at.sql \
+  migration_clients_notes.sql; do
   if [ -f "$f" ]; then
     echo "Running $f (incremental)..."
     if [ -n "$MYSQL_PWD" ]; then

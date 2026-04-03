@@ -1,5 +1,9 @@
 const bcrypt = require("bcrypt");
 const { pool } = require("../../config/database");
+const {
+  resolveGeneralEntryLedgerColumn,
+  resolveGeHasAccountIdColumns,
+} = require("../../utils/generalEntryPersistence");
 
 const SORT_COLUMN_MAP = {
   username: "u.username",
@@ -25,6 +29,82 @@ function formatClientBalanceDisplay(value) {
   const n = Number(value || 0);
   if (!Number.isFinite(n)) return "0";
   return Math.floor(n).toLocaleString();
+}
+
+function emptyLedgerStats() {
+  return {
+    deposit: { first: null, recent: null, total: 0 },
+    withdraw: { first: null, recent: null, total: 0 },
+    transferIn: { first: null, recent: null, total: 0 },
+    transferOut: { first: null, recent: null, total: 0 },
+  };
+}
+
+function mapLedgerCell(row) {
+  if (!row || row.amount == null) return null;
+  const at = row.created_at ? new Date(row.created_at).toISOString() : null;
+  return {
+    amount: Number(row.amount),
+    at,
+  };
+}
+
+/**
+ * Stats from general_entries for client ledger account (same rules as client history).
+ */
+async function buildLedgerStatsForClientUser(userId) {
+  const stats = emptyLedgerStats();
+  const ledgerCol = await resolveGeneralEntryLedgerColumn();
+  const hasIds = await resolveGeHasAccountIdColumns();
+
+  if (!ledgerCol || !hasIds) {
+    return {
+      stats,
+      warning: "Ledger is not fully configured (general_entries).",
+    };
+  }
+
+  const [[accRow]] = await pool.query(
+    "SELECT id FROM accounts WHERE type = 'client' AND reference_id = ? LIMIT 1",
+    [userId]
+  );
+  if (!accRow) {
+    return { stats, warning: null };
+  }
+
+  const aid = accRow.id;
+  const presets = [
+    ["deposit", "to_account_id", "DP%"],
+    ["withdraw", "from_account_id", "WD%"],
+    ["transferIn", "from_account_id", "TRI%"],
+    ["transferOut", "to_account_id", "TRO%"],
+  ];
+
+  for (const [key, col, like] of presets) {
+    const where = `ge.${col} = ? AND ge.${ledgerCol} LIKE ?`;
+    const params = [aid, like];
+
+    const [firstRows] = await pool.query(
+      `SELECT ge.amount, ge.created_at FROM general_entries ge WHERE ${where} ORDER BY ge.created_at ASC LIMIT 1`,
+      params
+    );
+    const [recentRows] = await pool.query(
+      `SELECT ge.amount, ge.created_at FROM general_entries ge WHERE ${where} ORDER BY ge.created_at DESC LIMIT 1`,
+      params
+    );
+    const [[sumRow]] = await pool.query(
+      `SELECT COALESCE(SUM(ge.amount), 0) AS total FROM general_entries ge WHERE ${where}`,
+      params
+    );
+
+    stats[key] = {
+      first: firstRows?.[0] ? mapLedgerCell(firstRows[0]) : null,
+      recent: recentRows?.[0] ? mapLedgerCell(recentRows[0]) : null,
+      total: Number(sumRow?.total || 0),
+    };
+  }
+
+  return { stats, warning: null };
 }
 
 exports.getAdminUsers = async (req, res) => {
@@ -83,11 +163,13 @@ exports.getAdminUsers = async (req, res) => {
       SELECT
         u.id,
         u.username,
+        u.last_login_at AS lastLoginAt,
         COALESCE(c.full_name, '') AS name,
         COALESCE(c.mobile, '') AS contact,
         COALESCE(c.balance, 0) AS balance,
         c.status,
-        c.created_at AS joinDateISO
+        c.created_at AS joinDateISO,
+        c.notes AS clientNotes
       FROM users u
       INNER JOIN roles r ON r.id = u.role_id
       INNER JOIN clients c ON c.user_id = u.id
@@ -112,6 +194,8 @@ exports.getAdminUsers = async (req, res) => {
         String(row.status || "").toLowerCase() === "active" ? "active" : "suspended",
       joinDateISO: row.joinDateISO,
       joinDateText: row.joinDateISO,
+      lastLoginAt: row.lastLoginAt || null,
+      notes: row.clientNotes != null ? String(row.clientNotes) : "",
     }));
 
     return res.status(200).json({
@@ -126,6 +210,71 @@ exports.getAdminUsers = async (req, res) => {
     console.error("getAdminUsers error:", err);
     return res.status(500).json({
       message: "Something went wrong while loading users.",
+    });
+  }
+};
+
+exports.getAdminUserDetail = async (req, res) => {
+  try {
+    const userId = Number(req.params.id);
+    if (!Number.isInteger(userId) || userId <= 0) {
+      return res.status(400).json({
+        message: "Invalid user id.",
+      });
+    }
+
+    const findSql = `
+      SELECT
+        u.id,
+        u.username,
+        u.last_login_at AS lastLoginAt,
+        COALESCE(c.full_name, '') AS name,
+        COALESCE(c.mobile, '') AS contact,
+        COALESCE(c.balance, 0) AS balance,
+        c.status,
+        c.created_at AS joinDateISO,
+        COALESCE(c.notes, '') AS notes
+      FROM users u
+      INNER JOIN roles r ON r.id = u.role_id
+      INNER JOIN clients c ON c.user_id = u.id
+      WHERE u.id = ? AND r.name = 'client'
+      LIMIT 1
+    `;
+
+    const [existingRows] = await pool.query(findSql, [userId]);
+    if (!existingRows || existingRows.length === 0) {
+      return res.status(404).json({
+        message: "Client user not found.",
+      });
+    }
+
+    const row = existingRows[0];
+    const { stats, warning } = await buildLedgerStatsForClientUser(userId);
+
+    return res.status(200).json({
+      item: {
+        id: row.id,
+        username: row.username || "",
+        name: row.name || "",
+        contact: row.contact || "",
+        balance: Number(row.balance || 0),
+        balanceText: formatClientBalanceDisplay(row.balance),
+        status:
+          String(row.status || "").toLowerCase() === "active" ? "Active" : "Inactive",
+        statusRaw:
+          String(row.status || "").toLowerCase() === "active" ? "active" : "suspended",
+        joinDateISO: row.joinDateISO,
+        joinDateText: row.joinDateISO,
+        lastLoginAt: row.lastLoginAt || null,
+        notes: row.notes != null ? String(row.notes) : "",
+      },
+      stats,
+      warning: warning || null,
+    });
+  } catch (err) {
+    console.error("getAdminUserDetail error:", err);
+    return res.status(500).json({
+      message: "Something went wrong while loading user details.",
     });
   }
 };
@@ -193,11 +342,13 @@ exports.updateAdminUser = async (req, res) => {
       SELECT
         u.id,
         u.username,
+        u.last_login_at AS lastLoginAt,
         COALESCE(c.full_name, '') AS name,
         COALESCE(c.mobile, '') AS contact,
         COALESCE(c.balance, 0) AS balance,
         c.status,
-        c.created_at AS joinDateISO
+        c.created_at AS joinDateISO,
+        COALESCE(c.notes, '') AS notes
       FROM users u
       INNER JOIN roles r ON r.id = u.role_id
       INNER JOIN clients c ON c.user_id = u.id
@@ -213,14 +364,24 @@ exports.updateAdminUser = async (req, res) => {
       });
     }
 
-    const updateSql = `
-      UPDATE clients
-      SET full_name = ?, mobile = ?, status = ?
-      WHERE user_id = ?
-      LIMIT 1
-    `;
+    const hasNotesKey = Object.prototype.hasOwnProperty.call(req.body || {}, "notes");
+    let notesToSave = undefined;
+    if (hasNotesKey) {
+      const s = String(req.body.notes ?? "").trim().slice(0, 20000);
+      notesToSave = s === "" ? null : s;
+    }
 
-    await pool.query(updateSql, [name, contact, status, userId]);
+    if (hasNotesKey) {
+      await pool.query(
+        `UPDATE clients SET full_name = ?, mobile = ?, status = ?, notes = ? WHERE user_id = ? LIMIT 1`,
+        [name, contact, status, notesToSave, userId]
+      );
+    } else {
+      await pool.query(
+        `UPDATE clients SET full_name = ?, mobile = ?, status = ? WHERE user_id = ? LIMIT 1`,
+        [name, contact, status, userId]
+      );
+    }
 
     if (newPassword !== null && newPassword !== "") {
       const saltRounds = 10;
@@ -249,6 +410,8 @@ exports.updateAdminUser = async (req, res) => {
           String(updated.status || "").toLowerCase() === "active" ? "active" : "suspended",
         joinDateISO: updated.joinDateISO,
         joinDateText: updated.joinDateISO,
+        lastLoginAt: updated.lastLoginAt || null,
+        notes: updated.notes != null ? String(updated.notes) : "",
       },
     });
   } catch (err) {

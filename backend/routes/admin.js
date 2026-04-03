@@ -6,6 +6,7 @@ const {
 } = require("../controllers/admin/updatePasswordController");
 const {
   getAdminUsers,
+  getAdminUserDetail,
   updateAdminUser,
 } = require("../controllers/admin/usersController");
 const {
@@ -131,6 +132,7 @@ const router = express.Router();
 
 router.post("/update-password", requireAdminAuth, updateAdminPassword);
 router.get("/users", requireAdminAuth, getAdminUsers);
+router.get("/users/:id/detail", requireAdminAuth, getAdminUserDetail);
 router.patch("/users/:id", requireAdminAuth, updateAdminUser);
 
 router.get("/wallet-companies/active", requireAdminAuth, getAdminWalletCompaniesActive);

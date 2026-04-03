@@ -11,6 +11,7 @@ import AdminTable from "../../components/AdminTable/AdminTable";
 import AdminPagination from "../../components/AdminPagination/AdminPagination";
 import { formatAdminDateTime } from "../../utils/adminDateUtils";
 import "./usersPage.css";
+import "../Wallets/walletsPage.css";
 
 function buildQuery(params) {
   const search = new URLSearchParams();
@@ -51,9 +52,12 @@ function EditUserModal({
   if (!open || !user) return null;
 
   return (
-    <div className="jw-adminUsersModalOverlay" onClick={onCancel}>
+    <div
+      className="jw-adminUsersModalOverlay jw-adminUsersModalOverlay--belowHeader"
+      onClick={onCancel}
+    >
       <div
-        className="jw-adminUsersModal"
+        className="jw-adminUsersModal jw-adminUsersModal--scrollable"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -133,6 +137,17 @@ function EditUserModal({
             </select>
           </div>
 
+          <div className="jw-adminUsersModal__field">
+            <label className="jw-adminUsersModal__label">Notes (optional)</label>
+            <textarea
+              className="jw-adminUsersModal__input jw-adminUsersModal__textarea"
+              value={form.notes}
+              onChange={(e) => onChange("notes", e.target.value)}
+              placeholder="Internal notes about this user"
+              rows={4}
+            />
+          </div>
+
           {errorText ? (
             <div className="jw-adminUsersModal__error">{errorText}</div>
           ) : null}
@@ -155,6 +170,143 @@ function EditUserModal({
             disabled={saving}
           >
             {saving ? "Saving..." : "Confirm"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const USER_STAT_ROWS = [
+  { key: "deposit", label: "Deposit" },
+  { key: "withdraw", label: "Withdraw" },
+  { key: "transferIn", label: "Transfer IN" },
+  { key: "transferOut", label: "Transfer OUT" },
+];
+
+function UserStatsFirstRecentCell({ cell }) {
+  if (!cell || cell.amount == null) {
+    return <span className="jw-adminUserStatsDash">—</span>;
+  }
+  return (
+    <div className="jw-adminUserStatsCell">
+      <div className="jw-adminUserStatsAmt">{formatUserBalanceCell(cell.amount)}</div>
+      <div className="jw-adminUserStatsTime">{formatAdminDateTime(cell.at)}</div>
+    </div>
+  );
+}
+
+function ViewUserModal({ open, loading, errorText, usernameTitle, detail, onClose }) {
+  if (!open) return null;
+
+  const item = detail?.item;
+  const stats = detail?.stats;
+  const warning = detail?.warning;
+
+  return (
+    <div
+      className="jw-adminUsersModalOverlay jw-adminUsersModalOverlay--belowHeader"
+      onClick={onClose}
+    >
+      <div
+        className="jw-adminUsersModal jw-adminUsersModal--scrollable jw-adminUsersModal--userView"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="jw-admin-user-view-title"
+      >
+        <div className="jw-adminUsersModal__header">
+          <div className="jw-adminUsersModal__title" id="jw-admin-user-view-title">
+            View: {usernameTitle || item?.username || "—"}
+          </div>
+        </div>
+
+        <div className="jw-adminUsersModal__body">
+          {loading ? (
+            <div className="jw-adminUserViewLoading">Loading…</div>
+          ) : errorText ? (
+            <div className="jw-adminUsersModal__error">{errorText}</div>
+          ) : item ? (
+            <>
+              {warning ? (
+                <div className="jw-adminUsersPage__notice" style={{ border: "1px solid #fde68a", background: "#fffbeb", color: "#92400e" }}>
+                  {warning}
+                </div>
+              ) : null}
+
+              <div className="jw-adminUserViewDetails">
+                <div className="jw-adminUserViewDetails__grid">
+                  <div className="jw-adminUserViewDetails__cell">
+                    <span className="jw-adminUserViewLabel">Full Name:</span> {item.name || "—"}
+                  </div>
+                  <div className="jw-adminUserViewDetails__cell">
+                    <span className="jw-adminUserViewLabel">Contact Number:</span> {item.contact || "—"}
+                  </div>
+                  <div className="jw-adminUserViewDetails__cell">
+                    <span className="jw-adminUserViewLabel">Balance:</span> {formatUserBalanceCell(item.balance)}
+                  </div>
+                  <div className="jw-adminUserViewDetails__cell">
+                    <span className="jw-adminUserViewLabel">Status:</span> {item.status || "—"}
+                  </div>
+                  <div className="jw-adminUserViewDetails__cell">
+                    <span className="jw-adminUserViewLabel">Joining Date:</span>{" "}
+                    {formatAdminDateTime(item.joinDateISO)}
+                  </div>
+                  <div className="jw-adminUserViewDetails__cell">
+                    <span className="jw-adminUserViewLabel">Last Login:</span>{" "}
+                    {item.lastLoginAt ? formatAdminDateTime(item.lastLoginAt) : "—"}
+                  </div>
+                </div>
+              </div>
+
+              <div className="jw-adminUserViewStatsWrap">
+                <div className="jw-adminUserViewSectionTitle">Stats</div>
+                <div className="jw-adminUserStatsTableWrap">
+                  <table className="jw-adminUserStatsTable">
+                    <thead>
+                      <tr>
+                        <th>Transaction</th>
+                        <th>First</th>
+                        <th>Recent</th>
+                        <th>Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {USER_STAT_ROWS.map((row) => {
+                        const s = stats?.[row.key] || {};
+                        return (
+                          <tr key={row.key}>
+                            <td className="jw-adminUserStatsTxn">{row.label}</td>
+                            <td>
+                              <UserStatsFirstRecentCell cell={s.first} />
+                            </td>
+                            <td>
+                              <UserStatsFirstRecentCell cell={s.recent} />
+                            </td>
+                            <td className="jw-adminUserStatsTotalCell">
+                              {formatUserBalanceCell(s.total)}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="jw-adminUsersModal__field">
+                <label className="jw-adminUsersModal__label">Notes</label>
+                <div className="jw-adminUsersModal__readOnly jw-adminUserViewNotes">
+                  {item.notes?.trim() ? item.notes : "—"}
+                </div>
+              </div>
+            </>
+          ) : null}
+        </div>
+
+        <div className="jw-adminUsersModal__actions">
+          <button type="button" className="jw-adminUsersModal__btn is-light" onClick={onClose}>
+            Close
           </button>
         </div>
       </div>
@@ -201,10 +353,17 @@ export default function UsersPage() {
     contact: "",
     newPassword: "",
     status: "active",
+    notes: "",
   });
   const [showEditPassword, setShowEditPassword] = useState(false);
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState("");
+
+  const [viewOpen, setViewOpen] = useState(false);
+  const [viewUsername, setViewUsername] = useState("");
+  const [viewLoading, setViewLoading] = useState(false);
+  const [viewError, setViewError] = useState("");
+  const [viewDetail, setViewDetail] = useState(null);
 
   const columns = useMemo(
     () => [
@@ -266,6 +425,7 @@ export default function UsersPage() {
             ...item,
             joinDateText: formatAdminDateTime(item.joinDateISO) || item.joinDateISO || "",
             balance: formatUserBalanceCell(item.balance),
+            notes: item.notes != null ? String(item.notes) : "",
           }))
         );
         setTotal(Number(data?.total || 0));
@@ -318,10 +478,52 @@ export default function UsersPage() {
       contact: normalizeContactToDisplay(row.contact),
       newPassword: "",
       status: row.statusRaw || (row.status === "Active" ? "active" : "suspended"),
+      notes: row.notes != null ? String(row.notes) : "",
     });
     setShowEditPassword(false);
     setEditError("");
     setEditOpen(true);
+  };
+
+  const openViewModal = async (row) => {
+    if (!row?.id) return;
+    setViewOpen(true);
+    setViewUsername(row.username || "");
+    setViewLoading(true);
+    setViewError("");
+    setViewDetail(null);
+
+    try {
+      const token = localStorage.getItem("token") || "";
+      const response = await fetch(`/api/admin/users/${row.id}/detail`, {
+        method: "GET",
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setViewError(data?.message || "Unable to load user details.");
+        setViewLoading(false);
+        return;
+      }
+      setViewDetail({
+        item: data.item,
+        stats: data.stats,
+        warning: data.warning,
+      });
+    } catch {
+      setViewError("Unable to load user details.");
+    } finally {
+      setViewLoading(false);
+    }
+  };
+
+  const closeViewModal = () => {
+    setViewOpen(false);
+    setViewUsername("");
+    setViewError("");
+    setViewDetail(null);
   };
 
   const closeEditModal = () => {
@@ -374,6 +576,7 @@ export default function UsersPage() {
       name: editForm.name.trim(),
       contact: contactE164,
       status: editForm.status,
+      notes: editForm.notes,
     };
     if (editForm.newPassword.trim()) {
       body.newPassword = editForm.newPassword;
@@ -409,6 +612,7 @@ export default function UsersPage() {
                   ...updatedItem,
                   joinDateText: formatAdminDateTime(updatedItem.joinDateISO) || updatedItem.joinDateISO || "",
                   balance: formatUserBalanceCell(updatedItem.balance),
+                  notes: updatedItem.notes != null ? String(updatedItem.notes) : "",
                 }
               : row
           )
@@ -480,6 +684,7 @@ export default function UsersPage() {
               sort={sort}
               onSort={onSort}
               onEdit={openEditModal}
+              onUsernameClick={openViewModal}
             />
           </>
         }
@@ -508,6 +713,15 @@ export default function UsersPage() {
         onChange={handleEditChange}
         onCancel={closeEditModal}
         onConfirm={handleEditConfirm}
+      />
+
+      <ViewUserModal
+        open={viewOpen}
+        loading={viewLoading}
+        errorText={viewError}
+        usernameTitle={viewUsername}
+        detail={viewDetail}
+        onClose={closeViewModal}
       />
     </>
   );

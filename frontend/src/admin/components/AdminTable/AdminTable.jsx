@@ -33,6 +33,7 @@ export default function AdminTable({
   sort,
   onSort,
   onEdit,
+  onUsernameClick,
 }) {
   const isLoading = rows.length === 1 && rows[0].id === "loading-row";
   const isEmpty = rows.length === 1 && rows[0].id === "empty-row";
@@ -88,7 +89,17 @@ export default function AdminTable({
             rows.map((r) => (
               <tr key={r.id}>
                 <td className="jw-adminTd__username">
-                  <span className="jw-adminLinkLike">{r.username}</span>
+                  {typeof onUsernameClick === "function" ? (
+                    <button
+                      type="button"
+                      className="jw-adminUsernameLinkBtn"
+                      onClick={() => onUsernameClick(r)}
+                    >
+                      {r.username}
+                    </button>
+                  ) : (
+                    <span className="jw-adminLinkLike">{r.username}</span>
+                  )}
                 </td>
 
                 <td>{r.name}</td>
