@@ -1,0 +1,66 @@
+/**
+ * Client (logged-in) UI: thin scrollbars on desktop — minimal footprint, hidden until
+ * hover or while scrolling (matches mobile-style overlay behavior on WebKit).
+ *
+ * Scope: @media (min-width: 769px) only. On smaller viewports, OS overlay scrollbars apply.
+ *
+ * Usage
+ * ─────
+ * 1. Add classes to the scrollable element:
+ *    - `jw-clientScrollbar` — dark thumb (light gray / white content backgrounds).
+ *    - `jw-clientScrollbar jw-clientScrollbar--inverse` — light thumb (dark modals / navy UI).
+ * 2. For “show thumb while scrolling”, use either:
+ *    - `useClientScrollbarReveal(ref)` in React, or
+ *    - `attachClientScrollbarReveal(element)` and call the returned cleanup on unmount.
+ *
+ * @see ../hooks/useClientScrollbarReveal.js
+ */
+
+@media (min-width: 769px) {
+  .jw-clientScrollbar {
+    --jw-client-sb-thumb: transparent;
+    --jw-client-sb-thumb-reveal: rgba(0, 0, 0, 0.28);
+    --jw-client-sb-thumb-hover: rgba(0, 0, 0, 0.42);
+    --jw-client-sb-ff: rgba(0, 0, 0, 0.32);
+
+    scrollbar-width: thin;
+    scrollbar-color: var(--jw-client-sb-thumb) transparent;
+  }
+
+  /* Light thumbs on dark surfaces (e.g. ticket modal overlay / body) */
+  .jw-clientScrollbar--inverse {
+    --jw-client-sb-thumb-reveal: rgba(255, 255, 255, 0.32);
+    --jw-client-sb-thumb-hover: rgba(255, 255, 255, 0.5);
+    --jw-client-sb-ff: rgba(255, 255, 255, 0.35);
+  }
+
+  .jw-clientScrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .jw-clientScrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .jw-clientScrollbar::-webkit-scrollbar-thumb {
+    background: var(--jw-client-sb-thumb);
+    border-radius: 999px;
+    transition: background 0.2s ease;
+  }
+
+  .jw-clientScrollbar:hover::-webkit-scrollbar-thumb,
+  .jw-clientScrollbar.jw-clientScrollbar--scrolling::-webkit-scrollbar-thumb {
+    background: var(--jw-client-sb-thumb-reveal);
+  }
+
+  .jw-clientScrollbar:hover::-webkit-scrollbar-thumb:hover,
+  .jw-clientScrollbar.jw-clientScrollbar--scrolling::-webkit-scrollbar-thumb:hover {
+    background: var(--jw-client-sb-thumb-hover);
+  }
+
+  .jw-clientScrollbar:hover,
+  .jw-clientScrollbar.jw-clientScrollbar--scrolling {
+    scrollbar-color: var(--jw-client-sb-ff) transparent;
+  }
+}

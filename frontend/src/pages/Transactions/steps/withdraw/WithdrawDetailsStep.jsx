@@ -50,7 +50,15 @@ export default function WithdrawDetailsStep({
             <button
               type="button"
               className="jw-txHistoryBtn jw-txHistoryBtn--green"
-              onClick={() => navigate("/wallets?create=1")}
+              onClick={() => {
+                if (selectedWalletCompanyId != null) {
+                  navigate(
+                    `/wallets?create=1&companyId=${encodeURIComponent(String(selectedWalletCompanyId))}`,
+                  );
+                } else {
+                  navigate("/wallets?create=1");
+                }
+              }}
             >
               New Wallet +
             </button>

@@ -9,6 +9,7 @@ import "../../admin/components/AdminPagination/adminPagination.css";
 import "../../admin/pages/Users/usersPage.css";
 import "../Transfers/transfersBody.css";
 import "./historyBody.css";
+import { attachClientScrollbarReveal } from "../../hooks/useClientScrollbarReveal";
 
 const TAB_ALL = "all";
 const TAB_DEPOSITS = "deposits";
@@ -204,6 +205,7 @@ export default function HistoryBody() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const skipDateDefaultRef = useRef(false);
   const filterKeyRef = useRef(null);
+  const ticketModalOverlayRef = useRef(null);
 
   useEffect(() => {
     const key = `${tab}|${fromDate}|${toDate}|${brand}|${trx}`;
@@ -230,6 +232,20 @@ export default function HistoryBody() {
     setSlipZoomPct(100);
     setSlipImgError(false);
   }, [viewTicket?.id, viewTicket?.kind]);
+
+  useEffect(() => {
+    if (!viewTicket) return;
+    const root = ticketModalOverlayRef.current;
+    if (!root) return;
+    const body = root.querySelector(".jw-historyTicketModal__body");
+    const slip = root.querySelector(".jw-historyTicketModal__slipScroll");
+    const cleanups = [
+      attachClientScrollbarReveal(root),
+      body && attachClientScrollbarReveal(body),
+      slip && attachClientScrollbarReveal(slip),
+    ].filter(Boolean);
+    return () => cleanups.forEach((fn) => fn());
+  }, [viewTicket, depositSlipShown]);
 
   useLayoutEffect(() => {
     if (skipDateDefaultRef.current) return;
@@ -603,7 +619,8 @@ export default function HistoryBody() {
 
         {viewTicket ? (
           <div
-            className="jw-historyTicketModalOverlay"
+            ref={ticketModalOverlayRef}
+            className="jw-historyTicketModalOverlay jw-clientScrollbar jw-clientScrollbar--inverse"
             role="presentation"
             onClick={() => setViewTicket(null)}
           >
@@ -627,7 +644,7 @@ export default function HistoryBody() {
                   ×
                 </button>
               </div>
-              <div className="jw-historyTicketModal__body">
+              <div className="jw-historyTicketModal__body jw-clientScrollbar jw-clientScrollbar--inverse">
                 {viewTicketStatus ? (
                   <div className="jw-historyTicketModal__statusRow">
                     <span className="jw-historyTicketModal__label">Status:</span>{" "}
@@ -730,7 +747,7 @@ export default function HistoryBody() {
                               <ZoomIn size={16} />
                             </button>
                           </div>
-                          <div className="jw-historyTicketModal__slipScroll">
+                          <div className="jw-historyTicketModal__slipScroll jw-clientScrollbar">
                             {slipImgError ? (
                               <div className="jw-depositSlipModal__error">
                                 Image could not be loaded.

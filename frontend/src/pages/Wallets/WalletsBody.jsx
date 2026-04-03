@@ -74,8 +74,15 @@ export default function WalletsBody() {
   useEffect(() => {
     if (searchParams.get("create") !== "1") return;
 
+    const companyIdParam = searchParams.get("companyId");
     setStep("create");
     setErrors({});
+    if (companyIdParam != null && String(companyIdParam).trim() !== "") {
+      setWalletCompanyId(String(companyIdParam));
+    } else {
+      setWalletCompanyId("");
+    }
+
     (async () => {
       try {
         const res = await fetchWalletCompanies();
@@ -87,6 +94,7 @@ export default function WalletsBody() {
 
     const next = new URLSearchParams(searchParams);
     next.delete("create");
+    next.delete("companyId");
     setSearchParams(next, { replace: true });
   }, [searchParams, setSearchParams]);
 
@@ -113,7 +121,16 @@ export default function WalletsBody() {
   const handleAddNew = async () => {
     // ensure companies loaded for dropdown
     if (!companies.length) {
-      try { await loadCompanies(); } catch {}
+      try {
+        await loadCompanies();
+      } catch {
+        /* ignore */
+      }
+    }
+    if (selectedCompanyId != null) {
+      setWalletCompanyId(String(selectedCompanyId));
+    } else {
+      setWalletCompanyId("");
     }
     setStep("create");
     setErrors({});

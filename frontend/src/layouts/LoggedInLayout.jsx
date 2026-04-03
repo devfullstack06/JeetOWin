@@ -5,7 +5,9 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { logout as logoutUser } from "../utils/auth";
 import { startIdleLogout } from "../utils/idleLogout";
 import { apiFetch } from "../services/api";
+import { useClientScrollbarReveal } from "../hooks/useClientScrollbarReveal";
 import "./loggedInLayout.css";
+import "../styles/clientScrollbar.css";
 
 function formatBalance(num) {
   if (num == null || Number.isNaN(Number(num))) return "Rs. 0";
@@ -49,6 +51,8 @@ export default function LoggedInLayout({ activeId = "dashboard", children }) {
   const touchStartRef = useRef(null);
   /** Measured height of sticky header (1 or 2 rows on mobile) → --jw-header-h for modals / layout */
   const headerSlotRef = useRef(null);
+  const mainScrollRef = useRef(null);
+  useClientScrollbarReveal(mainScrollRef);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -309,7 +313,9 @@ export default function LoggedInLayout({ activeId = "dashboard", children }) {
         </aside>
 
         {/* Body */}
-        <main className="jw-loggedBody">{children}</main>
+        <main ref={mainScrollRef} className="jw-loggedBody jw-clientScrollbar">
+          {children}
+        </main>
       </div>
 
       {/* Mobile Drawer */}
