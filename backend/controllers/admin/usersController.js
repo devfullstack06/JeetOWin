@@ -20,6 +20,13 @@ function normalizePositiveInt(value, fallback) {
   return Math.floor(n);
 }
 
+/** Match admin Wallets balance column: integer grouping, no decimals */
+function formatClientBalanceDisplay(value) {
+  const n = Number(value || 0);
+  if (!Number.isFinite(n)) return "0";
+  return Math.floor(n).toLocaleString();
+}
+
 exports.getAdminUsers = async (req, res) => {
   try {
     const username = String(req.query.username || "").trim();
@@ -98,7 +105,7 @@ exports.getAdminUsers = async (req, res) => {
       name: row.name || "",
       contact: row.contact || "",
       balance: Number(row.balance || 0),
-      balanceText: Number(row.balance || 0).toFixed(2),
+      balanceText: formatClientBalanceDisplay(row.balance),
       status:
         String(row.status || "").toLowerCase() === "active" ? "Active" : "Inactive",
       statusRaw:
@@ -235,7 +242,7 @@ exports.updateAdminUser = async (req, res) => {
         name: updated.name || "",
         contact: updated.contact || "",
         balance: Number(updated.balance || 0),
-        balanceText: Number(updated.balance || 0).toFixed(2),
+        balanceText: formatClientBalanceDisplay(updated.balance),
         status:
           String(updated.status || "").toLowerCase() === "active" ? "Active" : "Inactive",
         statusRaw:

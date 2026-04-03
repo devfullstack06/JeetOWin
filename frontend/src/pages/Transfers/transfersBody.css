@@ -459,12 +459,24 @@
     color: #000;
     font-weight: 600;
   }
+
+  .jw-transferSubmitBtn:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+  }
   
   .jw-transferInlineError {
     grid-column: 1 / -1;
     font-size: 12px;
     color: #ffb3b3;
     margin-top: 2px;
+  }
+
+  .jw-transferSubmitBanner {
+    margin: 8px 0 6px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: rgba(255, 80, 80, 0.12);
   }
   
   .jw-transferCreateActions {

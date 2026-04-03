@@ -205,7 +205,9 @@ exports.getAdminWalletCompanies = async (req, res) => {
 
     const selectCols = "id, name, code, icon_key, icon_path, icon_svg, is_active, sort_order, created_at";
     const selectColsNoIconPath = "id, name, code, icon_key, icon_svg, is_active, sort_order, created_at";
-    const selectColsWithFlags = selectCols + ", available_for_deposit, available_for_withdraw";
+    const selectColsWithFlags =
+      selectCols +
+      ", available_for_deposit, available_for_withdraw, min_withdraw, deposit_process_minutes, withdraw_process_minutes";
 
     let dataRows;
     try {
@@ -246,11 +248,23 @@ exports.getAdminWalletCompanies = async (req, res) => {
     rows = dataRows;
 
     const hasDepositWithdrawCols = rows[0] && "available_for_deposit" in rows[0];
+    const hasMinWdProcessCols = rows[0] && "min_withdraw" in rows[0];
 
     const items = rows.map((row) => {
       const forDep = hasDepositWithdrawCols ? !!row.available_for_deposit : !!row.is_active;
       const forWd = hasDepositWithdrawCols ? !!row.available_for_withdraw : !!row.is_active;
       const hasPath = !!(row.icon_path || row.icon_key);
+      let minWithdraw = null;
+      let depositProcessMinutes = null;
+      let withdrawProcessMinutes = null;
+      if (hasMinWdProcessCols) {
+        const mw = row.min_withdraw;
+        if (mw != null && Number.isFinite(Number(mw))) minWithdraw = Number(mw);
+        const dp = row.deposit_process_minutes;
+        if (dp != null && Number.isFinite(Number(dp))) depositProcessMinutes = Math.floor(Number(dp));
+        const wp = row.withdraw_process_minutes;
+        if (wp != null && Number.isFinite(Number(wp))) withdrawProcessMinutes = Math.floor(Number(wp));
+      }
       return {
         id: row.id,
         name: row.name || "",
@@ -262,6 +276,9 @@ exports.getAdminWalletCompanies = async (req, res) => {
         forWD: forWd ? "Yes" : "No",
         availableForDeposit: forDep,
         availableForWithdraw: forWd,
+        minWithdraw,
+        depositProcessMinutes,
+        withdrawProcessMinutes,
         sortOrder: row.sort_order,
         createdAt: row.created_at,
       };
@@ -289,6 +306,26 @@ function buildItemFromRow(row) {
   const forDep = row.available_for_deposit != null ? !!row.available_for_deposit : !!row.is_active;
   const forWd = row.available_for_withdraw != null ? !!row.available_for_withdraw : !!row.is_active;
   const hasPath = !!(row.icon_path || row.icon_key);
+  let minWithdraw = null;
+  let depositProcessMinutes = null;
+  let withdrawProcessMinutes = null;
+  if ("min_withdraw" in row && row.min_withdraw != null && Number.isFinite(Number(row.min_withdraw))) {
+    minWithdraw = Number(row.min_withdraw);
+  }
+  if (
+    "deposit_process_minutes" in row &&
+    row.deposit_process_minutes != null &&
+    Number.isFinite(Number(row.deposit_process_minutes))
+  ) {
+    depositProcessMinutes = Math.floor(Number(row.deposit_process_minutes));
+  }
+  if (
+    "withdraw_process_minutes" in row &&
+    row.withdraw_process_minutes != null &&
+    Number.isFinite(Number(row.withdraw_process_minutes))
+  ) {
+    withdrawProcessMinutes = Math.floor(Number(row.withdraw_process_minutes));
+  }
   return {
     id: row.id,
     name: row.name || "",
@@ -300,6 +337,9 @@ function buildItemFromRow(row) {
     forWD: forWd ? "Yes" : "No",
     availableForDeposit: forDep,
     availableForWithdraw: forWd,
+    minWithdraw,
+    depositProcessMinutes,
+    withdrawProcessMinutes,
     sortOrder: row.sort_order != null ? row.sort_order : 0,
     createdAt: row.created_at != null ? row.created_at : null,
   };
@@ -310,6 +350,68 @@ function parseYesNo(value) {
   if (value === false || value === 0) return 0;
   const s = String(value || "").trim().toLowerCase();
   return s === "yes" || s === "true" || s === "1" ? 1 : 0;
+}
+
+/** Persist min_withdraw / process minutes; ignores missing columns */
+async function applyWalletCompanyFinancialColumns(id, fields) {
+  const sets = [];
+  const params = [];
+  if ("minWithdraw" in fields) {
+    sets.push("min_withdraw = ?");
+    params.push(fields.minWithdraw);
+  }
+  if ("depositProcessMinutes" in fields) {
+    sets.push("deposit_process_minutes = ?");
+    params.push(fields.depositProcessMinutes);
+  }
+  if ("withdrawProcessMinutes" in fields) {
+    sets.push("withdraw_process_minutes = ?");
+    params.push(fields.withdrawProcessMinutes);
+  }
+  if (sets.length === 0) return;
+  params.push(id);
+  try {
+    await pool.query(`UPDATE wallet_companies SET ${sets.join(", ")} WHERE id = ?`, params);
+  } catch (e) {
+    if (e.code === "ER_BAD_FIELD_ERROR") return;
+    throw e;
+  }
+}
+
+function parseMinWithdrawCreate(body) {
+  const raw = body.minWithdraw ?? body.min_withdraw;
+  if (raw === undefined || raw === null || String(raw).trim() === "") return { value: null };
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n < 0) return { error: "Min. withdraw must be a non-negative number." };
+  return { value: n };
+}
+
+function parseProcessMinutesCreate(body, camelKey, snakeKey, label) {
+  const raw = body[camelKey] ?? body[snakeKey];
+  if (raw === undefined || raw === null || String(raw).trim() === "") return { error: `${label} is required.` };
+  const n = Math.floor(Number(raw));
+  if (!Number.isFinite(n) || n < 1) return { error: `${label} must be a positive whole number (1 or greater).` };
+  return { value: n };
+}
+
+function parseMinWithdrawPatch(body) {
+  if (!("minWithdraw" in body) && !("min_withdraw" in body)) return { skip: true };
+  const raw = body.minWithdraw ?? body.min_withdraw;
+  if (raw === "" || raw === null || raw === undefined) return { value: null };
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n < 0) return { error: "Min. withdraw must be a non-negative number." };
+  return { value: n };
+}
+
+function parseProcessMinutesPatch(body, camelKey, snakeKey, label) {
+  if (!(camelKey in body) && !(snakeKey in body)) return { skip: true };
+  const raw = body[camelKey] ?? body[snakeKey];
+  if (raw === "" || raw === null || raw === undefined) return { value: null };
+  const n = Math.floor(Number(raw));
+  if (!Number.isFinite(n) || n < 1) {
+    return { error: `${label} must be a positive whole number (1 or greater), or leave empty to clear.` };
+  }
+  return { value: n };
 }
 
 exports.createAdminWalletCompany = async (req, res) => {
@@ -326,6 +428,23 @@ exports.createAdminWalletCompany = async (req, res) => {
     if (!name) {
       return res.status(400).json({ message: "Name is required." });
     }
+
+    const minWCreate = parseMinWithdrawCreate(req.body);
+    if (minWCreate.error) return res.status(400).json({ message: minWCreate.error });
+    const dpPmCreate = parseProcessMinutesCreate(
+      req.body,
+      "depositProcessMinutes",
+      "deposit_process_minutes",
+      "DP process minutes"
+    );
+    if (dpPmCreate.error) return res.status(400).json({ message: dpPmCreate.error });
+    const wdPmCreate = parseProcessMinutesCreate(
+      req.body,
+      "withdrawProcessMinutes",
+      "withdraw_process_minutes",
+      "WD process minutes"
+    );
+    if (wdPmCreate.error) return res.status(400).json({ message: wdPmCreate.error });
 
     let iconPathFromFile = null;
     if (iconFile && iconFile.buffer && iconFile.buffer.length > 0) {
@@ -471,24 +590,41 @@ exports.createAdminWalletCompany = async (req, res) => {
       }
     }
 
+    await applyWalletCompanyFinancialColumns(insertId, {
+      minWithdraw: minWCreate.value,
+      depositProcessMinutes: dpPmCreate.value,
+      withdrawProcessMinutes: wdPmCreate.value,
+    });
+
     let rows;
     try {
       [rows] = await pool.query(
-        "SELECT id, name, code, icon_key, icon_path, icon_svg, is_active, sort_order, created_at, available_for_deposit, available_for_withdraw FROM wallet_companies WHERE id = ?",
+        "SELECT id, name, code, icon_key, icon_path, icon_svg, is_active, sort_order, created_at, available_for_deposit, available_for_withdraw, min_withdraw, deposit_process_minutes, withdraw_process_minutes FROM wallet_companies WHERE id = ?",
         [insertId]
       );
     } catch (selErr) {
       if (selErr.code === "ER_BAD_FIELD_ERROR") {
         try {
           [rows] = await pool.query(
-            "SELECT id, name, code, icon_key, icon_svg, is_active, sort_order, created_at, available_for_deposit, available_for_withdraw FROM wallet_companies WHERE id = ?",
+            "SELECT id, name, code, icon_key, icon_path, icon_svg, is_active, sort_order, created_at, available_for_deposit, available_for_withdraw FROM wallet_companies WHERE id = ?",
             [insertId]
           );
         } catch (e2) {
-          [rows] = await pool.query(
-            "SELECT id, name, code, icon_key, is_active, sort_order, created_at FROM wallet_companies WHERE id = ?",
-            [insertId]
-          );
+          if (e2.code === "ER_BAD_FIELD_ERROR") {
+            try {
+              [rows] = await pool.query(
+                "SELECT id, name, code, icon_key, icon_svg, is_active, sort_order, created_at, available_for_deposit, available_for_withdraw FROM wallet_companies WHERE id = ?",
+                [insertId]
+              );
+            } catch (e3) {
+              [rows] = await pool.query(
+                "SELECT id, name, code, icon_key, is_active, sort_order, created_at FROM wallet_companies WHERE id = ?",
+                [insertId]
+              );
+            }
+          } else {
+            throw e2;
+          }
         }
       } else {
         throw selErr;
@@ -569,6 +705,29 @@ exports.updateAdminWalletCompany = async (req, res) => {
       return res.status(404).json({ message: "Wallet company not found." });
     }
 
+    const financialPatch = {};
+    const minWP = parseMinWithdrawPatch(body);
+    if (minWP.error) return res.status(400).json({ message: minWP.error });
+    if (!minWP.skip) financialPatch.minWithdraw = minWP.value;
+
+    const dpPatch = parseProcessMinutesPatch(
+      body,
+      "depositProcessMinutes",
+      "deposit_process_minutes",
+      "DP process minutes"
+    );
+    if (dpPatch.error) return res.status(400).json({ message: dpPatch.error });
+    if (!dpPatch.skip) financialPatch.depositProcessMinutes = dpPatch.value;
+
+    const wdPatch = parseProcessMinutesPatch(
+      body,
+      "withdrawProcessMinutes",
+      "withdraw_process_minutes",
+      "WD process minutes"
+    );
+    if (wdPatch.error) return res.status(400).json({ message: wdPatch.error });
+    if (!wdPatch.skip) financialPatch.withdrawProcessMinutes = wdPatch.value;
+
     const updates = [];
     const params = [];
 
@@ -593,7 +752,7 @@ exports.updateAdminWalletCompany = async (req, res) => {
       params.push(sortOrder);
     }
 
-    if (updates.length === 0) {
+    if (updates.length === 0 && Object.keys(financialPatch).length === 0) {
       const row = existing[0];
       return res.status(200).json({
         message: "No changes.",
@@ -601,13 +760,14 @@ exports.updateAdminWalletCompany = async (req, res) => {
       });
     }
 
-    params.push(id);
-    try {
-      await pool.query(
-        `UPDATE wallet_companies SET ${updates.join(", ")} WHERE id = ?`,
-        params
-      );
-    } catch (updErr) {
+    if (updates.length > 0) {
+      params.push(id);
+      try {
+        await pool.query(
+          `UPDATE wallet_companies SET ${updates.join(", ")} WHERE id = ?`,
+          params
+        );
+      } catch (updErr) {
       if (updErr.code === "ER_BAD_FIELD_ERROR") {
         const depWdUpdates = updates.filter((u) => u.startsWith("available_for_"));
         const depWdParams = [];
@@ -638,6 +798,11 @@ exports.updateAdminWalletCompany = async (req, res) => {
       } else {
         throw updErr;
       }
+      }
+    }
+
+    if (Object.keys(financialPatch).length > 0) {
+      await applyWalletCompanyFinancialColumns(id, financialPatch);
     }
 
     if (iconPathFromFile) {
@@ -671,15 +836,26 @@ exports.updateAdminWalletCompany = async (req, res) => {
     let rows;
     try {
       [rows] = await pool.query(
-        "SELECT id, name, code, icon_key, icon_path, icon_svg, is_active, sort_order, created_at, available_for_deposit, available_for_withdraw FROM wallet_companies WHERE id = ?",
+        "SELECT id, name, code, icon_key, icon_path, icon_svg, is_active, sort_order, created_at, available_for_deposit, available_for_withdraw, min_withdraw, deposit_process_minutes, withdraw_process_minutes FROM wallet_companies WHERE id = ?",
         [id]
       );
     } catch (selErr) {
       if (selErr.code === "ER_BAD_FIELD_ERROR") {
-        [rows] = await pool.query(
-          "SELECT id, name, code, icon_key, icon_svg, is_active, sort_order, created_at, available_for_deposit, available_for_withdraw FROM wallet_companies WHERE id = ?",
-          [id]
-        );
+        try {
+          [rows] = await pool.query(
+            "SELECT id, name, code, icon_key, icon_path, icon_svg, is_active, sort_order, created_at, available_for_deposit, available_for_withdraw FROM wallet_companies WHERE id = ?",
+            [id]
+          );
+        } catch (e2) {
+          if (e2.code === "ER_BAD_FIELD_ERROR") {
+            [rows] = await pool.query(
+              "SELECT id, name, code, icon_key, icon_svg, is_active, sort_order, created_at, available_for_deposit, available_for_withdraw FROM wallet_companies WHERE id = ?",
+              [id]
+            );
+          } else {
+            throw e2;
+          }
+        }
       } else {
         throw selErr;
       }

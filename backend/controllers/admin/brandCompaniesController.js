@@ -73,7 +73,7 @@ exports.getAdminBrandCompanies = async (req, res) => {
     let rows = [];
     try {
       [rows] = await pool.query(
-        `SELECT bc.id, bc.username, bc.brand_id, b.name AS brand_name, bc.type, bc.website_url, bc.affiliate_link, bc.is_active, bc.notes, bc.created_at
+        `SELECT bc.id, bc.username, bc.brand_id, b.name AS brand_name, bc.type, bc.website_url, bc.affiliate_link, bc.is_active, bc.notes, bc.balance, bc.created_at
          FROM brand_companies bc
          INNER JOIN brands b ON b.id = bc.brand_id
          WHERE ${whereSql}
@@ -96,6 +96,7 @@ exports.getAdminBrandCompanies = async (req, res) => {
       type: r.type || "master",
       websiteUrl: r.website_url != null ? String(r.website_url) : "",
       affiliateLink: r.affiliate_link != null ? String(r.affiliate_link) : "",
+      balance: r.balance != null && Number.isFinite(Number(r.balance)) ? Math.trunc(Number(r.balance)) : 0,
       status: r.is_active ? "Active" : "Inactive",
       statusRaw: r.is_active ? "active" : "inactive",
       notes: r.notes != null ? String(r.notes) : "",

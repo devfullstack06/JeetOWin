@@ -24,6 +24,11 @@ function buildQuery(params) {
   return search.toString();
 }
 
+/** Same as admin Wallets balance cell: grouped integer, no decimals */
+function formatUserBalanceCell(value) {
+  return Math.floor(Number(value ?? 0) || 0).toLocaleString();
+}
+
 function normalizeContactToDisplay(contact) {
   if (!contact) return "";
   const digits = String(contact).replace(/\D/g, "");
@@ -260,9 +265,7 @@ export default function UsersPage() {
           items.map((item) => ({
             ...item,
             joinDateText: formatAdminDateTime(item.joinDateISO) || item.joinDateISO || "",
-            balance:
-              item.balanceText ??
-              Number(item.balance || 0).toFixed(2),
+            balance: formatUserBalanceCell(item.balance),
           }))
         );
         setTotal(Number(data?.total || 0));
@@ -405,9 +408,7 @@ export default function UsersPage() {
               ? {
                   ...updatedItem,
                   joinDateText: formatAdminDateTime(updatedItem.joinDateISO) || updatedItem.joinDateISO || "",
-                  balance:
-                    updatedItem.balanceText ??
-                    Number(updatedItem.balance || 0).toFixed(2),
+                  balance: formatUserBalanceCell(updatedItem.balance),
                 }
               : row
           )

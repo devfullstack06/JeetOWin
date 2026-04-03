@@ -20,7 +20,14 @@ function TransferBrandLogo({ iconSrc, label }) {
   );
 }
 
-export default function TransferCreateStep({ onCancel, onSubmit, brandsAvailable = [] }) {
+export default function TransferCreateStep({
+  onCancel,
+  onSubmit,
+  brandsAvailable = [],
+  isSubmitting = false,
+  submitError = "",
+  onClearSubmitError,
+}) {
   const navigate = useNavigate();
   const brands = useMemo(() => {
     return (brandsAvailable || [])
@@ -80,8 +87,9 @@ export default function TransferCreateStep({ onCancel, onSubmit, brandsAvailable
       }
     }
 
-    // reset row action on brand switch
-    cancelRowAction();
+    // Reset expanded row when brand changes or on mount — do NOT clear submitError here
+    // (cancelRowAction calls onClearSubmitError and would wipe API errors right after remount)
+    resetExpandedRowOnly();
     loadAccounts();
 
     return () => {
@@ -90,8 +98,16 @@ export default function TransferCreateStep({ onCancel, onSubmit, brandsAvailable
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedBrand]);
 
+  function resetExpandedRowOnly() {
+    setError("");
+    setActiveAccountId(null);
+    setDirection(null);
+    setAmountDigits("");
+  }
+
   const startRowAction = (accountId, dir) => {
     setError("");
+    onClearSubmitError?.();
     setActiveAccountId(accountId);
     setDirection(dir);
     setAmountDigits("");
@@ -99,9 +115,8 @@ export default function TransferCreateStep({ onCancel, onSubmit, brandsAvailable
 
   function cancelRowAction() {
     setError("");
-    setActiveAccountId(null);
-    setDirection(null);
-    setAmountDigits("");
+    onClearSubmitError?.();
+    resetExpandedRowOnly();
   }
 
   const handleSubmit = (account) => {
@@ -118,6 +133,7 @@ export default function TransferCreateStep({ onCancel, onSubmit, brandsAvailable
       setError("Please select IN/OUT.");
       return;
     }
+    if (isSubmitting) return;
 
     onSubmit?.({
       brand: selectedBrand,
@@ -141,6 +157,7 @@ export default function TransferCreateStep({ onCancel, onSubmit, brandsAvailable
             <button
               type="button"
               className="jw-txHistoryBtn"
+              disabled={isSubmitting}
               onClick={() => navigate("/history?tab=transfers")}
             >
               History
@@ -159,7 +176,11 @@ export default function TransferCreateStep({ onCancel, onSubmit, brandsAvailable
                   key={b.id}
                   type="button"
                   className={`jw-txTile ${active ? "is-active" : ""}`}
-                  onClick={() => setSelectedBrand(b.label)}
+                  disabled={isSubmitting}
+                  onClick={() => {
+                    onClearSubmitError?.();
+                    setSelectedBrand(b.label);
+                  }}
                   role="listitem"
                   aria-label={b.label}
                 >
@@ -170,6 +191,12 @@ export default function TransferCreateStep({ onCancel, onSubmit, brandsAvailable
             })
           )}
         </div>
+
+        {submitError ? (
+          <div className="jw-transferInlineError jw-transferSubmitBanner" role="alert">
+            {submitError}
+          </div>
+        ) : null}
 
         {/* TABLE HEADER */}
         <div className="jw-transferTableHeader">
@@ -197,6 +224,7 @@ export default function TransferCreateStep({ onCancel, onSubmit, brandsAvailable
                         <button
                           type="button"
                           className="jw-transferBtnIn"
+                          disabled={isSubmitting}
                           onClick={() => startRowAction(acc.id, "IN")}
                         >
                           IN
@@ -204,6 +232,7 @@ export default function TransferCreateStep({ onCancel, onSubmit, brandsAvailable
                         <button
                           type="button"
                           className="jw-transferBtnOut"
+                          disabled={isSubmitting}
                           onClick={() => startRowAction(acc.id, "OUT")}
                         >
                           OUT
@@ -218,6 +247,7 @@ export default function TransferCreateStep({ onCancel, onSubmit, brandsAvailable
                           type="button"
                           className="jw-transferRowClose"
                           aria-label="Cancel"
+                          disabled={isSubmitting}
                           onClick={cancelRowAction}
                         >
                           ×
@@ -233,9 +263,11 @@ export default function TransferCreateStep({ onCancel, onSubmit, brandsAvailable
                         type="text"
                         inputMode="numeric"
                         placeholder="Enter Amount"
+                        disabled={isSubmitting}
                         value={formatDigitsPkForInput(amountDigits)}
                         onChange={(e) => {
                           setError("");
+                          onClearSubmitError?.();
                           setAmountDigits(digitsOnlyFromInput(e.target.value));
                         }}
                       />
@@ -243,9 +275,11 @@ export default function TransferCreateStep({ onCancel, onSubmit, brandsAvailable
                       <button
                         type="button"
                         className="jw-transferSubmitBtn"
+                        disabled={isSubmitting}
+                        aria-busy={isSubmitting}
                         onClick={() => handleSubmit(acc)}
                       >
-                        Submit
+                        {isSubmitting ? "Submitting…" : "Submit"}
                       </button>
 
                       {error && (
@@ -263,7 +297,12 @@ export default function TransferCreateStep({ onCancel, onSubmit, brandsAvailable
 
         {/* BOTTOM: Cancel */}
         <div className="jw-transferCreateActions">
-          <button type="button" className="jw-btn jw-btnCancel" onClick={onCancel}>
+          <button
+            type="button"
+            className="jw-btn jw-btnCancel"
+            disabled={isSubmitting}
+            onClick={onCancel}
+          >
             Cancel
           </button>
         </div>

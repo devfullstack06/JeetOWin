@@ -65,6 +65,7 @@ export default function TransfersBody() {
   const [ticket, setTicket] = useState(null);
   const [rejectedReason, setRejectedReason] = useState("");
   const [errors, setErrors] = useState({});
+  const [isSubmittingTicket, setIsSubmittingTicket] = useState(false);
 
   const pollingRef = useRef(null);
 
@@ -173,7 +174,7 @@ export default function TransfersBody() {
 
   const handleCreateSubmit = async (payload) => {
     setErrors({});
-    setStep("processing");
+    setIsSubmittingTicket(true);
 
     try {
       const res = await createTransferTicket(payload);
@@ -196,12 +197,14 @@ export default function TransfersBody() {
         outProcessMinutes: outPm,
       });
       window.dispatchEvent(new CustomEvent("jw:refresh-balance"));
+      setStep("processing");
     } catch (err) {
-      setStep("create");
       setErrors((prev) => ({
         ...prev,
         submit: err?.message || "Failed to submit transfer request.",
       }));
+    } finally {
+      setIsSubmittingTicket(false);
     }
   };
 
@@ -232,6 +235,13 @@ export default function TransfersBody() {
             onCancel={handleClose}
             onSubmit={handleCreateSubmit}
             brandsAvailable={brands}
+            isSubmitting={isSubmittingTicket}
+            submitError={errors.submit}
+            onClearSubmitError={() => setErrors((prev) => {
+              const next = { ...prev };
+              delete next.submit;
+              return next;
+            })}
           />
         )}
 

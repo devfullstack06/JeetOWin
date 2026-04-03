@@ -46,6 +46,38 @@ export default function AdminLoggedInLayout({ children }) {
     if (role && role !== "admin") navigate("/login", { replace: true });
   }, [role, navigate]);
 
+  // ✅ Number inputs: do not change value on mouse wheel or ArrowUp/ArrowDown (all admin forms/modals)
+  useEffect(() => {
+    const isLiveNumberInput = (el) =>
+      el instanceof HTMLInputElement &&
+      el.type === "number" &&
+      !el.disabled &&
+      !el.readOnly;
+
+    const onWheel = (e) => {
+      const path = typeof e.composedPath === "function" ? e.composedPath() : [e.target];
+      for (let i = 0; i < path.length; i += 1) {
+        if (isLiveNumberInput(path[i])) {
+          e.preventDefault();
+          return;
+        }
+      }
+    };
+
+    const onKeyDown = (e) => {
+      if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+      const t = e.target;
+      if (isLiveNumberInput(t)) e.preventDefault();
+    };
+
+    document.addEventListener("wheel", onWheel, { capture: true, passive: false });
+    document.addEventListener("keydown", onKeyDown, true);
+    return () => {
+      document.removeEventListener("wheel", onWheel, true);
+      document.removeEventListener("keydown", onKeyDown, true);
+    };
+  }, []);
+
   const isMobile = () =>
     window.matchMedia && window.matchMedia("(max-width: 768px)").matches;
 

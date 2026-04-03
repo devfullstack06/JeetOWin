@@ -14,6 +14,12 @@
   min-height: 100vh;
 }
 
+/* Wraps LandingHeader; height is measured for --jw-header-h (fixed modals use this below the bar) */
+.jw-loggedHeaderSlot {
+  flex-shrink: 0;
+  width: 100%;
+}
+
 /* Under header */
 .jw-loggedGrid {
   display: grid;

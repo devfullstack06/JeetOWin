@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Plus, X } from "lucide-react";
+import { Clock, Plus, X } from "lucide-react";
 import AdminPageShell from "../../components/AdminPageShell/AdminPageShell";
 import AdminTabs from "../../components/AdminTabs/AdminTabs";
 import AdminFilterBar, {
@@ -12,6 +12,7 @@ import AdminPagination from "../../components/AdminPagination/AdminPagination";
 import { getWalletIconUrl } from "../../../utils/walletIconUrl";
 import "../Users/usersPage.css";
 import "./walletsPage.css";
+import "../Brands/brandsPage.css";
 
 function buildQuery(params) {
   const search = new URLSearchParams();
@@ -20,6 +21,19 @@ function buildQuery(params) {
     search.set(key, String(value));
   });
   return search.toString();
+}
+
+/** Same style as payment wallet Balance column: grouped integer, no decimals */
+function formatWalletCompanyMinWithdraw(value) {
+  if (value == null || !Number.isFinite(Number(value))) return "—";
+  return Math.floor(Number(value)).toLocaleString();
+}
+
+/** Same as Brands website IN/OUT process cells */
+function formatWalletCompanyProcessMins(value) {
+  if (value == null || !Number.isFinite(Number(value))) return "—";
+  const n = Math.floor(Number(value));
+  return `${n} mins.`;
 }
 
 function SortIcon({ dir }) {
@@ -89,6 +103,23 @@ function CompaniesTable({ rows, sort, onSort, onEdit, onImageClick, loading }) {
     { key: "name", header: "Name", sortKey: "name" },
     { key: "forDP", header: "For DP", sortKey: "forDP" },
     { key: "forWD", header: "For WD", sortKey: "forWD" },
+    { key: "minWd", header: "Min. WD" },
+    {
+      key: "dpProcess",
+      header: (
+        <span className="jw-brandProcessTh">
+          DP <Clock className="jw-brandProcessTh__icon" size={14} aria-hidden />
+        </span>
+      ),
+    },
+    {
+      key: "wdProcess",
+      header: (
+        <span className="jw-brandProcessTh">
+          WD <Clock className="jw-brandProcessTh__icon" size={14} aria-hidden />
+        </span>
+      ),
+    },
     { key: "sortOrder", header: "Sort order", sortKey: "sortOrder" },
     { key: "image", header: "Image" },
     { key: "actions", header: "Actions" },
@@ -121,12 +152,12 @@ function CompaniesTable({ rows, sort, onSort, onEdit, onImageClick, loading }) {
           {isLoading ? (
             Array.from({ length: 5 }).map((_, i) => (
               <tr key={`sk-${i}`}>
-                <td colSpan={6}><div className="jw-adminSkeleton" style={{ height: 20 }} /></td>
+                <td colSpan={9}><div className="jw-adminSkeleton" style={{ height: 20 }} /></td>
               </tr>
             ))
           ) : isEmpty ? (
             <tr>
-              <td colSpan={6} className="jw-adminEmpty">No results found</td>
+              <td colSpan={9} className="jw-adminEmpty">No results found</td>
             </tr>
           ) : (
             rows.map((r) => {
@@ -136,6 +167,9 @@ function CompaniesTable({ rows, sort, onSort, onEdit, onImageClick, loading }) {
                   <td>{r.name}</td>
                   <td>{r.forDP ?? "—"}</td>
                   <td>{r.forWD ?? "—"}</td>
+                  <td>{formatWalletCompanyMinWithdraw(r.minWithdraw)}</td>
+                  <td>{formatWalletCompanyProcessMins(r.depositProcessMinutes)}</td>
+                  <td>{formatWalletCompanyProcessMins(r.withdrawProcessMinutes)}</td>
                   <td>{r.sortOrder !== undefined && r.sortOrder !== null ? r.sortOrder : "—"}</td>
                   <td>
                     {hasImage ? (
@@ -239,6 +273,59 @@ function CreateCompanyModal({ open, form, saving, errorText, onChange, onIconFil
               <option value="yes">Yes</option>
               <option value="no">No</option>
             </select>
+          </div>
+          <div className="jw-adminUsersModal__field">
+            <label className="jw-adminUsersModal__label">DP process minutes</label>
+            <input
+              type="number"
+              min={1}
+              step={1}
+              inputMode="numeric"
+              className="jw-adminUsersModal__input"
+              value={form.depositProcessMinutes === "" ? "" : form.depositProcessMinutes}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === "") onChange("depositProcessMinutes", "");
+                else {
+                  const n = parseInt(v, 10);
+                  if (!Number.isNaN(n) && n >= 1) onChange("depositProcessMinutes", n);
+                }
+              }}
+              placeholder="e.g. 15"
+            />
+          </div>
+          <div className="jw-adminUsersModal__field">
+            <label className="jw-adminUsersModal__label">WD process minutes</label>
+            <input
+              type="number"
+              min={1}
+              step={1}
+              inputMode="numeric"
+              className="jw-adminUsersModal__input"
+              value={form.withdrawProcessMinutes === "" ? "" : form.withdrawProcessMinutes}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === "") onChange("withdrawProcessMinutes", "");
+                else {
+                  const n = parseInt(v, 10);
+                  if (!Number.isNaN(n) && n >= 1) onChange("withdrawProcessMinutes", n);
+                }
+              }}
+              placeholder="e.g. 15"
+            />
+          </div>
+          <div className="jw-adminUsersModal__field">
+            <label className="jw-adminUsersModal__label">Min. withdraw</label>
+            <input
+              type="number"
+              min={0}
+              step={1}
+              inputMode="numeric"
+              className="jw-adminUsersModal__input"
+              value={form.minWithdraw}
+              onChange={(e) => onChange("minWithdraw", e.target.value)}
+              placeholder="Optional (Rs., whole number)"
+            />
           </div>
           <div className="jw-adminUsersModal__field">
             <label className="jw-adminUsersModal__label">Sort order</label>
@@ -349,6 +436,45 @@ function EditCompanyModal({ open, company, form, saving, errorText, onChange, on
               <option value="yes">Yes</option>
               <option value="no">No</option>
             </select>
+          </div>
+          <div className="jw-adminUsersModal__field">
+            <label className="jw-adminUsersModal__label">DP process minutes</label>
+            <input
+              type="number"
+              min={1}
+              step={1}
+              inputMode="numeric"
+              className="jw-adminUsersModal__input"
+              value={form.depositProcessMinutes}
+              onChange={(e) => onChange("depositProcessMinutes", e.target.value)}
+              placeholder="Empty = clear in DB"
+            />
+          </div>
+          <div className="jw-adminUsersModal__field">
+            <label className="jw-adminUsersModal__label">WD process minutes</label>
+            <input
+              type="number"
+              min={1}
+              step={1}
+              inputMode="numeric"
+              className="jw-adminUsersModal__input"
+              value={form.withdrawProcessMinutes}
+              onChange={(e) => onChange("withdrawProcessMinutes", e.target.value)}
+              placeholder="Empty = clear in DB"
+            />
+          </div>
+          <div className="jw-adminUsersModal__field">
+            <label className="jw-adminUsersModal__label">Min. withdraw</label>
+            <input
+              type="number"
+              min={0}
+              step={1}
+              inputMode="numeric"
+              className="jw-adminUsersModal__input"
+              value={form.minWithdraw}
+              onChange={(e) => onChange("minWithdraw", e.target.value)}
+              placeholder="Empty = clear in DB"
+            />
           </div>
           <div className="jw-adminUsersModal__field">
             <label className="jw-adminUsersModal__label">Sort order</label>
@@ -481,14 +607,31 @@ export default function WalletsPage() {
   const [errorText, setErrorText] = useState("");
 
   const [createOpen, setCreateOpen] = useState(false);
-  const [createForm, setCreateForm] = useState({ name: "", availableForDeposit: "yes", availableForWithdraw: "yes", sortOrder: "", iconSvg: "" });
+  const [createForm, setCreateForm] = useState({
+    name: "",
+    availableForDeposit: "yes",
+    availableForWithdraw: "yes",
+    depositProcessMinutes: "15",
+    withdrawProcessMinutes: "15",
+    minWithdraw: "",
+    sortOrder: "",
+    iconSvg: "",
+  });
   const [createIconFile, setCreateIconFile] = useState(null);
   const [createSaving, setCreateSaving] = useState(false);
   const [createError, setCreateError] = useState("");
 
   const [editOpen, setEditOpen] = useState(false);
   const [editingCompany, setEditingCompany] = useState(null);
-  const [editForm, setEditForm] = useState({ availableForDeposit: "yes", availableForWithdraw: "yes", sortOrder: "", iconSvg: "" });
+  const [editForm, setEditForm] = useState({
+    availableForDeposit: "yes",
+    availableForWithdraw: "yes",
+    depositProcessMinutes: "",
+    withdrawProcessMinutes: "",
+    minWithdraw: "",
+    sortOrder: "",
+    iconSvg: "",
+  });
   const [editIconFile, setEditIconFile] = useState(null);
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState("");
@@ -672,7 +815,16 @@ export default function WalletsPage() {
   };
 
   const openCreate = () => {
-    setCreateForm({ name: "", availableForDeposit: "yes", availableForWithdraw: "yes", sortOrder: "", iconSvg: "" });
+    setCreateForm({
+      name: "",
+      availableForDeposit: "yes",
+      availableForWithdraw: "yes",
+      depositProcessMinutes: "15",
+      withdrawProcessMinutes: "15",
+      minWithdraw: "",
+      sortOrder: "",
+      iconSvg: "",
+    });
     setCreateIconFile(null);
     setCreateError("");
     setCreateOpen(true);
@@ -692,6 +844,23 @@ export default function WalletsPage() {
       setCreateError("Name is required.");
       return;
     }
+    const dp = Math.floor(Number(createForm.depositProcessMinutes));
+    const wd = Math.floor(Number(createForm.withdrawProcessMinutes));
+    if (!Number.isFinite(dp) || dp < 1) {
+      setCreateError("DP process minutes must be a positive whole number (1 or greater).");
+      return;
+    }
+    if (!Number.isFinite(wd) || wd < 1) {
+      setCreateError("WD process minutes must be a positive whole number (1 or greater).");
+      return;
+    }
+    if (String(createForm.minWithdraw).trim() !== "") {
+      const mw = Number(createForm.minWithdraw);
+      if (!Number.isFinite(mw) || mw < 0) {
+        setCreateError("Min. withdraw must be a non-negative number.");
+        return;
+      }
+    }
     setCreateSaving(true);
     setCreateError("");
     const token = localStorage.getItem("token") || "";
@@ -702,6 +871,11 @@ export default function WalletsPage() {
         formData.append("name", createForm.name.trim());
         formData.append("availableForDeposit", createForm.availableForDeposit);
         formData.append("availableForWithdraw", createForm.availableForWithdraw);
+        formData.append("depositProcessMinutes", String(dp));
+        formData.append("withdrawProcessMinutes", String(wd));
+        if (String(createForm.minWithdraw).trim() !== "") {
+          formData.append("minWithdraw", String(createForm.minWithdraw).trim());
+        }
         if (createForm.sortOrder !== "" && createForm.sortOrder !== undefined) {
           formData.append("sortOrder", String(createForm.sortOrder));
         }
@@ -722,6 +896,11 @@ export default function WalletsPage() {
             name: createForm.name.trim(),
             availableForDeposit: createForm.availableForDeposit,
             availableForWithdraw: createForm.availableForWithdraw,
+            depositProcessMinutes: dp,
+            withdrawProcessMinutes: wd,
+            ...(String(createForm.minWithdraw).trim() !== ""
+              ? { minWithdraw: Number(String(createForm.minWithdraw).trim()) }
+              : {}),
             sortOrder: createForm.sortOrder !== "" && createForm.sortOrder !== undefined ? Number(createForm.sortOrder) : undefined,
             iconSvg: createForm.iconSvg || undefined,
           }),
@@ -748,6 +927,16 @@ export default function WalletsPage() {
     setEditForm({
       availableForDeposit: row.availableForDeposit ? "yes" : "no",
       availableForWithdraw: row.availableForWithdraw ? "yes" : "no",
+      depositProcessMinutes:
+        row.depositProcessMinutes != null && Number.isFinite(Number(row.depositProcessMinutes))
+          ? String(row.depositProcessMinutes)
+          : "",
+      withdrawProcessMinutes:
+        row.withdrawProcessMinutes != null && Number.isFinite(Number(row.withdrawProcessMinutes))
+          ? String(row.withdrawProcessMinutes)
+          : "",
+      minWithdraw:
+        row.minWithdraw != null && Number.isFinite(Number(row.minWithdraw)) ? String(row.minWithdraw) : "",
       sortOrder: row.sortOrder !== undefined && row.sortOrder !== null ? row.sortOrder : "",
       iconSvg: "",
     });
@@ -767,6 +956,27 @@ export default function WalletsPage() {
 
   const handleEditConfirm = async () => {
     if (!editingCompany?.id) return;
+    if (String(editForm.depositProcessMinutes).trim() !== "") {
+      const n = Math.floor(Number(editForm.depositProcessMinutes));
+      if (!Number.isFinite(n) || n < 1) {
+        setEditError("DP process minutes must be a positive whole number (1 or greater), or leave empty to clear.");
+        return;
+      }
+    }
+    if (String(editForm.withdrawProcessMinutes).trim() !== "") {
+      const n = Math.floor(Number(editForm.withdrawProcessMinutes));
+      if (!Number.isFinite(n) || n < 1) {
+        setEditError("WD process minutes must be a positive whole number (1 or greater), or leave empty to clear.");
+        return;
+      }
+    }
+    if (String(editForm.minWithdraw).trim() !== "") {
+      const mw = Number(editForm.minWithdraw);
+      if (!Number.isFinite(mw) || mw < 0) {
+        setEditError("Min. withdraw must be a non-negative number.");
+        return;
+      }
+    }
     setEditSaving(true);
     setEditError("");
     const token = localStorage.getItem("token") || "";
@@ -776,6 +986,18 @@ export default function WalletsPage() {
         const formData = new FormData();
         formData.append("availableForDeposit", editForm.availableForDeposit);
         formData.append("availableForWithdraw", editForm.availableForWithdraw);
+        formData.append(
+          "depositProcessMinutes",
+          String(editForm.depositProcessMinutes).trim() === "" ? "" : String(Math.floor(Number(editForm.depositProcessMinutes)))
+        );
+        formData.append(
+          "withdrawProcessMinutes",
+          String(editForm.withdrawProcessMinutes).trim() === "" ? "" : String(Math.floor(Number(editForm.withdrawProcessMinutes)))
+        );
+        formData.append(
+          "minWithdraw",
+          String(editForm.minWithdraw).trim() === "" ? "" : String(editForm.minWithdraw).trim()
+        );
         if (editForm.sortOrder !== "" && editForm.sortOrder !== undefined && editForm.sortOrder !== null) {
           formData.append("sortOrder", String(editForm.sortOrder));
         }
@@ -788,7 +1010,16 @@ export default function WalletsPage() {
       } else {
         const body = {
           availableForDeposit: editForm.availableForDeposit,
-          availableForWithdraw: editForm.availableWithdraw,
+          availableForWithdraw: editForm.availableForWithdraw,
+          depositProcessMinutes:
+            String(editForm.depositProcessMinutes).trim() === ""
+              ? ""
+              : Math.floor(Number(editForm.depositProcessMinutes)),
+          withdrawProcessMinutes:
+            String(editForm.withdrawProcessMinutes).trim() === ""
+              ? ""
+              : Math.floor(Number(editForm.withdrawProcessMinutes)),
+          minWithdraw: String(editForm.minWithdraw).trim() === "" ? "" : Number(String(editForm.minWithdraw).trim()),
         };
         if (editForm.sortOrder !== "" && editForm.sortOrder !== undefined && editForm.sortOrder !== null) {
           body.sortOrder = Number(editForm.sortOrder);

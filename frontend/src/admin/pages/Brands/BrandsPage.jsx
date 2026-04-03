@@ -432,6 +432,7 @@ function MasterCompaniesTable({ rows, sort, onSort, onEdit, onLinkClick, loading
   const cols = [
     { key: "username", header: "Username", sortKey: "username" },
     { key: "website", header: "Website", sortKey: "website" },
+    { key: "balance", header: "Balance", thClassName: "jw-adminBrandsMasterBalanceCol" },
     { key: "type", header: "Type", sortKey: "type" },
     { key: "link", header: "Link" },
     { key: "status", header: "Status", sortKey: "status" },
@@ -446,7 +447,12 @@ function MasterCompaniesTable({ rows, sort, onSort, onEdit, onLinkClick, loading
               const sortable = !!c.sortKey;
               const dir = sort?.key === c.sortKey ? sort?.dir : null;
               return (
-                <th key={c.key} onClick={() => sortable && onSort?.(c.sortKey)} role={sortable ? "button" : undefined}>
+                <th
+                  key={c.key}
+                  className={c.thClassName || undefined}
+                  onClick={() => sortable && onSort?.(c.sortKey)}
+                  role={sortable ? "button" : undefined}
+                >
                   <span className="jw-adminThInner">
                     {c.header}
                     {sortable && <SortIcon dir={dir} />}
@@ -460,18 +466,23 @@ function MasterCompaniesTable({ rows, sort, onSort, onEdit, onLinkClick, loading
           {isLoading ? (
             Array.from({ length: 5 }).map((_, i) => (
               <tr key={`sk-${i}`}>
-                <td colSpan={6}><div className="jw-adminSkeleton" style={{ height: 20 }} /></td>
+                <td colSpan={7}><div className="jw-adminSkeleton" style={{ height: 20 }} /></td>
               </tr>
             ))
           ) : isEmpty ? (
             <tr>
-              <td colSpan={6} className="jw-adminEmpty">No results found</td>
+              <td colSpan={7} className="jw-adminEmpty">No results found</td>
             </tr>
           ) : (
             rows.map((r) => (
               <tr key={r.id}>
                 <td>{r.username}</td>
                 <td>{r.website}</td>
+                <td className="jw-adminBrandsMasterBalanceCol">
+                  {r.balance != null && Number.isFinite(Number(r.balance))
+                    ? Math.floor(Number(r.balance)).toLocaleString()
+                    : "0"}
+                </td>
                 <td>{r.type === "affiliate" ? "Affiliate" : "Master"}</td>
                 <td>
                   {r.linkUrl ? (

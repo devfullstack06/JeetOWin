@@ -47,6 +47,31 @@ export default function LoggedInLayout({ activeId = "dashboard", children }) {
 
   // swipe tracking refs
   const touchStartRef = useRef(null);
+  /** Measured height of sticky header (1 or 2 rows on mobile) → --jw-header-h for modals / layout */
+  const headerSlotRef = useRef(null);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const el = headerSlotRef.current;
+    if (!el) return;
+
+    const syncHeaderHeight = () => {
+      const h = el.getBoundingClientRect().height;
+      if (h > 0) root.style.setProperty("--jw-header-h", `${Math.round(h)}px`);
+    };
+
+    syncHeaderHeight();
+    const ro = new ResizeObserver(syncHeaderHeight);
+    ro.observe(el);
+    window.addEventListener("resize", syncHeaderHeight);
+    window.addEventListener("orientationchange", syncHeaderHeight);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", syncHeaderHeight);
+      window.removeEventListener("orientationchange", syncHeaderHeight);
+      root.style.removeProperty("--jw-header-h");
+    };
+  }, []);
 
   // 🔓 LOGOUT HANDLER (single source of truth for this layout)
   const handleLogout = () => {
@@ -256,13 +281,15 @@ export default function LoggedInLayout({ activeId = "dashboard", children }) {
 
   return (
     <div className="jw-loggedPage">
-      <LandingHeader
-        isLoggedIn
-        balanceCurrency="Rs."
-        balanceAmount={balanceAmountDisplay}
-        onDeposit={() => go("deposit")}
-        onRefreshBalance={fetchBalance}
-      />
+      <div ref={headerSlotRef} className="jw-loggedHeaderSlot">
+        <LandingHeader
+          isLoggedIn
+          balanceCurrency="Rs."
+          balanceAmount={balanceAmountDisplay}
+          onDeposit={() => go("deposit")}
+          onRefreshBalance={fetchBalance}
+        />
+      </div>
 
       <div className="jw-loggedGrid">
         {/* Desktop Left Nav */}
