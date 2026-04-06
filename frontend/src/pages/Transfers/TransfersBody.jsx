@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowUpDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
+import "../Wallets/walletsBody.css";
 import "./transfersBody.css";
 import usePageTitle from "../../hooks/usePageTitle";
 

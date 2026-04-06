@@ -1,58 +1,139 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
+import { getWalletIconUrl } from "../../../utils/walletIconUrl";
 
-export default function AccountsListStep({ accounts, onCreateNew }) {
-  const hasAccounts = accounts.length > 0;
+function initials(name = "") {
+  return (
+    (name || "?")
+      .split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((p) => p[0]?.toUpperCase())
+      .join("") || "?"
+  );
+}
+
+function BrandTileIcon({ brand }) {
+  const [imgError, setImgError] = useState(false);
+  const iconUrl = getWalletIconUrl(brand);
+  const showImg = iconUrl && !imgError;
+
+  if (showImg) {
+    return (
+      <img
+        className="jw-walletTileIcon"
+        src={iconUrl}
+        alt=""
+        onError={() => setImgError(true)}
+      />
+    );
+  }
+  return (
+    <div className="jw-walletTileFallback">
+      {initials(brand.name)}
+    </div>
+  );
+}
+
+export default function AccountsListStep({
+  brands = [],
+  accounts = [],
+  selectedBrandId = null,
+  onSelectBrand = () => {},
+  onCreateNew = () => {},
+}) {
+  const sortedBrands = useMemo(() => {
+    return [...brands].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+  }, [brands]);
 
   return (
-    <div className="jw-accountsListStep">
-      <div className="jw-accountsCreateNewWrap">
+    <div className="jw-walletsListStep jw-accountsListStep">
+      <div className="jw-walletsTopBar">
+        <div className="jw-walletsTopBarLeft">
+          <div className="jw-walletsTopTitle">Accounts</div>
+          <div className="jw-walletsTopSub">Select Your Account</div>
+        </div>
+
         <button
           type="button"
-          className="jw-accountsCreateNew"
+          className="jw-walletsAddNewBox"
           onClick={onCreateNew}
+          aria-label="Create New Account"
         >
-          <span>Create New</span>
-          <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
-            <path
-              d="M15 6.25V23.75M6.25 15H23.75"
-              stroke="white"
-              strokeWidth="4"
-              strokeLinecap="round"
-            />
-          </svg>
+          <div className="jw-walletsAddPlus">+</div>
+          <div className="jw-walletsAddText">Create New</div>
         </button>
       </div>
 
-      {/* List area: header fixed + rows scroll */}
-      <div className="jw-accountsListWrap">
-        <div className="jw-accountsListHeader">
-          <span>Username</span>
-          <span>Created</span>
-          <span>Brand</span>
-          <span>Password</span>
+      {sortedBrands.length > 0 ? (
+        <div className="jw-walletsTilesRow" aria-label="Brands available for accounts">
+          {sortedBrands.map((b) => {
+            const isActive = selectedBrandId === b.id;
+            return (
+              <button
+                key={b.id}
+                type="button"
+                className={`jw-walletTile ${isActive ? "is-active" : ""}`}
+                onClick={() => onSelectBrand(isActive ? null : b.id)}
+                aria-label={b.name}
+                title={b.name}
+              >
+                <BrandTileIcon brand={b} />
+                <div className="jw-walletTileLabel">{b.name}</div>
+              </button>
+            );
+          })}
         </div>
+      ) : null}
 
-        {hasAccounts ? (
-          <div className="jw-accountsRows" role="list">
-            {accounts.map((acc) => (
-              <div key={acc.id} className="jw-accountsRow" role="listitem">
-                <span>{acc.username}</span>
-                <span>{acc.createdAt ?? "-"}</span>
-                <span className="jw-accountsBrand">{acc.brand}</span>
-
-                {/* placeholder: later "Update" can open password reset flow */}
-                <button className="jw-accountsUpdate" type="button">
-                  Update
-                </button>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="jw-accountsEmpty">
-            No Account created yet. Click on Create New button to create a new
-            Account.
-          </div>
-        )}
+      <div className="jw-walletsTableScroll">
+        <table className="jw-walletsDataTable jw-accountsDataTable">
+          <colgroup>
+            <col className="jw-accountsColUser" />
+            <col className="jw-accountsColCreated" />
+            <col className="jw-accountsColBrand" />
+            <col className="jw-accountsColAction" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th scope="col">Username</th>
+              <th scope="col" className="jw-walletsThCenter">
+                Created
+              </th>
+              <th scope="col" className="jw-walletsThCenter">
+                Brand
+              </th>
+              <th scope="col" className="jw-walletsThRight">
+                Password
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {accounts.length === 0 ? (
+              <tr>
+                <td colSpan={4} className="jw-walletEmptyCell">
+                  {sortedBrands.length === 0
+                    ? "No brands are enabled for accounts. When your administrator enables a brand for accounts, you can create and view them here."
+                    : selectedBrandId
+                      ? "No accounts found for this brand."
+                      : "No Account created yet. Click Create New to add an account."}
+                </td>
+              </tr>
+            ) : (
+              accounts.map((acc) => (
+                <tr key={acc.id}>
+                  <td className="jw-walletColName">{acc.username}</td>
+                  <td className="jw-walletColWallet">{acc.createdAt ?? "—"}</td>
+                  <td className="jw-walletColWallet">{acc.brand}</td>
+                  <td className="jw-walletColNumber jw-accountsRowAction">
+                    <button className="jw-accountsUpdate" type="button">
+                      Update
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );

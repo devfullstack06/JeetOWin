@@ -366,6 +366,19 @@ exports.approveAdminDepositTicket = async (req, res) => {
       return res.status(400).json({ message: "Trx ID is required." });
     }
 
+    const [dupTrx] = await conn.query(
+      `SELECT id FROM deposit_tickets
+       WHERE status = 'approved' AND trx_id IS NOT NULL AND trx_id != '' AND trx_id = ?
+       LIMIT 1`,
+      [finalTrxId]
+    );
+    if (dupTrx.length) {
+      await conn.rollback();
+      return res.status(409).json({
+        message: "This Trx ID is already used on another approved deposit.",
+      });
+    }
+
     let slipPath = existing[0].slip_path;
     if (req.files && req.files.slip && req.files.slip[0]) {
       slipPath = getRelativeSlipPath(req.files.slip[0]);

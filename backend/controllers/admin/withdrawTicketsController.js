@@ -538,6 +538,20 @@ exports.approveAdminWithdrawTicket = async (req, res) => {
       return res.status(400).json({ message: "Ticket is not pending." });
     }
 
+    const [dupTrx] = await conn.query(
+      `SELECT id FROM withdraw_tickets
+       WHERE status = 'approved' AND trx_id IS NOT NULL AND trx_id != '' AND trx_id = ?
+       LIMIT 1`,
+      [trxId]
+    );
+    if (dupTrx.length) {
+      await conn.rollback();
+      conn.release();
+      return res.status(409).json({
+        message: "This Trx ID is already used on another approved withdraw.",
+      });
+    }
+
     const [pwRows] = await conn.query(
       `SELECT id, wallet_company_id, name, number, balance, min_withdraw, max_withdraw
        FROM payment_wallets

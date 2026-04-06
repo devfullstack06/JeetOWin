@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
+import "../Wallets/walletsBody.css";
 import "./accountsBody.css";
 
 import AccountsListStep from "./steps/AccountsListStep";
@@ -19,6 +20,19 @@ import {
   fetchMyAccounts,
 } from "./api/accountsApi";
 
+function mapAccountsBrandsFromApi(raw) {
+  const origin = getApiOrigin();
+  return (raw || []).map((b) => {
+    if (typeof b === "string") {
+      return { id: b, name: b, iconPath: null, iconSrc: "" };
+    }
+    const iconSrc = b.iconPath
+      ? `${origin}${b.iconPath.startsWith("/") ? b.iconPath : `/${b.iconPath}`}`
+      : "";
+    return { ...b, iconSrc };
+  });
+}
+
 export default function AccountsBody() {
   const navigate = useNavigate();
 
@@ -32,6 +46,48 @@ export default function AccountsBody() {
   const [accounts, setAccounts] = useState([]);
   const [brands, setBrands] = useState([]);
   const brandsAvailable = useMemo(() => brands, [brands]);
+  const [selectedBrandId, setSelectedBrandId] = useState(null);
+
+  const normalizedBrands = useMemo(() => {
+    return (brands || []).map((b) => ({
+      id: b.id,
+      name: b.name != null ? String(b.name) : "",
+      iconPath: b.iconPath ?? b.icon_path ?? null,
+      sortOrder: b.sortOrder ?? b.sort_order ?? 0,
+    }));
+  }, [brands]);
+
+  /** Brand names the API exposes for Accounts (available_accounts). Only these rows/tiles apply. */
+  const allowedAccountBrandNames = useMemo(() => {
+    const s = new Set();
+    for (const b of normalizedBrands) {
+      const n = b.name != null ? String(b.name).trim() : "";
+      if (n) s.add(n);
+    }
+    return s;
+  }, [normalizedBrands]);
+
+  const accountsEligibleForList = useMemo(() => {
+    if (allowedAccountBrandNames.size === 0) return [];
+    return accounts.filter((a) => {
+      const bn = a.brand != null ? String(a.brand).trim() : "";
+      return bn && allowedAccountBrandNames.has(bn);
+    });
+  }, [accounts, allowedAccountBrandNames]);
+
+  const filteredAccounts = useMemo(() => {
+    if (selectedBrandId == null) return accountsEligibleForList;
+    const brandName = normalizedBrands.find((x) => x.id === selectedBrandId)?.name;
+    if (!brandName) return accountsEligibleForList;
+    const key = String(brandName).trim();
+    return accountsEligibleForList.filter((a) => String(a.brand).trim() === key);
+  }, [accountsEligibleForList, selectedBrandId, normalizedBrands]);
+
+  useEffect(() => {
+    if (selectedBrandId == null) return;
+    const stillValid = normalizedBrands.some((b) => b.id === selectedBrandId);
+    if (!stillValid) setSelectedBrandId(null);
+  }, [normalizedBrands, selectedBrandId]);
 
   // Form state
   const [brand, setBrand] = useState("");
@@ -45,6 +101,13 @@ export default function AccountsBody() {
   const [rejectedReason, setRejectedReason] = useState("");
 
   const pollingRef = useRef(null);
+
+  const loadBrands = async () => {
+    const res = await fetchBrands();
+    const mapped = mapAccountsBrandsFromApi(res?.brands ?? []);
+    setBrands(mapped);
+    return mapped;
+  };
 
   const resetForm = () => {
     setBrand("");
@@ -78,7 +141,21 @@ export default function AccountsBody() {
     goToList();
   };
 
-  const handleCreateNew = () => {
+  const handleCreateNew = async () => {
+    let rows = brands;
+    if (!rows.length) {
+      try {
+        rows = await loadBrands();
+      } catch {
+        /* brands may still load from initial effect */
+      }
+    }
+    if (selectedBrandId != null) {
+      const row = rows.find((b) => String(b.id) === String(selectedBrandId));
+      setBrand(row?.name != null ? String(row.name) : "");
+    } else {
+      setBrand("");
+    }
     setStep("create");
     setErrors({});
   };
@@ -170,19 +247,7 @@ export default function AccountsBody() {
         if (cancelled) return;
 
         if (brandsRes.status === "fulfilled") {
-          const raw = brandsRes.value?.brands ?? [];
-          const origin = getApiOrigin();
-          setBrands(
-            raw.map((b) => {
-              if (typeof b === "string") {
-                return { id: b, name: b, iconPath: null, iconSrc: "" };
-              }
-              const iconSrc = b.iconPath
-                ? `${origin}${b.iconPath.startsWith("/") ? b.iconPath : `/${b.iconPath}`}`
-                : "";
-              return { ...b, iconSrc };
-            })
-          );
+          setBrands(mapAccountsBrandsFromApi(brandsRes.value?.brands ?? []));
         } else {
           console.error("[Accounts] fetch brands failed:", brandsRes.reason);
           setBrands([]); // fallback
@@ -303,7 +368,10 @@ export default function AccountsBody() {
         {/* STEP RENDER */}
         {step === "list" && (
           <AccountsListStep
-            accounts={accounts}
+            brands={normalizedBrands}
+            accounts={filteredAccounts}
+            selectedBrandId={selectedBrandId}
+            onSelectBrand={setSelectedBrandId}
             onCreateNew={handleCreateNew}
           />
         )}

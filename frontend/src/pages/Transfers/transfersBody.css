@@ -225,7 +225,21 @@
    STEP 2: Create Transfer UI (mock-like)
    ========================= */
 
+  /* Same flex chain as Accounts form / Wallets list so .jw-walletsTableScroll can scroll */
+  .jw-transfersFormOuter {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    width: 100%;
+  }
+
   .jw-transfersFormPanel {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
     padding: 0 10px 10px;
   }
 
@@ -328,53 +342,98 @@
     line-height: 1.1;
   }
 
-  /* header row: Username | Action */
-  .jw-transferTableHeader {
-    display: flex;
-    justify-content: space-between;
-    padding: 6px 6px;
-    font-size: 11px;
-    opacity: 0.9;
+  /* Table scroll area uses .jw-walletsTableScroll from walletsBody.css */
+
+  .jw-transferDataTable {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 10px;
+    table-layout: fixed;
   }
-  
-  .jw-transferTableHeaderRight {
+
+  .jw-transferDataTable col.jw-transferColAccount {
+    width: 58%;
+  }
+
+  .jw-transferDataTable col.jw-transferColAction {
+    width: 42%;
+  }
+
+  .jw-transferDataTable thead th {
+    font-size: 11px;
+    font-weight: 400;
+    opacity: 0.9;
+    padding: 6px 20px 4px;
+    text-align: left;
+    vertical-align: bottom;
+    color: inherit;
+  }
+
+  /* Must beat .jw-transferDataTable thead th { text-align: left } */
+  .jw-transferDataTable thead th.jw-transferThAction {
     text-align: right;
   }
-  
-  /* list wrapper (scroll if needed) */
-  .jw-transferCreateList {
-    flex: 1;
-    min-height: 0;
-    overflow: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding-right: 2px;
-    -webkit-overflow-scrolling: touch;
-  }
-  
-  /* each account row */
-  .jw-transferAccountRow {
+
+  /* Gap before each new account row (single tbody — same pattern as /accounts) */
+  /* .jw-transferDataTable tbody tr.jw-transferDataRow:not(:first-child) td {
+    border-top: 14px solid transparent;
+  } */
+
+  .jw-transferDataTable tbody tr.jw-transferDataRow td {
     background: rgba(0, 0, 0, 0.18);
-    border-radius: 12px;
     padding: 10px;
+    vertical-align: middle;
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
   }
-  
-  .jw-transferAccountTop {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
+
+  .jw-transferDataRow:not(.is-expanded) td:first-child {
+    border-radius: 12px 0 0 12px;
   }
-  
+
+  .jw-transferDataRow:not(.is-expanded) td:last-child {
+    border-radius: 0 12px 12px 0;
+  }
+
+  .jw-transferDataRow.is-expanded td:first-child {
+    border-radius: 12px 0 0 0;
+  }
+
+  .jw-transferDataRow.is-expanded td:last-child {
+    border-radius: 0 12px 0 0;
+  }
+
+  .jw-transferExpandRow td {
+    background: rgba(0, 0, 0, 0.18);
+    padding: 0 10px 10px;
+    border-radius: 0 0 12px 12px;
+    vertical-align: top;
+  }
+
+  .jw-transfersEmptyCell {
+    background: transparent !important;
+    padding: 14px 14px !important;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.75);
+    text-align: center;
+    border-radius: 0 !important;
+  }
+
   .jw-transferUsername {
     font-size: 13px;
     font-weight: 700;
     color: rgba(255, 255, 255, 0.9);
   }
-  
+
+  .jw-transferTdAction {
+    text-align: right;
+    vertical-align: middle;
+  }
+
+  /* Shrink-wrap so text-align:right pins IN/OUT to the cell edge */
   .jw-transferActionBtns {
-    display: flex;
+    display: inline-flex;
+    justify-content: flex-end;
     gap: 10px;
   }
   
@@ -398,8 +457,9 @@
   }
   
   .jw-transferActionActive {
-    display: flex;
+    display: inline-flex;
     align-items: center;
+    justify-content: flex-end;
     gap: 10px;
   }
   
@@ -479,6 +539,13 @@
     background: rgba(255, 80, 80, 0.12);
   }
   
+  .jw-transfersFormPanel > .jw-txStepTitleContainer,
+  .jw-transfersFormPanel > .jw-txTilesRow,
+  .jw-transfersFormPanel > .jw-transferSubmitBanner,
+  .jw-transfersFormPanel > .jw-transferCreateActions {
+    flex-shrink: 0;
+  }
+
   .jw-transferCreateActions {
     display: flex;
     justify-content: center;

@@ -86,29 +86,44 @@ export default function WalletsListStep({
         })}
       </div>
 
-      {/* ✅ Add center column: Wallet */}
-      <div className="jw-walletsListHeader">
-        <div>Name</div>
-        <div style={{ textAlign: "center" }}>Wallet</div>
-        <div style={{ textAlign: "right" }}>Number</div>
-      </div>
-
-      <div className="jw-walletsRows">
-        {wallets.length === 0 ? (
-          <div className="jw-walletEmpty">
-            {selectedCompanyId
-              ? "No wallets found for this company."
-              : "No wallets added yet."}
-          </div>
-        ) : (
-          wallets.map((w) => (
-            <div key={w.id} className="jw-walletRow">
-              <div className="jw-walletColName">{w.accountTitle}</div>
-              <div className="jw-walletColWallet">{w.companyName}</div>
-              <div className="jw-walletColNumber">{w.accountNumber}</div>
-            </div>
-          ))
-        )}
+      <div className="jw-walletsTableScroll">
+        <table className="jw-walletsDataTable">
+          <colgroup>
+            <col className="jw-walletsColName" />
+            <col className="jw-walletsColWallet" />
+            <col className="jw-walletsColNumber" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col" className="jw-walletsThCenter">
+                Wallet
+              </th>
+              <th scope="col" className="jw-walletsThRight">
+                Number
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {wallets.length === 0 ? (
+              <tr>
+                <td colSpan={3} className="jw-walletEmptyCell">
+                  {selectedCompanyId
+                    ? "No wallets found for this company."
+                    : "No wallets added yet."}
+                </td>
+              </tr>
+            ) : (
+              wallets.map((w) => (
+                <tr key={w.id}>
+                  <td className="jw-walletColName">{w.accountTitle}</td>
+                  <td className="jw-walletColWallet">{w.companyName}</td>
+                  <td className="jw-walletColNumber">{w.accountNumber}</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );

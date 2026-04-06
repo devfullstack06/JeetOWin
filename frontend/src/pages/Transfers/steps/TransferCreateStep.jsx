@@ -198,101 +198,124 @@ export default function TransferCreateStep({
           </div>
         ) : null}
 
-        {/* TABLE HEADER */}
-        <div className="jw-transferTableHeader">
-          <div>Account</div>
-          <div className="jw-transferTableHeaderRight">Action</div>
-        </div>
+        <div className="jw-walletsTableScroll">
+          <table className="jw-transferDataTable" aria-label="Accounts list">
+            <colgroup>
+              <col className="jw-transferColAccount" />
+              <col className="jw-transferColAction" />
+            </colgroup>
+            <thead>
+              <tr>
+                <th scope="col">Account</th>
+                <th scope="col" className="jw-transferThAction">
+                  Action
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {loadingAccounts ? (
+                <tr>
+                  <td colSpan={2} className="jw-transfersEmptyCell">
+                    Loading accounts...
+                  </td>
+                </tr>
+              ) : accounts.length === 0 ? (
+                <tr>
+                  <td colSpan={2} className="jw-transfersEmptyCell">
+                    No accounts found for this brand.
+                  </td>
+                </tr>
+              ) : (
+                accounts.map((acc) => {
+                  const isActive = acc.id === activeAccountId;
 
-        {/* LIST */}
-        <div className="jw-transferCreateList" role="list" aria-label="Accounts list">
-          {loadingAccounts ? (
-            <div className="jw-transfersEmpty">Loading accounts...</div>
-          ) : accounts.length === 0 ? (
-            <div className="jw-transfersEmpty">No accounts found for this brand.</div>
-          ) : (
-            accounts.map((acc) => {
-              const isActive = acc.id === activeAccountId;
-
-              return (
-                <div key={acc.id} className="jw-transferAccountRow" role="listitem">
-                  <div className="jw-transferAccountTop">
-                    <div className="jw-transferUsername">{acc.username}</div>
-
-                    {!isActive ? (
-                      <div className="jw-transferActionBtns">
-                        <button
-                          type="button"
-                          className="jw-transferBtnIn"
-                          disabled={isSubmitting}
-                          onClick={() => startRowAction(acc.id, "IN")}
-                        >
-                          IN
-                        </button>
-                        <button
-                          type="button"
-                          className="jw-transferBtnOut"
-                          disabled={isSubmitting}
-                          onClick={() => startRowAction(acc.id, "OUT")}
-                        >
-                          OUT
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="jw-transferActionActive">
-                        <div className="jw-transferActionText">
-                          Transfer {direction === "IN" ? "In" : "Out"}
-                        </div>
-                        <button
-                          type="button"
-                          className="jw-transferRowClose"
-                          aria-label="Cancel"
-                          disabled={isSubmitting}
-                          onClick={cancelRowAction}
-                        >
-                          ×
-                        </button>
-                      </div>
-                    )}
-                  </div>
-
-                  {isActive && (
-                    <div className="jw-transferAccountBottom">
-                      <input
-                        className="jw-transferAmountInput"
-                        type="text"
-                        inputMode="numeric"
-                        placeholder="Enter Amount"
-                        disabled={isSubmitting}
-                        value={formatDigitsPkForInput(amountDigits)}
-                        onChange={(e) => {
-                          setError("");
-                          onClearSubmitError?.();
-                          setAmountDigits(digitsOnlyFromInput(e.target.value));
-                        }}
-                      />
-
-                      <button
-                        type="button"
-                        className="jw-transferSubmitBtn"
-                        disabled={isSubmitting}
-                        aria-busy={isSubmitting}
-                        onClick={() => handleSubmit(acc)}
+                  return (
+                    <React.Fragment key={acc.id}>
+                      <tr
+                        className={`jw-transferDataRow ${isActive ? "is-expanded" : ""}`}
                       >
-                        {isSubmitting ? "Submitting…" : "Submit"}
-                      </button>
+                        <td className="jw-transferUsername">{acc.username}</td>
+                        <td className="jw-transferTdAction">
+                          {!isActive ? (
+                            <div className="jw-transferActionBtns">
+                              <button
+                                type="button"
+                                className="jw-transferBtnIn"
+                                disabled={isSubmitting}
+                                onClick={() => startRowAction(acc.id, "IN")}
+                              >
+                                IN
+                              </button>
+                              <button
+                                type="button"
+                                className="jw-transferBtnOut"
+                                disabled={isSubmitting}
+                                onClick={() => startRowAction(acc.id, "OUT")}
+                              >
+                                OUT
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="jw-transferActionActive">
+                              <div className="jw-transferActionText">
+                                Transfer {direction === "IN" ? "In" : "Out"}
+                              </div>
+                              <button
+                                type="button"
+                                className="jw-transferRowClose"
+                                aria-label="Cancel"
+                                disabled={isSubmitting}
+                                onClick={cancelRowAction}
+                              >
+                                ×
+                              </button>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                      {isActive && (
+                        <tr className="jw-transferExpandRow">
+                          <td colSpan={2}>
+                            <div className="jw-transferAccountBottom">
+                              <input
+                                className="jw-transferAmountInput"
+                                type="text"
+                                inputMode="numeric"
+                                placeholder="Enter Amount"
+                                disabled={isSubmitting}
+                                value={formatDigitsPkForInput(amountDigits)}
+                                onChange={(e) => {
+                                  setError("");
+                                  onClearSubmitError?.();
+                                  setAmountDigits(digitsOnlyFromInput(e.target.value));
+                                }}
+                              />
 
-                      {error && (
-                        <div className="jw-transferInlineError" role="alert">
-                          {error}
-                        </div>
+                              <button
+                                type="button"
+                                className="jw-transferSubmitBtn"
+                                disabled={isSubmitting}
+                                aria-busy={isSubmitting}
+                                onClick={() => handleSubmit(acc)}
+                              >
+                                {isSubmitting ? "Submitting…" : "Submit"}
+                              </button>
+
+                              {error && (
+                                <div className="jw-transferInlineError" role="alert">
+                                  {error}
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
                       )}
-                    </div>
-                  )}
-                </div>
-              );
-            })
-          )}
+                    </React.Fragment>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
         </div>
 
         {/* BOTTOM: Cancel */}

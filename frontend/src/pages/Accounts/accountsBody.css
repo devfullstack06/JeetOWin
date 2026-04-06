@@ -73,88 +73,57 @@
   text-shadow: 0px 4px 4px rgba(0, 0, 0, 0.8);
 }
 
-/* STEP 1: CREATE NEW (centered horizontally) */
-.jw-accountsCreateNewWrap {
-  display: flex;
-  justify-content: center;
-  padding: 0 10px;
+/* List step: 4-column table (inherits .jw-walletsDataTable from walletsBody.css) */
+.jw-accountsListStep .jw-accountsDataTable col.jw-accountsColUser {
+  width: 26%;
 }
 
-.jw-accountsCreateNew {
-  max-width: 300px;
-  width: 100%;
-  margin: 0 50px;
-  padding: 20px 50px;
-  border-radius: 10px;
-  background: #00ca52;
-  border: 0;
-
-  color: #fff;
-  font-size: 20px;
-  font-weight: 510;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-
-  cursor: pointer;
+.jw-accountsListStep .jw-accountsDataTable col.jw-accountsColCreated {
+  width: 22%;
 }
 
-/* ✅ STEP 1 LAYOUT WRAPPER (enables scroll area below Create New) */
-.jw-accountsListStep {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.jw-accountsListStep .jw-accountsDataTable col.jw-accountsColBrand {
+  width: 28%;
 }
 
-/* ✅ Header fixed + rows scroll container */
-.jw-accountsListWrap {
-  flex: 1;
-  min-height: 0;
-  padding: 0 10px 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.jw-accountsListStep .jw-accountsDataTable col.jw-accountsColAction {
+  width: 24%;
 }
 
-/* ACCOUNTS LIST HEADER (fixed) */
-.jw-accountsListHeader {
-  display: flex;
-  justify-content: space-between;
-  font-size: 10px;
-  opacity: 0.9;
-  padding: 0 10px;
+.jw-accountsListStep .jw-accountsRowAction {
+  text-align: right;
+  white-space: nowrap;
 }
 
-/* ✅ Only rows scroll */
-.jw-accountsRows {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding-right: 2px; /* small space so scrollbar doesn't touch content */
-  -webkit-overflow-scrolling: touch;
+.jw-accountsListStep .jw-accountsRowAction .jw-accountsUpdate {
+  vertical-align: middle;
 }
 
-.jw-accountsRow {
-  background: #071336;
-  border-radius: 10px;
-  padding: 6px 10px;
-
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-
-  font-size: 12px;
+/* Created + Brand: center; Password: right (header + body) */
+.jw-accountsListStep .jw-accountsDataTable thead th:nth-child(1) {
+  text-align: left;
 }
 
-.jw-accountsBrand {
-  font-weight: 700;
+.jw-accountsListStep .jw-accountsDataTable thead th:nth-child(2),
+.jw-accountsListStep .jw-accountsDataTable thead th:nth-child(3) {
+  text-align: center;
+}
+
+.jw-accountsListStep .jw-accountsDataTable thead th:nth-child(4) {
+  text-align: right;
+}
+
+.jw-accountsListStep .jw-accountsDataTable tbody td:nth-child(1) {
+  text-align: left;
+}
+
+.jw-accountsListStep .jw-accountsDataTable tbody td:nth-child(2),
+.jw-accountsListStep .jw-accountsDataTable tbody td:nth-child(3) {
+  text-align: center;
+}
+
+.jw-accountsListStep .jw-accountsDataTable tbody td:nth-child(4) {
+  text-align: right;
 }
 
 .jw-accountsUpdate {

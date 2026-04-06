@@ -87,10 +87,23 @@
 
 /* =========================
    DESKTOP
+   Same scroll model as mobile + public: header stays put, only main scrolls.
    ========================= */
 @media (min-width: 769px) {
+  .jw-loggedPage {
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
   .jw-loggedGrid {
-    min-height: calc(100vh - var(--jw-header-h));
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
   }
 
   .jw-loggedNav {
@@ -100,6 +113,7 @@
     top: var(--jw-header-h);
     width: var(--jw-nav-w);
     height: calc(100vh - var(--jw-header-h));
+    height: calc(100dvh - var(--jw-header-h));
     z-index: 200;
     display: flex;
     flex-direction: column;
@@ -112,6 +126,11 @@
   }
 
   .jw-loggedBody {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+
     width: calc(100% - var(--jw-nav-w));
     max-width: var(--jw-body-max-w);
     margin-left: var(--jw-nav-w);
