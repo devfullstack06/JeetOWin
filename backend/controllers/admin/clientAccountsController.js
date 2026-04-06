@@ -216,9 +216,9 @@ exports.createAdminClientAccount = async (req, res) => {
     const passwordHash = await bcrypt.hash(password, 10);
 
     const [result] = await pool.query(
-      `INSERT INTO client_accounts (username, password_hash, client_id, brand, brand_id, brand_company_id, status, notes, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
-      [username, passwordHash, clientId, brandName || "", brandId, brandCompanyId || null, status, notes || null]
+      `INSERT INTO client_accounts (username, password_hash, initial_password, client_id, brand, brand_id, brand_company_id, status, notes, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+      [username, passwordHash, password, clientId, brandName || "", brandId, brandCompanyId || null, status, notes || null]
     );
 
     const [rows] = await pool.query(

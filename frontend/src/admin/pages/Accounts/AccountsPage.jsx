@@ -764,9 +764,10 @@ function ProcessModal({
               {showApproveFields && (
                 <>
                   <div className="jw-adminUsersModal__field">
-                    <label className="jw-adminUsersModal__label">Master</label>
+                    <label className="jw-adminUsersModal__label">Master (required)</label>
                     <select
                       className={`jw-adminUsersModal__input ${!form.masterId ? "jw-adminInput--placeholder" : ""}`}
+                      aria-required="true"
                       value={form.masterId === "" ? "" : form.masterId}
                       onChange={(e) => onChange("masterId", e.target.value ? Number(e.target.value) : "")}
                     >
@@ -1121,6 +1122,11 @@ export default function AccountsPage() {
       return;
     }
     if (f.process === "approve") {
+      const masterNum = Number(f.masterId);
+      if (!Number.isFinite(masterNum) || masterNum < 1) {
+        setProcessError("Master is required.");
+        return;
+      }
       if (!f.username.trim()) {
         setProcessError("Username is required.");
         return;

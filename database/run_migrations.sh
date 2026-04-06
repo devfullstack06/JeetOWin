@@ -49,6 +49,7 @@ for f in migration_accounts_client_type.sql \
   migration_deposit_tickets_ledger_transaction_number.sql \
   migration_deposit_tickets_created_by_user_id.sql \
   migration_client_accounts_suggested_username.sql \
+  migration_client_accounts_initial_password.sql \
   migration_withdraw_tickets.sql \
   migration_withdraw_tickets_evidence.sql \
   migration_withdraw_tickets_slip.sql \

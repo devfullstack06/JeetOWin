@@ -130,7 +130,8 @@ exports.approveAdminAccountTicket = async (req, res) => {
     if (!id) return res.status(400).json({ message: "Invalid id." });
 
     const body = req.body || {};
-    const masterId = body.masterId != null && Number.isFinite(Number(body.masterId)) ? Number(body.masterId) : null;
+    const masterIdRaw = body.masterId != null ? Number(body.masterId) : NaN;
+    const masterId = Number.isFinite(masterIdRaw) && masterIdRaw > 0 ? masterIdRaw : null;
     const username = String(body.username || "").trim();
     const notes = body.notes != null ? String(body.notes || "").trim() : null;
 
@@ -141,6 +142,10 @@ exports.approveAdminAccountTicket = async (req, res) => {
     if (!ticketRows.length) return res.status(404).json({ message: "Ticket not found." });
     const ticket = ticketRows[0];
 
+    if (!masterId) {
+      return res.status(400).json({ message: "Master is required." });
+    }
+
     const finalUsername = username || ticket.suggested_username || "";
     if (!finalUsername) return res.status(400).json({ message: "Username is required." });
 
@@ -148,14 +153,35 @@ exports.approveAdminAccountTicket = async (req, res) => {
     const [bRows] = await pool.query("SELECT id, name FROM brands WHERE name = ? LIMIT 1", [ticket.brand]);
     if (bRows.length) brandId = bRows[0].id;
 
+    const [masterRows] = await pool.query(
+      `SELECT bc.id FROM brand_companies bc
+       INNER JOIN brands b ON b.id = bc.brand_id AND b.name = ?
+       WHERE bc.id = ? AND LOWER(TRIM(bc.type)) = 'master' AND bc.is_active = 1
+       LIMIT 1`,
+      [ticket.brand, masterId]
+    );
+    if (!masterRows.length) {
+      return res.status(400).json({ message: "Select a valid master for this ticket's brand." });
+    }
+
     const randomPassword = crypto.randomBytes(12).toString("hex");
     const passwordHash = await bcrypt.hash(randomPassword, 10);
 
     const suggestedUsername = ticket.suggested_username != null ? String(ticket.suggested_username).trim() : null;
     await pool.query(
-      `INSERT INTO client_accounts (username, suggested_username, password_hash, client_id, brand, brand_id, brand_company_id, status, notes, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?, NOW(), NOW())`,
-      [finalUsername, suggestedUsername || null, passwordHash, ticket.client_id, ticket.brand, brandId, masterId, notes || null]
+      `INSERT INTO client_accounts (username, suggested_username, password_hash, initial_password, client_id, brand, brand_id, brand_company_id, status, notes, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, NOW(), NOW())`,
+      [
+        finalUsername,
+        suggestedUsername || null,
+        passwordHash,
+        randomPassword,
+        ticket.client_id,
+        ticket.brand,
+        brandId,
+        masterId,
+        notes || null,
+      ]
     );
 
     await pool.query("DELETE FROM account_tickets WHERE id = ?", [id]);

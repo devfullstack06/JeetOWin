@@ -95,7 +95,7 @@
   white-space: nowrap;
 }
 
-.jw-accountsListStep .jw-accountsRowAction .jw-accountsUpdate {
+.jw-accountsListStep .jw-accountsRowAction .jw-accountsActionIcons {
   vertical-align: middle;
 }
 
@@ -126,15 +126,151 @@
   text-align: right;
 }
 
-.jw-accountsUpdate {
-  background: #ecbd8f;
-  border: 0;
-  border-radius: 10px;
-  padding: 2px 8px;
+.jw-accountsActionIcons {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
 
-  font-size: 12px;
-  font-weight: 700;
+/* Same control + icon sizing as History ticket table View column (jw-historyViewBtn) */
+.jw-accountsListStep .jw-historyViewBtn,
+.jw-accountsListStep .jw-historyEditBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: #fff;
   cursor: pointer;
+  vertical-align: middle;
+  transition: color 0.15s ease, opacity 0.15s ease;
+}
+
+.jw-accountsListStep .jw-historyViewBtn:hover,
+.jw-accountsListStep .jw-historyEditBtn:hover {
+  color: rgba(255, 255, 255, 0.92);
+  background: transparent;
+}
+
+.jw-accountsListStep .jw-historyViewBtn:focus-visible,
+.jw-accountsListStep .jw-historyEditBtn:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.55);
+  outline-offset: 2px;
+}
+
+/* Account details modal (portal to body; aligns with History ticket modal) */
+.jw-accountsDetailModalOverlay {
+  position: fixed;
+  top: calc(var(--jw-header-h, 62px) - 10px);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1200;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  justify-content: safe center;
+  padding: 16px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.jw-accountsDetailModal {
+  width: 100%;
+  max-width: 440px;
+  max-height: min(calc(100dvh - var(--jw-header-h, 62px) - 2px - 32px), 720px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  border-radius: 14px;
+  background: linear-gradient(360deg, #14379c 22%, #071336 100%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
+}
+
+.jw-accountsDetailModal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  flex-shrink: 0;
+}
+
+.jw-accountsDetailModal__title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.jw-accountsDetailModal__close {
+  background: transparent;
+  border: 0;
+  color: #fff;
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.jw-accountsDetailModal__body {
+  padding: 14px 16px 16px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.jw-accountsDetailModal__dl {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.jw-accountsDetailModal__row {
+  display: grid;
+  grid-template-columns: minmax(120px, 42%) 1fr;
+  gap: 10px 14px;
+  align-items: start;
+}
+
+.jw-accountsDetailModal__row dt {
+  margin: 0;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.jw-accountsDetailModal__row dd {
+  margin: 0;
+  word-break: break-word;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.jw-accountsDetailModal__mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 13px;
+}
+
+.jw-accountsDetailModal__link {
+  color: #7dd3fc;
+  text-decoration: underline;
+  word-break: break-all;
+}
+
+.jw-accountsDetailModal__link:hover {
+  color: #bae6fd;
 }
 
 /* ✅ Empty state under header */

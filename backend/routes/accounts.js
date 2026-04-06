@@ -54,10 +54,12 @@ router.get("/brands", authenticateToken, requireClient, async (req, res) => {
 router.get("/", authenticateToken, requireClient, async (req, res) => {
   try {
     const [rows] = await pool.query(
-      `SELECT id, brand, username, created_at
-       FROM client_accounts
-       WHERE client_id = ?
-       ORDER BY created_at DESC`,
+      `SELECT ca.id, ca.brand, ca.username, ca.created_at, ca.initial_password,
+              bc.website_url AS brand_website_url
+       FROM client_accounts ca
+       LEFT JOIN brand_companies bc ON bc.id = ca.brand_company_id
+       WHERE ca.client_id = ?
+       ORDER BY ca.created_at DESC`,
       [req.user.userId]
     );
 
@@ -66,10 +68,46 @@ router.get("/", authenticateToken, requireClient, async (req, res) => {
       brand: r.brand,
       username: r.username,
       createdAt: r.created_at ? new Date(r.created_at).toISOString().slice(0, 10) : null,
+      initialPassword:
+        r.initial_password != null && String(r.initial_password).trim() !== ""
+          ? String(r.initial_password)
+          : null,
+      websiteUrl:
+        r.brand_website_url != null && String(r.brand_website_url).trim() !== ""
+          ? String(r.brand_website_url).trim()
+          : null,
     }));
 
     return res.json({ accounts });
   } catch (e) {
+    if (e.code === "ER_BAD_FIELD_ERROR" && String(e.sqlMessage || "").includes("initial_password")) {
+      try {
+        const [rows] = await pool.query(
+          `SELECT ca.id, ca.brand, ca.username, ca.created_at,
+                  bc.website_url AS brand_website_url
+           FROM client_accounts ca
+           LEFT JOIN brand_companies bc ON bc.id = ca.brand_company_id
+           WHERE ca.client_id = ?
+           ORDER BY ca.created_at DESC`,
+          [req.user.userId]
+        );
+        const accounts = rows.map((r) => ({
+          id: r.id,
+          brand: r.brand,
+          username: r.username,
+          createdAt: r.created_at ? new Date(r.created_at).toISOString().slice(0, 10) : null,
+          initialPassword: null,
+          websiteUrl:
+            r.brand_website_url != null && String(r.brand_website_url).trim() !== ""
+              ? String(r.brand_website_url).trim()
+              : null,
+        }));
+        return res.json({ accounts });
+      } catch (e2) {
+        console.error("[accounts] GET / error:", e2);
+        return res.json({ accounts: [] });
+      }
+    }
     console.error("[accounts] GET / error:", e);
     return res.json({ accounts: [] });
   }
@@ -209,11 +247,25 @@ router.patch("/tickets/:id/mock", authenticateToken, requireClient, async (req, 
 
     // approved mock: create a dummy account row
     const dummyUsername = `jw${req.user.userId}${ticketId}`.slice(0, 16);
-    const [accResult] = await pool.query(
-      `INSERT INTO client_accounts (client_id, brand, username, created_at)
-       VALUES (?, ?, ?, NOW())`,
-      [req.user.userId, rows[0].brand, dummyUsername]
-    );
+    const dummyInitialPw = `dev${req.user.userId}${ticketId}`.slice(0, 24);
+    let accResult;
+    try {
+      [accResult] = await pool.query(
+        `INSERT INTO client_accounts (client_id, brand, username, initial_password, created_at)
+         VALUES (?, ?, ?, ?, NOW())`,
+        [req.user.userId, rows[0].brand, dummyUsername, dummyInitialPw]
+      );
+    } catch (insErr) {
+      if (insErr.code === "ER_BAD_FIELD_ERROR" && String(insErr.sqlMessage || "").includes("initial_password")) {
+        [accResult] = await pool.query(
+          `INSERT INTO client_accounts (client_id, brand, username, created_at)
+           VALUES (?, ?, ?, NOW())`,
+          [req.user.userId, rows[0].brand, dummyUsername]
+        );
+      } else {
+        throw insErr;
+      }
+    }
 
     await pool.query(
       `UPDATE account_tickets

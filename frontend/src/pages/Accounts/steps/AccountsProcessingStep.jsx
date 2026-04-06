@@ -30,7 +30,9 @@ export default function AccountsProcessingStep({ ticket, onBack }) {
           <div className="jw-waitingText">
             Your request has been sent to our admin team.
             <br />
-            We’ll update your ticket with the username & password soon.
+            We&apos;ll update your ticket with the username &amp; password on My Accounts page.
+            <br />
+            Processing time: 15mins.
           </div>
         </div>
 
