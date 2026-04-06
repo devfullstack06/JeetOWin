@@ -18,6 +18,7 @@ import {
   createAccountTicket,
   fetchBrands,
   fetchMyAccounts,
+  fetchPendingAccountTickets,
 } from "./api/accountsApi";
 
 function mapAccountsBrandsFromApi(raw) {
@@ -47,6 +48,7 @@ export default function AccountsBody() {
   const [brands, setBrands] = useState([]);
   const brandsAvailable = useMemo(() => brands, [brands]);
   const [selectedBrandId, setSelectedBrandId] = useState(null);
+  const [pendingTicketsList, setPendingTicketsList] = useState([]);
 
   const normalizedBrands = useMemo(() => {
     return (brands || []).map((b) => ({
@@ -82,6 +84,46 @@ export default function AccountsBody() {
     const key = String(brandName).trim();
     return accountsEligibleForList.filter((a) => String(a.brand).trim() === key);
   }, [accountsEligibleForList, selectedBrandId, normalizedBrands]);
+
+  const pendingTicketsEligible = useMemo(() => {
+    if (allowedAccountBrandNames.size === 0) return [];
+    return pendingTicketsList.filter((t) => {
+      const bn = t.brand != null ? String(t.brand).trim() : "";
+      return bn && allowedAccountBrandNames.has(bn);
+    });
+  }, [pendingTicketsList, allowedAccountBrandNames]);
+
+  const filteredPendingTickets = useMemo(() => {
+    if (selectedBrandId == null) return pendingTicketsEligible;
+    const brandName = normalizedBrands.find((x) => x.id === selectedBrandId)?.name;
+    if (!brandName) return pendingTicketsEligible;
+    const key = String(brandName).trim();
+    return pendingTicketsEligible.filter((t) => String(t.brand).trim() === key);
+  }, [pendingTicketsEligible, selectedBrandId, normalizedBrands]);
+
+  const accountsTableRows = useMemo(() => {
+    const accountRows = filteredAccounts.map((a) => ({
+      rowKind: "account",
+      rowKey: `account-${a.id}`,
+      account: a,
+    }));
+    const ticketRows = filteredPendingTickets.map((t) => ({
+      rowKind: "pendingTicket",
+      rowKey: `ticket-${t.id}`,
+      ticket: t,
+    }));
+    const merged = [...ticketRows, ...accountRows];
+    merged.sort((x, y) => {
+      const ax = x.rowKind === "account" ? x.account?.createdAt : x.ticket?.createdAt;
+      const by = y.rowKind === "account" ? y.account?.createdAt : y.ticket?.createdAt;
+      const ta = ax ? new Date(ax).getTime() : 0;
+      const tb = by ? new Date(by).getTime() : 0;
+      return tb - ta;
+    });
+    return merged;
+  }, [filteredAccounts, filteredPendingTickets]);
+
+  const pendingTicketsCount = filteredPendingTickets.length;
 
   useEffect(() => {
     if (selectedBrandId == null) return;
@@ -123,13 +165,15 @@ export default function AccountsBody() {
     setRejectedReason("");
     resetForm();
 
-    // Refresh list after any flow
     try {
-      const data = await fetchMyAccounts();
-      setAccounts(data?.accounts ?? []);
+      const [accRes, ticRes] = await Promise.allSettled([
+        fetchMyAccounts(),
+        fetchPendingAccountTickets(),
+      ]);
+      if (accRes.status === "fulfilled") setAccounts(accRes.value?.accounts ?? []);
+      if (ticRes.status === "fulfilled") setPendingTicketsList(ticRes.value?.tickets ?? []);
     } catch (e) {
-      // keep silent to avoid breaking UX; console is enough
-      console.error("[Accounts] refresh accounts failed:", e);
+      console.error("[Accounts] refresh list failed:", e);
     }
   };
 
@@ -233,15 +277,16 @@ export default function AccountsBody() {
     }
   };
 
-  // Initial load: brands + accounts
+  // Initial load: brands + accounts + pending tickets
   useEffect(() => {
     let cancelled = false;
 
     async function load() {
       try {
-        const [brandsRes, accountsRes] = await Promise.allSettled([
+        const [brandsRes, accountsRes, ticketsRes] = await Promise.allSettled([
           fetchBrands(),
           fetchMyAccounts(),
+          fetchPendingAccountTickets(),
         ]);
 
         if (cancelled) return;
@@ -250,7 +295,7 @@ export default function AccountsBody() {
           setBrands(mapAccountsBrandsFromApi(brandsRes.value?.brands ?? []));
         } else {
           console.error("[Accounts] fetch brands failed:", brandsRes.reason);
-          setBrands([]); // fallback
+          setBrands([]);
         }
 
         if (accountsRes.status === "fulfilled") {
@@ -258,6 +303,13 @@ export default function AccountsBody() {
         } else {
           console.error("[Accounts] fetch accounts failed:", accountsRes.reason);
           setAccounts([]);
+        }
+
+        if (ticketsRes.status === "fulfilled") {
+          setPendingTicketsList(ticketsRes.value?.tickets ?? []);
+        } else {
+          console.error("[Accounts] fetch pending tickets failed:", ticketsRes.reason);
+          setPendingTicketsList([]);
         }
       } catch (e) {
         console.error("[Accounts] load failed:", e);
@@ -369,10 +421,11 @@ export default function AccountsBody() {
         {step === "list" && (
           <AccountsListStep
             brands={normalizedBrands}
-            accounts={filteredAccounts}
+            accountsTableRows={accountsTableRows}
             selectedBrandId={selectedBrandId}
             onSelectBrand={setSelectedBrandId}
             onCreateNew={handleCreateNew}
+            pendingTicketsCount={pendingTicketsCount}
           />
         )}
 

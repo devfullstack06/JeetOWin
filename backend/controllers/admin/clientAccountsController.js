@@ -30,6 +30,11 @@ function buildItem(row) {
     updatedAt: row.updated_at,
     createdAt: row.created_at,
     notes: row.notes != null ? String(row.notes) : "",
+    initialPassword:
+      row.initial_password != null && String(row.initial_password).trim() !== ""
+        ? String(row.initial_password)
+        : "",
+    createdByUsername: row.created_by_username != null ? String(row.created_by_username) : "",
   };
 }
 
@@ -40,6 +45,7 @@ const SORT_MAP = {
   status: "ca.status",
   updatedAt: "ca.updated_at",
   createdAt: "ca.created_at",
+  createdByUsername: "ca.created_by_username",
 };
 
 /**
@@ -122,6 +128,7 @@ exports.getAdminClientAccounts = async (req, res) => {
     try {
       [rows] = await pool.query(
         `SELECT ca.id, ca.client_id, ca.username, ca.suggested_username, ca.brand, ca.brand_id, ca.brand_company_id, ca.status, ca.updated_at, ca.created_at, ca.notes,
+                ca.initial_password, ca.created_by_username,
                 b.name AS brand_name,
                 u.username AS client_username
          FROM client_accounts ca
@@ -174,6 +181,7 @@ exports.getAdminClientAccountById = async (req, res) => {
 
     const [rows] = await pool.query(
       `SELECT ca.id, ca.username, ca.suggested_username, ca.brand, ca.brand_id, ca.brand_company_id, ca.status, ca.updated_at, ca.created_at, ca.notes,
+              ca.initial_password, ca.created_by_username,
               b.name AS brand_name
        FROM client_accounts ca
        LEFT JOIN brands b ON b.id = ca.brand_id
@@ -205,7 +213,7 @@ exports.createAdminClientAccount = async (req, res) => {
     const notes = body.notes != null ? String(body.notes || "").trim() : null;
 
     if (!username) return res.status(400).json({ message: "Username is required." });
-    if (!password) return res.status(400).json({ message: "Password is required." });
+    if (!password) return res.status(400).json({ message: "Initial password is required." });
     if (!brandId || !Number.isFinite(brandId)) return res.status(400).json({ message: "Website (brand) is required." });
 
     let brandName = null;
@@ -215,14 +223,35 @@ exports.createAdminClientAccount = async (req, res) => {
     }
     const passwordHash = await bcrypt.hash(password, 10);
 
+    const auth = req.authUser || {};
+    let createdByUsername = "";
+    if (auth.username != null && String(auth.username).trim() !== "") {
+      createdByUsername = String(auth.username).trim();
+    } else if (auth.id) {
+      const [ur] = await pool.query("SELECT username FROM users WHERE id = ? LIMIT 1", [auth.id]);
+      if (ur.length && ur[0].username != null) createdByUsername = String(ur[0].username).trim();
+    }
+
     const [result] = await pool.query(
-      `INSERT INTO client_accounts (username, password_hash, initial_password, client_id, brand, brand_id, brand_company_id, status, notes, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
-      [username, passwordHash, password, clientId, brandName || "", brandId, brandCompanyId || null, status, notes || null]
+      `INSERT INTO client_accounts (username, password_hash, initial_password, created_by_username, client_id, brand, brand_id, brand_company_id, status, notes, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+      [
+        username,
+        passwordHash,
+        password,
+        createdByUsername || null,
+        clientId,
+        brandName || "",
+        brandId,
+        brandCompanyId || null,
+        status,
+        notes || null,
+      ]
     );
 
     const [rows] = await pool.query(
       `SELECT ca.id, ca.username, ca.brand, ca.brand_id, ca.brand_company_id, ca.status, ca.updated_at, ca.created_at, ca.notes,
+              ca.initial_password, ca.created_by_username,
               b.name AS brand_name
        FROM client_accounts ca
        LEFT JOIN brands b ON b.id = ca.brand_id
@@ -238,7 +267,7 @@ exports.createAdminClientAccount = async (req, res) => {
 
 /**
  * PATCH /api/admin/client-accounts/:id
- * Editable: newPassword, notes, status.
+ * Editable: notes, status.
  */
 exports.updateAdminClientAccount = async (req, res) => {
   try {
@@ -246,7 +275,6 @@ exports.updateAdminClientAccount = async (req, res) => {
     if (!id) return res.status(400).json({ message: "Invalid id." });
 
     const body = req.body || {};
-    const newPassword = body.newPassword !== undefined ? String(body.newPassword) : null;
     const notes = body.notes !== undefined ? String(body.notes || "").trim() : null;
     const statusRaw = body.status !== undefined ? String(body.status || "").trim().toLowerCase() : null;
     const status = statusRaw === "inactive" ? "inactive" : statusRaw === "active" ? "active" : null;
@@ -260,12 +288,6 @@ exports.updateAdminClientAccount = async (req, res) => {
     const updates = [];
     const params = [];
 
-    if (newPassword !== null) {
-      if (!newPassword) return res.status(400).json({ message: "New password cannot be empty when provided." });
-      const passwordHash = await bcrypt.hash(newPassword, 10);
-      updates.push("password_hash = ?");
-      params.push(passwordHash);
-    }
     if (notes !== null) {
       updates.push("notes = ?");
       params.push(notes);
@@ -278,6 +300,7 @@ exports.updateAdminClientAccount = async (req, res) => {
     if (updates.length === 0) {
       const [rows] = await pool.query(
         `SELECT ca.id, ca.username, ca.suggested_username, ca.brand, ca.brand_id, ca.brand_company_id, ca.status, ca.updated_at, ca.created_at, ca.notes,
+                ca.initial_password, ca.created_by_username,
                 b.name AS brand_name
          FROM client_accounts ca LEFT JOIN brands b ON b.id = ca.brand_id WHERE ca.id = ?`,
         [id]
@@ -291,6 +314,7 @@ exports.updateAdminClientAccount = async (req, res) => {
 
     const [rows] = await pool.query(
       `SELECT ca.id, ca.username, ca.suggested_username, ca.brand, ca.brand_id, ca.brand_company_id, ca.status, ca.updated_at, ca.created_at, ca.notes,
+              ca.initial_password, ca.created_by_username,
               b.name AS brand_name
        FROM client_accounts ca LEFT JOIN brands b ON b.id = ca.brand_id WHERE ca.id = ?`,
       [id]

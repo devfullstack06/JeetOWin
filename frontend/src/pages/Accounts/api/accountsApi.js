@@ -14,6 +14,15 @@ export async function fetchMyAccounts() {
   return apiFetch("/api/accounts");
 }
 
+export async function fetchPendingTicketsCount() {
+  return apiFetch("/api/accounts/tickets/pending-count");
+}
+
+/** Pending account tickets only (for table). */
+export async function fetchPendingAccountTickets() {
+  return apiFetch("/api/accounts/tickets");
+}
+
 export async function createAccountTicket({ brand, suggestedUsername }) {
   return apiFetch("/api/accounts/tickets", {
     method: "POST",

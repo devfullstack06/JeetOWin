@@ -67,7 +67,7 @@ router.get("/", authenticateToken, requireClient, async (req, res) => {
       id: r.id,
       brand: r.brand,
       username: r.username,
-      createdAt: r.created_at ? new Date(r.created_at).toISOString().slice(0, 10) : null,
+      createdAt: r.created_at ? new Date(r.created_at).toISOString() : null,
       initialPassword:
         r.initial_password != null && String(r.initial_password).trim() !== ""
           ? String(r.initial_password)
@@ -95,7 +95,7 @@ router.get("/", authenticateToken, requireClient, async (req, res) => {
           id: r.id,
           brand: r.brand,
           username: r.username,
-          createdAt: r.created_at ? new Date(r.created_at).toISOString().slice(0, 10) : null,
+          createdAt: r.created_at ? new Date(r.created_at).toISOString() : null,
           initialPassword: null,
           websiteUrl:
             r.brand_website_url != null && String(r.brand_website_url).trim() !== ""
@@ -153,6 +153,58 @@ router.post("/tickets", authenticateToken, requireClient, async (req, res) => {
   } catch (e) {
     console.error("[accounts] POST /tickets error:", e);
     return res.status(500).json({ error: "Failed to create ticket" });
+  }
+});
+
+/**
+ * GET /api/accounts/tickets/pending-count
+ * Number of pending account tickets for the logged-in client.
+ */
+router.get("/tickets/pending-count", authenticateToken, requireClient, async (req, res) => {
+  try {
+    const [[row]] = await pool.query(
+      `SELECT COUNT(*) AS c
+       FROM account_tickets
+       WHERE client_id = ? AND status = 'pending'`,
+      [req.user.userId]
+    );
+    return res.json({ pendingCount: Number(row?.c ?? 0) });
+  } catch (e) {
+    if (e.code === "ER_NO_SUCH_TABLE") {
+      return res.json({ pendingCount: 0 });
+    }
+    console.error("[accounts] GET /tickets/pending-count error:", e);
+    return res.json({ pendingCount: 0 });
+  }
+});
+
+/**
+ * GET /api/accounts/tickets
+ * Pending tickets only (for client list). Rejected rows are never returned.
+ */
+router.get("/tickets", authenticateToken, requireClient, async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT id, brand, suggested_username, status, created_at
+       FROM account_tickets
+       WHERE client_id = ? AND status = 'pending'
+       ORDER BY created_at DESC`,
+      [req.user.userId]
+    );
+    const tickets = (rows || []).map((r) => ({
+      id: r.id,
+      brand: r.brand != null ? String(r.brand) : "",
+      suggestedUsername: r.suggested_username != null ? String(r.suggested_username) : "",
+      status: r.status != null ? String(r.status) : "pending",
+      createdAt: r.created_at ? new Date(r.created_at).toISOString() : null,
+    }));
+    return res.json({ tickets });
+  } catch (e) {
+    if (e.code === "ER_NO_SUCH_TABLE") {
+      return res.json({ tickets: [] });
+    }
+    console.error("[accounts] GET /tickets error:", e);
+    return res.json({ tickets: [] });
   }
 });
 

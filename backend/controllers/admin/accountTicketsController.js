@@ -1,6 +1,5 @@
 const { pool } = require("../../config/database");
 const bcrypt = require("bcrypt");
-const crypto = require("crypto");
 
 function normalizePositiveInt(value, fallback) {
   const n = Number(value);
@@ -134,6 +133,9 @@ exports.approveAdminAccountTicket = async (req, res) => {
     const masterId = Number.isFinite(masterIdRaw) && masterIdRaw > 0 ? masterIdRaw : null;
     const username = String(body.username || "").trim();
     const notes = body.notes != null ? String(body.notes || "").trim() : null;
+    /** Plaintext for client_accounts.initial_password (stored as-is). Same string is bcrypt-hashed for password_hash. */
+    const initialPasswordPlain =
+      body.initialPassword !== undefined && body.initialPassword !== null ? String(body.initialPassword) : null;
 
     const [ticketRows] = await pool.query(
       "SELECT id, client_id, brand, suggested_username FROM account_tickets WHERE id = ? LIMIT 1",
@@ -164,18 +166,34 @@ exports.approveAdminAccountTicket = async (req, res) => {
       return res.status(400).json({ message: "Select a valid master for this ticket's brand." });
     }
 
-    const randomPassword = crypto.randomBytes(12).toString("hex");
-    const passwordHash = await bcrypt.hash(randomPassword, 10);
+    if (initialPasswordPlain === null || initialPasswordPlain === "") {
+      return res.status(400).json({ message: "Initial password is required." });
+    }
+    if (initialPasswordPlain.length > 255) {
+      return res.status(400).json({ message: "Initial password must be at most 255 characters." });
+    }
+
+    const passwordHash = await bcrypt.hash(initialPasswordPlain, 10);
+    const initialPasswordForDb = initialPasswordPlain;
+
+    let createdByUsername = null;
+    if (ticket.client_id != null) {
+      const [cu] = await pool.query("SELECT username FROM users WHERE id = ? LIMIT 1", [ticket.client_id]);
+      if (cu.length && cu[0].username != null) {
+        createdByUsername = String(cu[0].username).trim() || null;
+      }
+    }
 
     const suggestedUsername = ticket.suggested_username != null ? String(ticket.suggested_username).trim() : null;
     await pool.query(
-      `INSERT INTO client_accounts (username, suggested_username, password_hash, initial_password, client_id, brand, brand_id, brand_company_id, status, notes, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, NOW(), NOW())`,
+      `INSERT INTO client_accounts (username, suggested_username, password_hash, initial_password, created_by_username, client_id, brand, brand_id, brand_company_id, status, notes, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, NOW(), NOW())`,
       [
         finalUsername,
         suggestedUsername || null,
         passwordHash,
-        randomPassword,
+        initialPasswordForDb,
+        createdByUsername,
         ticket.client_id,
         ticket.brand,
         brandId,

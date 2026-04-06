@@ -100,6 +100,7 @@ const LIST_COLUMNS = [
   { key: "username", header: "Username", sortKey: "username" },
   { key: "brand", header: "Brand", sortKey: "brand" },
   { key: "status", header: "Status", sortKey: "status" },
+  { key: "createdByUsername", header: "Created by", sortKey: "createdByUsername" },
   { key: "createdAt", header: "Created at", sortKey: "createdAt" },
   { key: "updatedAt", header: "Updated at", sortKey: "updatedAt" },
   { key: "actions", header: "Actions" },
@@ -165,6 +166,7 @@ function ListTable({ rows, loading, sort, onSort, onEdit }) {
                     {r.status || "—"}
                   </span>
                 </td>
+                <td className="jw-adminTd__username">{r.createdByUsername || "—"}</td>
                 <td className="jw-adminTd__date">{formatAdminDateTime(r.createdAt)}</td>
                 <td className="jw-adminTd__date">{formatAdminDateTime(r.updatedAt)}</td>
                 <td className="jw-adminTd__actions">
@@ -340,13 +342,13 @@ function CreateModal({
             />
           </div>
           <div className="jw-adminUsersModal__field">
-            <label className="jw-adminUsersModal__label">Password</label>
+            <label className="jw-adminUsersModal__label">Initial Password</label>
             <div className="jw-adminUsersModal__inputWrap">
               <input
                 type={showPassword ? "text" : "password"}
                 className="jw-adminUsersModal__input"
-                value={form.password}
-                onChange={(e) => onChange("password", e.target.value)}
+                value={form.initialPassword}
+                onChange={(e) => onChange("initialPassword", e.target.value)}
                 placeholder="Please Enter"
                 autoComplete="new-password"
               />
@@ -354,7 +356,7 @@ function CreateModal({
                 type="button"
                 className="jw-adminUsersModal__eye"
                 onClick={onToggleShowPassword}
-                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-label={showPassword ? "Hide initial password" : "Show initial password"}
               >
                 {showPassword ? (
                   <EyeOff size={18} aria-hidden />
@@ -448,18 +450,7 @@ function CreateModal({
   );
 }
 
-function EditModal({
-  open,
-  row,
-  form,
-  saving,
-  errorText,
-  showPassword = true,
-  onToggleShowPassword,
-  onChange,
-  onCancel,
-  onConfirm,
-}) {
+function EditModal({ open, row, form, saving, errorText, onChange, onCancel, onConfirm }) {
   if (!open || !row) return null;
 
   return (
@@ -495,29 +486,13 @@ function EditModal({
             />
           </div>
           <div className="jw-adminUsersModal__field">
-            <label className="jw-adminUsersModal__label">New Password</label>
-            <div className="jw-adminUsersModal__inputWrap">
-              <input
-                type={showPassword ? "text" : "password"}
-                className="jw-adminUsersModal__input"
-                value={form.newPassword}
-                onChange={(e) => onChange("newPassword", e.target.value)}
-                placeholder="Leave blank to keep current"
-                autoComplete="new-password"
-              />
-              <button
-                type="button"
-                className="jw-adminUsersModal__eye"
-                onClick={onToggleShowPassword}
-                aria-label={showPassword ? "Hide password" : "Show password"}
-              >
-                {showPassword ? (
-                  <EyeOff size={18} aria-hidden />
-                ) : (
-                  <Eye size={18} aria-hidden />
-                )}
-              </button>
-            </div>
+            <label className="jw-adminUsersModal__label">Initial Password</label>
+            <input
+              className="jw-adminUsersModal__input is-readonly"
+              value={row.initialPassword != null && String(row.initialPassword).trim() !== "" ? row.initialPassword : "—"}
+              readOnly
+              aria-readonly="true"
+            />
           </div>
           <div className="jw-adminUsersModal__field">
             <label className="jw-adminUsersModal__label">Website</label>
@@ -787,6 +762,19 @@ function ProcessModal({
                     />
                   </div>
                   <div className="jw-adminUsersModal__field">
+                    <label className="jw-adminUsersModal__label">Initial Password (required)</label>
+                    <input
+                      type="text"
+                      className="jw-adminUsersModal__input"
+                      value={form.initialPassword}
+                      onChange={(e) => onChange("initialPassword", e.target.value)}
+                      placeholder="Stored as entered for the client"
+                      autoComplete="off"
+                      spellCheck={false}
+                      aria-required="true"
+                    />
+                  </div>
+                  <div className="jw-adminUsersModal__field">
                     <label className="jw-adminUsersModal__label">Notes (Optional)</label>
                     <textarea
                       className="jw-adminUsersModal__input jw-adminUsersModal__textarea"
@@ -870,7 +858,7 @@ export default function AccountsPage() {
     clientId: "",
     clientUsername: "",
     username: "",
-    password: "",
+    initialPassword: "",
     brandId: "",
     brandCompanyId: "",
     status: "active",
@@ -882,8 +870,7 @@ export default function AccountsPage() {
 
   const [editOpen, setEditOpen] = useState(false);
   const [editRow, setEditRow] = useState(null);
-  const [editForm, setEditForm] = useState({ newPassword: "", notes: "", status: "active" });
-  const [showEditPassword, setShowEditPassword] = useState(true);
+  const [editForm, setEditForm] = useState({ notes: "", status: "active" });
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState("");
 
@@ -913,6 +900,7 @@ export default function AccountsPage() {
     process: "",
     masterId: "",
     username: "",
+    initialPassword: "",
     approveNotes: "",
     reason: "",
     rejectNotes: "",
@@ -1084,6 +1072,7 @@ export default function AccountsPage() {
       process: "",
       masterId: "",
       username: row.suggestedUsername || "",
+      initialPassword: "",
       approveNotes: "",
       reason: "",
       rejectNotes: "",
@@ -1131,6 +1120,14 @@ export default function AccountsPage() {
         setProcessError("Username is required.");
         return;
       }
+      if (!f.initialPassword || f.initialPassword.length === 0) {
+        setProcessError("Initial password is required.");
+        return;
+      }
+      if (f.initialPassword.length > 255) {
+        setProcessError("Initial password must be at most 255 characters.");
+        return;
+      }
     }
     if (f.process === "reject") {
       if (!f.reason.trim()) {
@@ -1152,6 +1149,7 @@ export default function AccountsPage() {
           body: JSON.stringify({
             masterId: f.masterId ? Number(f.masterId) : undefined,
             username: f.username.trim(),
+            initialPassword: f.initialPassword,
             notes: f.approveNotes.trim() || undefined,
           }),
         });
@@ -1232,7 +1230,7 @@ export default function AccountsPage() {
       clientId: "",
       clientUsername: "",
       username: "",
-      password: "",
+      initialPassword: "",
       brandId: "",
       brandCompanyId: "",
       status: "active",
@@ -1249,8 +1247,8 @@ export default function AccountsPage() {
       setCreateError("Username is required.");
       return;
     }
-    if (!f.password) {
-      setCreateError("Password is required.");
+    if (!f.initialPassword) {
+      setCreateError("Initial password is required.");
       return;
     }
     if (!f.brandId) {
@@ -1270,7 +1268,7 @@ export default function AccountsPage() {
         body: JSON.stringify({
           clientId: f.clientId ? Number(f.clientId) : undefined,
           username: f.username.trim(),
-          password: f.password,
+          password: f.initialPassword,
           brandId: Number(f.brandId),
           brandCompanyId: f.brandCompanyId ? Number(f.brandCompanyId) : undefined,
           status: f.status,
@@ -1295,11 +1293,9 @@ export default function AccountsPage() {
   const openEdit = (row) => {
     setEditRow(row);
     setEditForm({
-      newPassword: "",
       notes: row.notes != null ? row.notes : "",
       status: row.statusRaw === "inactive" ? "inactive" : "active",
     });
-    setShowEditPassword(true);
     setEditError("");
     setEditOpen(true);
   };
@@ -1317,7 +1313,6 @@ export default function AccountsPage() {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
-          newPassword: editForm.newPassword || undefined,
           notes: editForm.notes,
           status: editForm.status,
         }),
@@ -1537,8 +1532,6 @@ export default function AccountsPage() {
         form={editForm}
         saving={editSaving}
         errorText={editError}
-        showPassword={showEditPassword}
-        onToggleShowPassword={() => setShowEditPassword((v) => !v)}
         onChange={(key, value) => setEditForm((prev) => ({ ...prev, [key]: value }))}
         onCancel={() => {
           if (!editSaving) setEditOpen(false);
