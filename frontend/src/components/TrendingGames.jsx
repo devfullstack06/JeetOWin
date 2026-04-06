@@ -1,4 +1,6 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useClientScrollbarReveal } from "../hooks/useClientScrollbarReveal";
+import "../styles/clientScrollbar.css";
 import "./trendingGames.css";
 
 export default function TrendingGames({
@@ -15,6 +17,7 @@ export default function TrendingGames({
   const viewportRef = useRef(null);
   const stepRef = useRef(0);
   const autoTimerRef = useRef(null);
+  useClientScrollbarReveal(viewportRef);
 
   useEffect(() => {
     if (Array.isArray(items)) return;
@@ -141,7 +144,7 @@ export default function TrendingGames({
       ) : null}
 
       <div
-        className="jw-trendingScroller"
+        className="jw-trendingScroller jw-clientScrollbar"
         ref={viewportRef}
         onMouseEnter={stopAuto}
         onMouseLeave={startAuto}
