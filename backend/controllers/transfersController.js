@@ -224,16 +224,30 @@ async function getTransferTicketStatus(req, res) {
   }
 }
 
-// GET /api/transfers/brands
+// GET /api/transfers/brands — only brands the client has at least one active account for
 async function getTransferBrands(req, res) {
   if (!requireClient(req, res)) return;
 
+  const clientId = req.user.userId;
+
   try {
     const [rows] = await pool.query(
-      `SELECT name, icon_path,
-        COALESCE(in_process_minutes, 15) AS in_process_minutes,
-        COALESCE(out_process_minutes, 15) AS out_process_minutes
-       FROM brands WHERE is_active = 1 ORDER BY name ASC`
+      `
+      SELECT b.name, b.icon_path,
+        COALESCE(b.in_process_minutes, 15) AS in_process_minutes,
+        COALESCE(b.out_process_minutes, 15) AS out_process_minutes
+      FROM brands b
+      WHERE b.is_active = 1
+        AND EXISTS (
+          SELECT 1
+          FROM client_accounts ca
+          WHERE ca.client_id = ?
+            AND ca.brand = b.name
+            AND (ca.status IS NULL OR ca.status = 'active')
+        )
+      ORDER BY b.name ASC
+      `,
+      [clientId]
     );
     return res.json({
       brands: rows.map((r) => ({
@@ -262,6 +276,7 @@ async function getTransferAccountsByBrand(req, res) {
       SELECT id, brand, username, created_at
       FROM client_accounts
       WHERE client_id = ? AND brand = ?
+        AND (status IS NULL OR status = 'active')
       ORDER BY created_at DESC
       `,
       [req.user.userId, brand]

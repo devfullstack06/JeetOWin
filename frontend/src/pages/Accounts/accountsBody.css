@@ -626,6 +626,12 @@
   opacity: 0.75;
 }
 
+.jw-fieldHint--affiliateRedirect {
+  margin-top: 8px;
+  font-size: 12px;
+  opacity: 0.9;
+}
+
 .jw-fieldError {
   font-size: 12px;
   color: #ffb3b3;

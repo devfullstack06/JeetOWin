@@ -22,12 +22,49 @@ function requireClient(req, res, next) {
 router.get("/brands", authenticateToken, requireClient, async (req, res) => {
   try {
     const [rows] = await pool.query(
-      "SELECT id, name, icon_path FROM brands WHERE available_accounts = 1 ORDER BY sort_order ASC, name ASC"
+      `
+      SELECT
+        b.id,
+        b.name,
+        b.icon_path,
+        EXISTS(
+          SELECT 1 FROM brand_companies bc
+          WHERE bc.brand_id = b.id
+            AND LOWER(TRIM(COALESCE(bc.type, ''))) = 'master'
+            AND bc.is_active = 1
+        ) AS has_active_master,
+        EXISTS(
+          SELECT 1 FROM brand_companies bc
+          WHERE bc.brand_id = b.id
+            AND LOWER(TRIM(COALESCE(bc.type, ''))) = 'affiliate'
+            AND bc.is_active = 1
+        ) AS has_active_affiliate,
+        (
+          SELECT bc.affiliate_link
+          FROM brand_companies bc
+          WHERE bc.brand_id = b.id
+            AND LOWER(TRIM(COALESCE(bc.type, ''))) = 'affiliate'
+            AND bc.is_active = 1
+            AND bc.affiliate_link IS NOT NULL
+            AND TRIM(bc.affiliate_link) <> ''
+          ORDER BY bc.id ASC
+          LIMIT 1
+        ) AS affiliate_link
+      FROM brands b
+      WHERE b.available_accounts = 1
+      ORDER BY b.sort_order ASC, b.name ASC
+      `
     );
     const brands = (rows || []).map((r) => ({
       id: r.id,
       name: r.name,
       iconPath: r.icon_path != null ? String(r.icon_path) : null,
+      hasActiveMaster: !!r.has_active_master,
+      hasActiveAffiliate: !!r.has_active_affiliate,
+      affiliateLink:
+        r.affiliate_link != null && String(r.affiliate_link).trim() !== ""
+          ? String(r.affiliate_link).trim()
+          : null,
     }));
     return res.json({ brands });
   } catch (e) {
@@ -36,7 +73,14 @@ router.get("/brands", authenticateToken, requireClient, async (req, res) => {
         const [rowsLegacy] = await pool.query(
           "SELECT name FROM brands WHERE is_active = 1 ORDER BY name ASC"
         );
-        const brands = (rowsLegacy || []).map((r, i) => ({ id: `legacy-${i}`, name: r.name, iconPath: null }));
+        const brands = (rowsLegacy || []).map((r, i) => ({
+          id: `legacy-${i}`,
+          name: r.name,
+          iconPath: null,
+          hasActiveMaster: true,
+          hasActiveAffiliate: false,
+          affiliateLink: null,
+        }));
         return res.json({ brands });
       } catch (_) {
         return res.json({ brands: [] });

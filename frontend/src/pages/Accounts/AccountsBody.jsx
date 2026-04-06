@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { User } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import "../Wallets/walletsBody.css";
 import "./accountsBody.css";
@@ -25,17 +25,37 @@ function mapAccountsBrandsFromApi(raw) {
   const origin = getApiOrigin();
   return (raw || []).map((b) => {
     if (typeof b === "string") {
-      return { id: b, name: b, iconPath: null, iconSrc: "" };
+      return {
+        id: b,
+        name: b,
+        iconPath: null,
+        iconSrc: "",
+        hasActiveMaster: true,
+        hasActiveAffiliate: false,
+        affiliateLink: null,
+      };
     }
     const iconSrc = b.iconPath
       ? `${origin}${b.iconPath.startsWith("/") ? b.iconPath : `/${b.iconPath}`}`
       : "";
-    return { ...b, iconSrc };
+    const hasActiveMaster = b.hasActiveMaster ?? b.has_active_master ?? true;
+    const hasActiveAffiliate = !!(b.hasActiveAffiliate ?? b.has_active_affiliate);
+    const rawLink = b.affiliateLink ?? b.affiliate_link ?? null;
+    const affiliateLink =
+      rawLink != null && String(rawLink).trim() !== "" ? String(rawLink).trim() : null;
+    return {
+      ...b,
+      iconSrc,
+      hasActiveMaster: !!hasActiveMaster,
+      hasActiveAffiliate,
+      affiliateLink,
+    };
   });
 }
 
 export default function AccountsBody() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   usePageTitle("Accounts");
 
@@ -216,10 +236,52 @@ export default function AccountsBody() {
     });
   };
 
+  const selectedCreateBrandMeta = useMemo(() => {
+    if (!brand) return null;
+    return brands.find((b) => String(typeof b === "string" ? b : b.name) === String(brand)) ?? null;
+  }, [brand, brands]);
+
+  const showUsernameField = useMemo(() => {
+    if (!brand || !selectedCreateBrandMeta) return false;
+    if (typeof selectedCreateBrandMeta === "string") return true;
+    return selectedCreateBrandMeta.hasActiveMaster === true;
+  }, [brand, selectedCreateBrandMeta]);
+
+  /** No active Master but active Affiliate with link — Submit opens affiliate URL in a new tab. */
+  const affiliateRedirectOnly = useMemo(() => {
+    if (!brand || !selectedCreateBrandMeta || typeof selectedCreateBrandMeta === "string") {
+      return false;
+    }
+    const m = selectedCreateBrandMeta;
+    if (m.hasActiveMaster) return false;
+    return !!(m.hasActiveAffiliate && m.affiliateLink);
+  }, [brand, selectedCreateBrandMeta]);
+
+  useEffect(() => {
+    if (showUsernameField) return;
+    setSuggestedUsername("");
+    setErrors((prev) => {
+      if (!prev.username) return prev;
+      const next = { ...prev };
+      delete next.username;
+      return next;
+    });
+  }, [showUsernameField]);
+
   const validateForm = () => {
     const nextErrors = {};
 
     if (!brand) nextErrors.brand = "Please select a brand.";
+
+    if (brand && selectedCreateBrandMeta && typeof selectedCreateBrandMeta === "object") {
+      const m = selectedCreateBrandMeta;
+      const hasMaster = m.hasActiveMaster === true;
+      const canAffiliate =
+        !hasMaster && m.hasActiveAffiliate && m.affiliateLink && String(m.affiliateLink).trim() !== "";
+      if (!hasMaster && !canAffiliate) {
+        nextErrors.brand = "This brand is not available for account requests right now.";
+      }
+    }
 
     if (suggestedUsername && !/^[a-z0-9]+$/.test(suggestedUsername)) {
       nextErrors.username = "Only lowercase letters and numbers are allowed.";
@@ -241,7 +303,23 @@ export default function AccountsBody() {
     e.preventDefault();
     if (!validateForm()) return;
 
-    // Step 3 immediately after validation passes
+    const meta =
+      brand && selectedCreateBrandMeta && typeof selectedCreateBrandMeta === "object"
+        ? selectedCreateBrandMeta
+        : null;
+    const hasMaster = meta?.hasActiveMaster === true;
+    const affUrl =
+      meta?.affiliateLink && String(meta.affiliateLink).trim() !== ""
+        ? String(meta.affiliateLink).trim()
+        : "";
+    const openAffiliateOnly = !hasMaster && meta?.hasActiveAffiliate && affUrl;
+
+    if (openAffiliateOnly) {
+      window.open(affUrl, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    // Step 3 immediately after validation passes (ticket path — active Master exists)
     setStep("processing");
 
     try {
@@ -321,6 +399,29 @@ export default function AccountsBody() {
       cancelled = true;
     };
   }, []);
+
+  /** Deep link: /accounts?create=1 opens Create step with no brand pre-selected (see Transfers “New Account +”). */
+  useEffect(() => {
+    if (searchParams.get("create") !== "1") return;
+
+    setStep("create");
+    setErrors({});
+    setBrand("");
+    setSuggestedUsername("");
+
+    (async () => {
+      try {
+        const res = await fetchBrands();
+        setBrands(mapAccountsBrandsFromApi(res?.brands ?? []));
+      } catch {
+        /* brands may still load from initial effect */
+      }
+    })();
+
+    const next = new URLSearchParams(searchParams);
+    next.delete("create");
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   // Poll ticket status while in processing
   useEffect(() => {
@@ -440,6 +541,8 @@ export default function AccountsBody() {
             onSubmit={handleSubmit}
             brandsAvailable={brandsAvailable}
             clearBrandError={clearBrandError}
+            showUsernameField={showUsernameField}
+            affiliateRedirectOnly={affiliateRedirectOnly}
           />
         )}
 

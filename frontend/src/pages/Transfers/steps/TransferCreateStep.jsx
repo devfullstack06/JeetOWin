@@ -154,14 +154,24 @@ export default function TransferCreateStep({
             <div className="jw-txStepSub">Select your Account&apos;s Brand</div>
           </div>
           <div className="jw-txStepTitleAction">
-            <button
-              type="button"
-              className="jw-txHistoryBtn"
-              disabled={isSubmitting}
-              onClick={() => navigate("/history?tab=transfers")}
-            >
-              History
-            </button>
+            <div className="jw-txStepTitleActions jw-txStepTitleActions--withdrawCols">
+              <button
+                type="button"
+                className="jw-txHistoryBtn jw-txHistoryBtn--green"
+                disabled={isSubmitting}
+                onClick={() => navigate("/accounts?create=1")}
+              >
+                New Account +
+              </button>
+              <button
+                type="button"
+                className="jw-txHistoryBtn"
+                disabled={isSubmitting}
+                onClick={() => navigate("/history?tab=transfers")}
+              >
+                History
+              </button>
+            </div>
           </div>
         </div>
 
