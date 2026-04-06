@@ -127,8 +127,11 @@ const {
   rejectAdminTransferTicket,
   patchAdminTransferTicket,
 } = require("../controllers/admin/transferTicketsController");
+const { getAdminDashboard } = require("../controllers/admin/dashboardController");
 
 const router = express.Router();
+
+router.get("/dashboard", requireAdminAuth, getAdminDashboard);
 
 router.post("/update-password", requireAdminAuth, updateAdminPassword);
 router.get("/users", requireAdminAuth, getAdminUsers);

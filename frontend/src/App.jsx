@@ -24,6 +24,7 @@ import HistoryPage from "./pages/History/HistoryPage";
 // ==========================
 import AdminLayout from "./admin/AdminLayout";
 import AdminPlaceholder from "./admin/components/AdminPlaceholder";
+import AdminDashboardPage from "./admin/pages/Dashboard/DashboardPage";
 import UpdatePassword from "./admin/pages/UpdatePassword";
 import UsersPage from "./admin/pages/Users/UsersPage";
 import AdminWalletsPage from "./admin/pages/Wallets/WalletsPage";
@@ -114,7 +115,7 @@ export default function App() {
         <Route element={<AdminProtectedLayout />}>
           <Route path="/admin" element={<AdminLayout />}>
             {/* Real admin pages */}
-            <Route index element={<AdminPlaceholder title="Dashboard" crumb="Admin > Dashboard" />} />
+            <Route index element={<AdminDashboardPage />} />
             <Route path="users/user-info" element={<UsersPage />} />
             <Route path="update-password" element={<UpdatePassword />} />
             <Route path="wallets/company" element={<AdminWalletsPage />} />

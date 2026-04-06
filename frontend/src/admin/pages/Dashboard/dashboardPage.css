@@ -1,0 +1,213 @@
+.jw-adminDashboard {
+  padding: 16px 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.jw-adminDashboard__metaRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.jw-adminDashboard__meta {
+  margin: 0;
+  font-size: 13px;
+  color: #555;
+  line-height: 1.5;
+  max-width: min(100%, 640px);
+}
+
+.jw-adminDashboard__sectionTitle {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #111;
+  letter-spacing: 0.02em;
+}
+
+.jw-adminDashboard__queueList {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(4, auto);
+  gap: 1px;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #e0e0e0;
+}
+
+.jw-adminDashboard__queueLink {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 0;
+  padding: 12px 14px;
+  text-decoration: none;
+  color: #111;
+  font-size: 13px;
+  background: #fafafa;
+  transition: background 0.15s ease;
+}
+
+.jw-adminDashboard__queueLink:hover {
+  background: #f0f4ff;
+}
+
+.jw-adminDashboard__queueLabel {
+  font-weight: 500;
+}
+
+.jw-adminDashboard__queueValue {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  min-width: 2ch;
+  text-align: right;
+}
+
+.jw-adminDashboard__queueValue.is-alert {
+  color: #b00020;
+}
+
+/* —— Overview cards (Business + Amounts) —— */
+.jw-adminDashboard__overviewCard {
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  padding: 14px 16px 16px;
+  background: #fff;
+}
+
+.jw-adminDashboard__overviewTitle {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #111;
+}
+
+.jw-adminDashboard__overviewSub {
+  margin: 0 0 14px;
+  font-size: 12px;
+  color: #666;
+  line-height: 1.45;
+}
+
+.jw-adminDashboard__overviewCard > .jw-adminDashboard__overviewSub:first-child {
+  margin-top: 0;
+}
+
+.jw-adminDashboard__tableScroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.jw-adminDashboard__overviewTable {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.jw-adminDashboard__overviewTable th,
+.jw-adminDashboard__overviewTable td {
+  padding: 10px 12px;
+  text-align: right;
+  border-bottom: 1px solid #eee;
+  vertical-align: middle;
+}
+
+.jw-adminDashboard__overviewTable th {
+  font-weight: 700;
+  color: #333;
+  background: #f7f7f7;
+  white-space: nowrap;
+}
+
+.jw-adminDashboard__thMetric,
+.jw-adminDashboard__tdMetric {
+  text-align: left;
+  position: sticky;
+  left: 0;
+  background: #fff;
+  z-index: 1;
+  min-width: 160px;
+  max-width: 220px;
+  font-weight: 500;
+  color: #333;
+}
+
+.jw-adminDashboard__overviewTable thead .jw-adminDashboard__thMetric {
+  background: #f7f7f7;
+  z-index: 2;
+}
+
+.jw-adminDashboard__thPeriod {
+  min-width: 100px;
+}
+
+.jw-adminDashboard__tdValue {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.jw-adminDashboard__metricCell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  width: 100%;
+}
+
+.jw-adminDashboard__metricText {
+  font-weight: 600;
+  color: #111;
+}
+
+.jw-adminDashboard__trend {
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.jw-adminDashboard__trend--up {
+  color: #0d8f3c;
+}
+
+.jw-adminDashboard__trend--down {
+  color: #c62828;
+}
+
+.jw-adminDashboard__quality {
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid #e8e8e8;
+  background: #fffbeb;
+  font-size: 13px;
+  color: #5c4a00;
+  line-height: 1.5;
+}
+
+.jw-adminDashboard__quality a {
+  color: #0a1f4f;
+  font-weight: 600;
+}
+
+.jw-adminDashboard__error {
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #fff0f0;
+  border: 1px solid #f5c2c2;
+  color: #8b1a1a;
+  font-size: 13px;
+}
+
+.jw-adminDashboard__loading {
+  padding: 24px;
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+}
