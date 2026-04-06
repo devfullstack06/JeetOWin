@@ -39,6 +39,7 @@
 
 /* Body */
 .jw-loggedBody {
+  --jw-logged-body-pad: 12px;
   width: 100%;
   max-width: 100%;
   min-width: 0;

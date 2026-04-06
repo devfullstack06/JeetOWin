@@ -63,4 +63,12 @@
   .jw-clientScrollbar.jw-clientScrollbar--scrolling {
     scrollbar-color: var(--jw-client-sb-ff) transparent;
   }
+
+  /**
+   * Logged-in main column: extra inline-end padding so the vertical scrollbar
+   * sits ~10px past the content edge (see --jw-logged-body-pad in loggedInLayout).
+   */
+  .jw-loggedBody.jw-clientScrollbar {
+    padding-right: calc(var(--jw-logged-body-pad, 12px) + 10px);
+  }
 }

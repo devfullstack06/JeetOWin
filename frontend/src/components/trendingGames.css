@@ -48,6 +48,13 @@
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
+
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .jw-trendingScroller::-webkit-scrollbar {
+    display: none;
   }
   
   .jw-trendingTile {
