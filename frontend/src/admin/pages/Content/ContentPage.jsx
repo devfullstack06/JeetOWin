@@ -18,6 +18,7 @@ import "./contentPage.css";
 import MainBannerTab from "./MainBannerTab";
 import TopSportsTab from "./TopSportsTab";
 import TrendingGamesTab from "./TrendingGamesTab";
+import ChatTab from "./ChatTab";
 import {
   LeaderBoardAdminProvider,
   LeaderBoardAdminFilters,
@@ -639,6 +640,8 @@ export default function ContentPage() {
               <TrendingGamesTab />
             ) : activeTab === "leader-board" ? (
               <LeaderBoardAdminTable />
+            ) : activeTab === "chat" ? (
+              <ChatTab />
             ) : (
               <div className="jw-adminContentPlaceholder">{contentTabs.find((t) => t.key === activeTab)?.label ?? activeTab} — Coming soon.</div>
             )

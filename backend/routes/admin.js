@@ -128,10 +128,16 @@ const {
   patchAdminTransferTicket,
 } = require("../controllers/admin/transferTicketsController");
 const { getAdminDashboard } = require("../controllers/admin/dashboardController");
+const {
+  getAdminChatWidgetSettings,
+  patchAdminChatWidgetSettings,
+} = require("../controllers/admin/chatWidgetSettingsController");
 
 const router = express.Router();
 
 router.get("/dashboard", requireAdminAuth, getAdminDashboard);
+router.get("/chat-widget-settings", requireAdminAuth, getAdminChatWidgetSettings);
+router.patch("/chat-widget-settings", requireAdminAuth, patchAdminChatWidgetSettings);
 
 router.post("/update-password", requireAdminAuth, updateAdminPassword);
 router.get("/users", requireAdminAuth, getAdminUsers);

@@ -65,6 +65,7 @@ export const adminNavGroups = [
         { id: "admin-content-help", label: "Help Center", path: "/admin/content/help-center", crumb: "Admin > Content > Help Center" },
         { id: "admin-content-faqs", label: "FAQs", path: "/admin/content/faqs", crumb: "Admin > Content > FAQs" },
         { id: "admin-content-leaderboard", label: "Leader Board", path: "/admin/content/leader-board", crumb: "Admin > Content > Leader Board" },
+        { id: "admin-content-chat", label: "Chat", path: "/admin/content/chat", crumb: "Admin > Content > Chat" },
       ],
     },
     {

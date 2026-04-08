@@ -18,6 +18,7 @@ import PromotionsPage from "./pages/Promotions/PromotionsPage";
 import NotificationsPage from "./pages/Notifications/NotificationsPage";
 import TransactionsPage from "./pages/Transactions/TransactionsPage";
 import HistoryPage from "./pages/History/HistoryPage";
+import ClientChatWidget from "./components/chat/ClientChatWidget";
 
 // ==========================
 // ADMIN
@@ -100,20 +101,22 @@ export default function App() {
   const adminItems = getAdminItems();
 
   return (
-    <Routes>
-      {/* ===================== */}
-      {/* AUTH ROUTES */}
-      {/* ===================== */}
-      <Route path="/login" element={<Login />} />
-      <Route path="/signup" element={<Signup />} />
-      <Route path="/terms" element={<Terms />} />
+    <>
+      <ClientChatWidget />
+      <Routes>
+        {/* ===================== */}
+        {/* AUTH ROUTES */}
+        {/* ===================== */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/terms" element={<Terms />} />
 
-      {/* ===================== */}
-      {/* ADMIN ROUTES */}
-      {/* ===================== */}
-      <Route element={<RedirectIfClient />}>
-        <Route element={<AdminProtectedLayout />}>
-          <Route path="/admin" element={<AdminLayout />}>
+        {/* ===================== */}
+        {/* ADMIN ROUTES */}
+        {/* ===================== */}
+        <Route element={<RedirectIfClient />}>
+          <Route element={<AdminProtectedLayout />}>
+            <Route path="/admin" element={<AdminLayout />}>
             {/* Real admin pages */}
             <Route index element={<AdminDashboardPage />} />
             <Route path="users/user-info" element={<UsersPage />} />
@@ -184,48 +187,49 @@ export default function App() {
               );
             })}
 
-            {/* Admin fallback */}
-            <Route path="*" element={<Navigate to="/admin" replace />} />
+              {/* Admin fallback */}
+              <Route path="*" element={<Navigate to="/admin" replace />} />
+            </Route>
           </Route>
         </Route>
-      </Route>
 
-      {/* ===================== */}
-      {/* CLIENT ROUTES */}
-      {/* ===================== */}
-      <Route element={<MobileNavLayout />}>
-        {/* Public landing */}
-        <Route element={<RedirectIfAdmin />}>
-          <Route path="/" element={<Home />} />
-        </Route>
+        {/* ===================== */}
+        {/* CLIENT ROUTES */}
+        {/* ===================== */}
+        <Route element={<MobileNavLayout />}>
+          {/* Public landing */}
+          <Route element={<RedirectIfAdmin />}>
+            <Route path="/" element={<Home />} />
+          </Route>
 
-        {/* Client protected routes */}
-        <Route element={<RedirectIfAdmin />}>
-          <Route element={<ClientProtectedLayout />}>
-            <Route path="home" element={<Home />} />
-            <Route path="accounts" element={<AccountsPage />} />
-            <Route path="transfers" element={<TransfersPage />} />
-            <Route path="history" element={<HistoryPage />} />
-            <Route path="wallets" element={<WalletsPage />} />
-            <Route path="dashboard" element={<Home />} />
-            <Route path="contact" element={<ContactUsPage />} />
-            <Route path="promotions" element={<PromotionsPage />} />
-            <Route path="notifications" element={<NotificationsPage />} />
-            <Route path="transactions" element={<TransactionsPage />} />
-            <Route
-              path="deposit"
-              element={<TransactionsPage initialTab="deposit" />}
-            />
-            <Route
-              path="withdraw"
-              element={<TransactionsPage initialTab="withdraw" />}
-            />
+          {/* Client protected routes */}
+          <Route element={<RedirectIfAdmin />}>
+            <Route element={<ClientProtectedLayout />}>
+              <Route path="home" element={<Home />} />
+              <Route path="accounts" element={<AccountsPage />} />
+              <Route path="transfers" element={<TransfersPage />} />
+              <Route path="history" element={<HistoryPage />} />
+              <Route path="wallets" element={<WalletsPage />} />
+              <Route path="dashboard" element={<Home />} />
+              <Route path="contact" element={<ContactUsPage />} />
+              <Route path="promotions" element={<PromotionsPage />} />
+              <Route path="notifications" element={<NotificationsPage />} />
+              <Route path="transactions" element={<TransactionsPage />} />
+              <Route
+                path="deposit"
+                element={<TransactionsPage initialTab="deposit" />}
+              />
+              <Route
+                path="withdraw"
+                element={<TransactionsPage initialTab="withdraw" />}
+              />
+            </Route>
           </Route>
         </Route>
-      </Route>
 
-      {/* Global fallback */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        {/* Global fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </>
   );
 }
