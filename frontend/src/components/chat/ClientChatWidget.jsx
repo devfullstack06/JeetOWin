@@ -94,7 +94,15 @@ export default function ClientChatWidget() {
   }, []);
 
   useEffect(() => {
-    if (effective.provider !== "tawk" || !effective.scriptSrc) return;
+    if (effective.provider !== "tawk" || !effective.scriptSrc || !effective.enabled) {
+      window.Tawk_API?.hideWidget?.();
+      return;
+    }
+    if (!shouldShow) {
+      // Do not inject/load widget on routes where it must stay hidden.
+      window.Tawk_API?.hideWidget?.();
+      return;
+    }
 
     window.Tawk_API = window.Tawk_API || {};
     window.Tawk_LoadStart = window.Tawk_LoadStart || new Date();
@@ -121,7 +129,7 @@ export default function ClientChatWidget() {
     s1.setAttribute("data-chat-provider", "tawk");
     s0?.parentNode?.insertBefore(s1, s0);
     loadedScriptRef.current = effective.scriptSrc;
-  }, [effective.provider, effective.scriptSrc, effective.startMinimized, shouldShow]);
+  }, [effective.provider, effective.scriptSrc, effective.startMinimized, effective.enabled, shouldShow]);
 
   useEffect(() => {
     const api = window.Tawk_API;

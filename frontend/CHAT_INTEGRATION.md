@@ -35,3 +35,15 @@ To disable chat quickly:
   - `database/migration_chat_widget_settings.sql`
 
 This allows provider switching and script URL replacement from admin without frontend redeploy.
+
+## Webhook reporting (Phase C)
+
+- Webhook endpoint: `POST /api/chat-widget/webhook`
+- Auth header: `x-chat-webhook-secret: <CHAT_WIDGET_WEBHOOK_SECRET>`
+- Admin reports:
+  - `GET /api/admin/chat-widget-events`
+  - `GET /api/admin/chat-widget-events/summary`
+- Required migration:
+  - `database/migration_chat_widget_events.sql`
+
+Set `CHAT_WIDGET_WEBHOOK_SECRET` in backend environment before enabling webhook integration.

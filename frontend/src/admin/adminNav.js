@@ -57,8 +57,6 @@ export const adminNavGroups = [
         { id: "admin-content-promos", label: "Promos", path: "/admin/content/promos", crumb: "Admin > Content > Promos" },
         { id: "admin-content-top-sports", label: "Top Sports", path: "/admin/content/top-sports", crumb: "Admin > Content > Top Sports" },
         { id: "admin-content-trending", label: "Trending", path: "/admin/content/trending", crumb: "Admin > Content > Trending" },
-        { id: "admin-content-brands", label: "Brands", path: "/admin/content/brands", crumb: "Admin > Content > Brands" },
-        { id: "admin-content-banks", label: "Banks", path: "/admin/content/banks", crumb: "Admin > Content > Banks" },
         { id: "admin-content-social-media", label: "Social Media", path: "/admin/content/social-media", crumb: "Admin > Content > Social Media" },
         { id: "admin-content-tc", label: "T&C", path: "/admin/content/terms", crumb: "Admin > Content > T&C" },
         { id: "admin-content-privacy", label: "Privacy Policy", path: "/admin/content/privacy-policy", crumb: "Admin > Content > Privacy Policy" },

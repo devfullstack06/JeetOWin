@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import AdminPagination from "../../components/AdminPagination/AdminPagination";
 
 const DEFAULT_FORM = {
   provider: "none",
@@ -16,6 +17,13 @@ export default function ChatTab() {
   const [notice, setNotice] = useState("");
   const [form, setForm] = useState(DEFAULT_FORM);
   const [savedSnapshot, setSavedSnapshot] = useState(DEFAULT_FORM);
+  const [eventsLoading, setEventsLoading] = useState(false);
+  const [eventsError, setEventsError] = useState("");
+  const [events, setEvents] = useState([]);
+  const [eventsTotal, setEventsTotal] = useState(0);
+  const [eventsPage, setEventsPage] = useState(1);
+  const [eventsPageSize, setEventsPageSize] = useState(10);
+  const [summary, setSummary] = useState({ days: 7, totalEvents: 0, uniqueVisitors: 0, topProvider: null, topProviderEvents: 0 });
 
   const dirty = useMemo(() => JSON.stringify(form) !== JSON.stringify(savedSnapshot), [form, savedSnapshot]);
   const requireScript = form.provider !== "none";
@@ -57,6 +65,50 @@ export default function ChatTab() {
       ignore = true;
     };
   }, []);
+
+  useEffect(() => {
+    let ignore = false;
+    const token = localStorage.getItem("token") || "";
+    setEventsLoading(true);
+    setEventsError("");
+    Promise.all([
+      fetch(`/api/admin/chat-widget-events?page=${eventsPage}&pageSize=${eventsPageSize}`, {
+        method: "GET",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      }).then((res) => res.json().then((body) => ({ ok: res.ok, body }))),
+      fetch("/api/admin/chat-widget-events/summary?days=7", {
+        method: "GET",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      }).then((res) => res.json().then((body) => ({ ok: res.ok, body }))),
+    ])
+      .then(([eventsResp, summaryResp]) => {
+        if (ignore) return;
+        if (!eventsResp.ok) {
+          setEventsError(eventsResp.body?.message || "Failed to load chat events.");
+        } else {
+          setEvents(Array.isArray(eventsResp.body?.items) ? eventsResp.body.items : []);
+          setEventsTotal(Number(eventsResp.body?.total || 0));
+        }
+        if (summaryResp.ok && summaryResp.body) {
+          setSummary({
+            days: Number(summaryResp.body.days || 7),
+            totalEvents: Number(summaryResp.body.totalEvents || 0),
+            uniqueVisitors: Number(summaryResp.body.uniqueVisitors || 0),
+            topProvider: summaryResp.body.topProvider || null,
+            topProviderEvents: Number(summaryResp.body.topProviderEvents || 0),
+          });
+        }
+      })
+      .catch(() => {
+        if (!ignore) setEventsError("Failed to load chat events.");
+      })
+      .finally(() => {
+        if (!ignore) setEventsLoading(false);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [eventsPage, eventsPageSize]);
 
   const onToggle = (key) => (e) => {
     setNotice("");
@@ -165,6 +217,62 @@ export default function ChatTab() {
           </button>
         </div>
       </div>
+
+      <hr style={{ margin: "16px 0" }} />
+      <h4 style={{ marginTop: 0 }}>Webhook & Reporting (Phase C)</h4>
+      <p style={{ marginTop: 0 }}>
+        Webhook endpoint: <code>/api/chat-widget/webhook</code>. Send secret via <code>x-chat-webhook-secret</code> header.
+      </p>
+      <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 10 }}>
+        <div><strong>7-day Events:</strong> {summary.totalEvents}</div>
+        <div><strong>Unique Visitors:</strong> {summary.uniqueVisitors}</div>
+        <div><strong>Top Provider:</strong> {summary.topProvider || "—"}{summary.topProvider ? ` (${summary.topProviderEvents})` : ""}</div>
+      </div>
+      {eventsError ? <div className="jw-adminUsersPage__notice is-error">{eventsError}</div> : null}
+      <div className="jw-adminTableWrap">
+        <table className="jw-adminTable">
+          <thead>
+            <tr>
+              <th>Created</th>
+              <th>Provider</th>
+              <th>Event</th>
+              <th>Visitor</th>
+              <th>Conversation</th>
+            </tr>
+          </thead>
+          <tbody>
+            {eventsLoading ? (
+              <tr>
+                <td colSpan={5}><div className="jw-adminSkeleton" style={{ height: 20 }} /></td>
+              </tr>
+            ) : events.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="jw-adminEmpty">No chat events yet</td>
+              </tr>
+            ) : (
+              events.map((r) => (
+                <tr key={r.id}>
+                  <td>{r.createdAt ? new Date(r.createdAt).toLocaleString() : "—"}</td>
+                  <td>{r.provider || "—"}</td>
+                  <td>{r.eventName || "—"}</td>
+                  <td>{r.visitorName || r.visitorEmail || "—"}</td>
+                  <td>{r.conversationId || "—"}</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+      <AdminPagination
+        total={eventsTotal}
+        page={eventsPage}
+        pageSize={eventsPageSize}
+        onPageChange={setEventsPage}
+        onPageSizeChange={(n) => {
+          setEventsPageSize(n);
+          setEventsPage(1);
+        }}
+      />
     </div>
   );
 }

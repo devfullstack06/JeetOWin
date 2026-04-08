@@ -132,12 +132,18 @@ const {
   getAdminChatWidgetSettings,
   patchAdminChatWidgetSettings,
 } = require("../controllers/admin/chatWidgetSettingsController");
+const {
+  getAdminChatWidgetEvents,
+  getAdminChatWidgetEventsSummary,
+} = require("../controllers/admin/chatWidgetEventsController");
 
 const router = express.Router();
 
 router.get("/dashboard", requireAdminAuth, getAdminDashboard);
 router.get("/chat-widget-settings", requireAdminAuth, getAdminChatWidgetSettings);
 router.patch("/chat-widget-settings", requireAdminAuth, patchAdminChatWidgetSettings);
+router.get("/chat-widget-events", requireAdminAuth, getAdminChatWidgetEvents);
+router.get("/chat-widget-events/summary", requireAdminAuth, getAdminChatWidgetEventsSummary);
 
 router.post("/update-password", requireAdminAuth, updateAdminPassword);
 router.get("/users", requireAdminAuth, getAdminUsers);
