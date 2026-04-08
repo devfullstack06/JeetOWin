@@ -219,10 +219,10 @@ export default function ChatTab() {
       </div>
 
       <hr style={{ margin: "16px 0" }} />
-      <h4 style={{ marginTop: 0 }}>Webhook & Reporting (Phase C)</h4>
-      <p style={{ marginTop: 0 }}>
+      <h4 style={{ marginTop: 0 }}>Reporting</h4>
+      {/* <p style={{ marginTop: 0 }}>
         Webhook endpoint: <code>/api/chat-widget/webhook</code>. Send secret via <code>x-chat-webhook-secret</code> header.
-      </p>
+      </p> */}
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 10 }}>
         <div><strong>7-day Events:</strong> {summary.totalEvents}</div>
         <div><strong>Unique Visitors:</strong> {summary.uniqueVisitors}</div>
