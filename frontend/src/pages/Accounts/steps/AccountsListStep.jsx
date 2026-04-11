@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { Link } from "react-router-dom";
 import { Copy, Eye } from "lucide-react";
 import { getWalletIconUrl } from "../../../utils/walletIconUrl";
 
@@ -289,6 +290,17 @@ export default function AccountsListStep({
                 <dd>{formatRequestedAt(detailAccount.createdAt)}</dd>
               </div>
             </dl>
+            <p className="jw-accountsDetailModal__disclaimer">
+              Disclaimer: Change your Password first as you login your account on{" "}
+              {detailAccount.brand != null && String(detailAccount.brand).trim() !== ""
+                ? detailAccount.brand
+                : "—"}
+              . Password policy applies. View{" "}
+              <Link to="/terms" className="jw-accountsDetailModal__link">
+                Terms and Conditions
+              </Link>{" "}
+              for more details.
+            </p>
           </div>
         </div>
       </div>,
