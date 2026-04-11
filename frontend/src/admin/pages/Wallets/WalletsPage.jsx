@@ -710,6 +710,9 @@ export default function WalletsPage() {
   const [pwEditError, setPwEditError] = useState("");
   const [pwAdjustOpen, setPwAdjustOpen] = useState(false);
   const [pwAdjustType, setPwAdjustType] = useState("topup"); // "topup" | "deduct"
+  const [pwAdjustCompanyId, setPwAdjustCompanyId] = useState("");
+  const [pwAdjustWalletList, setPwAdjustWalletList] = useState([]);
+  const [pwAdjustWalletsLoading, setPwAdjustWalletsLoading] = useState(false);
   const [pwAdjustWalletId, setPwAdjustWalletId] = useState("");
   const [pwAdjustAmount, setPwAdjustAmount] = useState("");
   const [pwAdjustNotes, setPwAdjustNotes] = useState("");
@@ -847,6 +850,47 @@ export default function WalletsPage() {
     if (activeTab !== "wallets") return;
     fetchAdminAccountBalance();
   }, [activeTab, fetchAdminAccountBalance]);
+
+  useEffect(() => {
+    if (!pwAdjustOpen) {
+      setPwAdjustWalletList([]);
+      setPwAdjustWalletsLoading(false);
+      return;
+    }
+    if (!pwAdjustCompanyId) {
+      setPwAdjustWalletList([]);
+      setPwAdjustWalletsLoading(false);
+      return;
+    }
+    let ignore = false;
+    setPwAdjustWalletsLoading(true);
+    const token = localStorage.getItem("token") || "";
+    const query = buildQuery({
+      companyId: pwAdjustCompanyId,
+      page: 1,
+      pageSize: 500,
+      sortKey: "name",
+      sortDir: "asc",
+    });
+    fetch(`/api/admin/payment-wallets?${query}`, {
+      method: "GET",
+      headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (ignore) return;
+        setPwAdjustWalletList(Array.isArray(data.items) ? data.items : []);
+      })
+      .catch(() => {
+        if (!ignore) setPwAdjustWalletList([]);
+      })
+      .finally(() => {
+        if (!ignore) setPwAdjustWalletsLoading(false);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [pwAdjustOpen, pwAdjustCompanyId]);
 
   const onSubmit = () => {
     setApplied(filters);
@@ -1233,6 +1277,7 @@ export default function WalletsPage() {
           variant="light"
           onClick={() => {
             setPwAdjustType("topup");
+            setPwAdjustCompanyId("");
             setPwAdjustWalletId("");
             setPwAdjustAmount("");
             setPwAdjustNotes("");
@@ -1257,6 +1302,7 @@ export default function WalletsPage() {
           variant="light"
           onClick={() => {
             setPwAdjustType("deduct");
+            setPwAdjustCompanyId("");
             setPwAdjustWalletId("");
             setPwAdjustAmount("");
             setPwAdjustNotes("");
@@ -1531,17 +1577,63 @@ export default function WalletsPage() {
 
       {/* TopUp / Deduct Modal (unified) */}
       {pwAdjustOpen && (
-        <div className="jw-adminUsersModalOverlay jw-adminUsersModalOverlay--belowHeader" onClick={() => !pwAdjustSaving && (setPwAdjustOpen(false), setPwAdjustWalletId(""), setPwAdjustAmount(""), setPwAdjustNotes(""), setPwAdjustError(""))}>
+        <div
+          className="jw-adminUsersModalOverlay jw-adminUsersModalOverlay--belowHeader"
+          onClick={() =>
+            !pwAdjustSaving &&
+            (setPwAdjustOpen(false),
+            setPwAdjustCompanyId(""),
+            setPwAdjustWalletId(""),
+            setPwAdjustAmount(""),
+            setPwAdjustNotes(""),
+            setPwAdjustError(""))
+          }
+        >
           <div className="jw-adminUsersModal jw-adminUsersModal--scrollable" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
             <div className="jw-adminUsersModal__header"><div className="jw-adminUsersModal__title">{pwAdjustType === "topup" ? "Top Up" : "Deduct"}</div></div>
             <div className="jw-adminUsersModal__body">
               <div className="jw-adminUsersModal__field">
-                <label className="jw-adminUsersModal__label">Select Payment Wallet</label>
-                <select className="jw-adminUsersModal__input" value={pwAdjustWalletId} onChange={(e) => setPwAdjustWalletId(e.target.value)}>
+                <label className="jw-adminUsersModal__label">Select Wallet Company</label>
+                <select
+                  className="jw-adminUsersModal__input"
+                  value={pwAdjustCompanyId}
+                  onChange={(e) => {
+                    setPwAdjustCompanyId(e.target.value);
+                    setPwAdjustWalletId("");
+                  }}
+                >
                   <option value="">Please Select</option>
-                  {pwRows.map((r) => (
-                    <option key={r.id} value={r.id}>{r.name} — {r.number} (Rs. {Number(r.balance)?.toLocaleString() ?? "0"})</option>
+                  {(walletCompaniesActive || []).map((c) => (
+                    <option key={c.id} value={String(c.id)}>
+                      {c.name ?? `Company #${c.id}`}
+                    </option>
                   ))}
+                </select>
+              </div>
+              <div className="jw-adminUsersModal__field">
+                <label className="jw-adminUsersModal__label">Select Payment Wallet</label>
+                <select
+                  className="jw-adminUsersModal__input"
+                  value={pwAdjustWalletId}
+                  onChange={(e) => setPwAdjustWalletId(e.target.value)}
+                  disabled={!pwAdjustCompanyId || pwAdjustWalletsLoading}
+                >
+                  <option value="">
+                    {!pwAdjustCompanyId
+                      ? "Please select a company first"
+                      : pwAdjustWalletsLoading
+                        ? "Loading wallets…"
+                        : pwAdjustWalletList.length === 0
+                          ? "No payment wallets for this company"
+                          : "Please Select"}
+                  </option>
+                  {pwAdjustCompanyId && !pwAdjustWalletsLoading
+                    ? pwAdjustWalletList.map((r) => (
+                        <option key={r.id} value={r.id}>
+                          {r.name} — {r.number} (Rs. {Number(r.balance)?.toLocaleString() ?? "0"})
+                        </option>
+                      ))
+                    : null}
                 </select>
               </div>
               <div className="jw-adminUsersModal__field">
@@ -1559,7 +1651,7 @@ export default function WalletsPage() {
                 />
               </div>
               {pwAdjustWalletId && (() => {
-                const sel = pwRows.find((r) => String(r.id) === String(pwAdjustWalletId));
+                const sel = pwAdjustWalletList.find((r) => String(r.id) === String(pwAdjustWalletId));
                 const before = sel ? Number(sel.balance) || 0 : 0;
                 const amt = Number(pwAdjustAmount) || 0;
                 const after = pwAdjustType === "topup" ? before + amt : Math.max(0, before - amt);
@@ -1583,10 +1675,26 @@ export default function WalletsPage() {
               {pwAdjustError && <div className="jw-adminUsersModal__error">{pwAdjustError}</div>}
             </div>
             <div className="jw-adminUsersModal__actions">
-              <button type="button" className="jw-adminUsersModal__btn is-light" onClick={() => !pwAdjustSaving && (setPwAdjustOpen(false), setPwAdjustWalletId(""), setPwAdjustAmount(""), setPwAdjustNotes(""), setPwAdjustError(""))} disabled={pwAdjustSaving}>Cancel</button>
+              <button
+                type="button"
+                className="jw-adminUsersModal__btn is-light"
+                onClick={() =>
+                  !pwAdjustSaving &&
+                  (setPwAdjustOpen(false),
+                  setPwAdjustCompanyId(""),
+                  setPwAdjustWalletId(""),
+                  setPwAdjustAmount(""),
+                  setPwAdjustNotes(""),
+                  setPwAdjustError(""))
+                }
+                disabled={pwAdjustSaving}
+              >
+                Cancel
+              </button>
               <button type="button" className="jw-adminUsersModal__btn is-green" disabled={pwAdjustSaving} onClick={async () => {
                 const walletId = pwAdjustWalletId ? Number(pwAdjustWalletId) : 0;
                 const amt = Number(pwAdjustAmount);
+                if (!pwAdjustCompanyId) { setPwAdjustError("Please select a wallet company."); return; }
                 if (!walletId) { setPwAdjustError("Please select a payment wallet."); return; }
                 if (!Number.isFinite(amt) || amt <= 0) { setPwAdjustError("Enter a valid amount."); return; }
                 setPwAdjustSaving(true); setPwAdjustError("");
@@ -1600,8 +1708,14 @@ export default function WalletsPage() {
                   const data = await res.json().catch(() => ({}));
                   if (!res.ok) { setPwAdjustError(data?.message || "Failed."); setPwAdjustSaving(false); return; }
                   setPwRows((prev) => prev.map((r) => (r.id === walletId ? { ...r, balance: data.balance } : r)));
+                  setPwAdjustWalletList((prev) => prev.map((r) => (r.id === walletId ? { ...r, balance: data.balance } : r)));
                   fetchAdminAccountBalance();
-                  setPwAdjustOpen(false); setPwAdjustWalletId(""); setPwAdjustAmount(""); setPwAdjustNotes(""); setPwAdjustSaving(false);
+                  setPwAdjustOpen(false);
+                  setPwAdjustCompanyId("");
+                  setPwAdjustWalletId("");
+                  setPwAdjustAmount("");
+                  setPwAdjustNotes("");
+                  setPwAdjustSaving(false);
                 } catch { setPwAdjustError("Failed."); setPwAdjustSaving(false); }
               }}>{pwAdjustSaving ? "..." : pwAdjustType === "topup" ? "Top Up" : "Deduct"}</button>
             </div>
