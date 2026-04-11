@@ -1,8 +1,16 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import "./homeBanner.css";
 
-export default function HomeBanner({ slides: slidesProp, intervalMs = 2000 }) {
+const DRAG_CLICK_THRESHOLD_PX = 10;
+
+export default function HomeBanner({ slides: slidesProp, intervalMs = 4000 }) {
   const [remoteSlides, setRemoteSlides] = useState(undefined);
+  const containerRef = useRef(null);
+  const [viewportW, setViewportW] = useState(0);
+  const [dragPx, setDragPx] = useState(0);
+  const [isPointerDragging, setIsPointerDragging] = useState(false);
+  const dragStartRef = useRef(null);
+  const suppressLinkClickRef = useRef(false);
 
   useEffect(() => {
     if (slidesProp !== undefined) return;
@@ -47,12 +55,42 @@ export default function HomeBanner({ slides: slidesProp, intervalMs = 2000 }) {
   }, [slideCount]);
 
   useEffect(() => {
-    if (prefersReducedMotion || slideCount <= 1) return;
+    const el = containerRef.current;
+    if (!el) return;
+    const apply = () => {
+      const w = el.offsetWidth;
+      if (w > 0) setViewportW(w);
+    };
+    apply();
+    if (typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver((entries) => {
+      const w = entries[0]?.contentRect?.width;
+      if (w != null && w > 0) setViewportW(w);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [resolvedSlides, slideCount]);
+
+  useEffect(() => {
+    if (prefersReducedMotion || slideCount <= 1 || isPointerDragging) return;
     const id = setInterval(() => {
       setActive((prev) => (prev + 1) % slideCount);
     }, intervalMs);
     return () => clearInterval(id);
-  }, [intervalMs, prefersReducedMotion, slideCount]);
+  }, [intervalMs, prefersReducedMotion, slideCount, isPointerDragging]);
+
+  const trackTransform = useMemo(() => {
+    if (viewportW <= 0 || slideCount <= 0) {
+      return `translateX(-${active * 100}%)`;
+    }
+    let x = -active * viewportW + dragPx;
+    if (slideCount > 1) {
+      const minX = -(slideCount - 1) * viewportW;
+      const maxX = 0;
+      x = Math.max(minX, Math.min(maxX, x));
+    }
+    return `translateX(${x}px)`;
+  }, [active, dragPx, slideCount, viewportW]);
 
   if (resolvedSlides === null) {
     return (
@@ -81,6 +119,67 @@ export default function HomeBanner({ slides: slidesProp, intervalMs = 2000 }) {
     setActive(index);
   }
 
+  function isTargetInControls(target) {
+    if (!target || typeof target.closest !== "function") return false;
+    return Boolean(target.closest(".jw-bannerControls"));
+  }
+
+  function endDrag(e) {
+    const start = dragStartRef.current;
+    dragStartRef.current = null;
+    setIsPointerDragging(false);
+    setDragPx(0);
+    try {
+      if (e?.currentTarget && e.pointerId != null) {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      }
+    } catch {
+      /* ignore */
+    }
+    const w = containerRef.current?.offsetWidth || viewportW;
+    if (!start || w <= 0 || slideCount <= 1) return;
+    const dx = e.clientX - start.startX;
+    if (Math.abs(dx) > DRAG_CLICK_THRESHOLD_PX) {
+      suppressLinkClickRef.current = true;
+    }
+    const threshold = Math.min(56, w * 0.12);
+    if (dx < -threshold) {
+      setActive((prev) => Math.min(slideCount - 1, prev + 1));
+    } else if (dx > threshold) {
+      setActive((prev) => Math.max(0, prev - 1));
+    }
+  }
+
+  function onBannerPointerDown(e) {
+    if (slideCount <= 1) return;
+    if (isTargetInControls(e.target)) return;
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    dragStartRef.current = { startX: e.clientX, pointerId: e.pointerId };
+    setIsPointerDragging(true);
+    setDragPx(0);
+    suppressLinkClickRef.current = false;
+    e.preventDefault();
+    e.currentTarget.setPointerCapture(e.pointerId);
+  }
+
+  function onBannerPointerMove(e) {
+    if (!dragStartRef.current || dragStartRef.current.pointerId !== e.pointerId) return;
+    e.preventDefault();
+    setDragPx(e.clientX - dragStartRef.current.startX);
+  }
+
+  function onBannerPointerUp(e) {
+    if (!dragStartRef.current || dragStartRef.current.pointerId !== e.pointerId) return;
+    endDrag(e);
+  }
+
+  function onBannerLostPointerCapture(e) {
+    if (!dragStartRef.current || dragStartRef.current.pointerId !== e.pointerId) return;
+    dragStartRef.current = null;
+    setIsPointerDragging(false);
+    setDragPx(0);
+  }
+
   function toSlideLink(slide) {
     const raw = String(slide?.linkUrl || "").trim();
     if (!raw) return null;
@@ -89,8 +188,26 @@ export default function HomeBanner({ slides: slidesProp, intervalMs = 2000 }) {
   }
 
   return (
-    <section className="jw-banner" aria-label="Banner carousel">
-      <div className="jw-bannerTrack" style={{ transform: `translateX(-${active * 100}%)` }}>
+    <section
+      ref={containerRef}
+      className={`jw-banner${slideCount > 1 ? " jw-banner--draggable" : ""}`}
+      aria-label="Banner carousel"
+      onPointerDown={slideCount > 1 ? onBannerPointerDown : undefined}
+      onPointerMove={slideCount > 1 ? onBannerPointerMove : undefined}
+      onPointerUp={slideCount > 1 ? onBannerPointerUp : undefined}
+      onPointerCancel={slideCount > 1 ? onBannerPointerUp : undefined}
+      onLostPointerCapture={slideCount > 1 ? onBannerLostPointerCapture : undefined}
+    >
+      <div
+        className={`jw-bannerTrack${isPointerDragging ? " is-dragging" : ""}`}
+        style={{ transform: trackTransform }}
+        onClickCapture={(ev) => {
+          if (!suppressLinkClickRef.current) return;
+          ev.preventDefault();
+          ev.stopPropagation();
+          suppressLinkClickRef.current = false;
+        }}
+      >
         {safeSlides.map((s) => {
           const desktop = s.imageDesktop || s.src || "";
           const mobile = s.imageMobile || desktop;
@@ -100,16 +217,16 @@ export default function HomeBanner({ slides: slidesProp, intervalMs = 2000 }) {
           return (
             <div key={s.id} className="jw-bannerSlide">
               {href ? (
-                <a href={href} target={target} rel={rel} className="jw-bannerLink" aria-label={s.title || "Banner link"}>
+                <a href={href} target={target} rel={rel} className="jw-bannerLink" aria-label={s.title || "Banner link"} draggable={false}>
                   <picture>
                     <source media="(max-width: 768px)" srcSet={mobile} />
-                    <img className="jw-bannerImg" src={desktop} alt={s.title || ""} />
+                    <img className="jw-bannerImg" src={desktop} alt={s.title || ""} draggable={false} />
                   </picture>
                 </a>
               ) : (
                 <picture>
                   <source media="(max-width: 768px)" srcSet={mobile} />
-                  <img className="jw-bannerImg" src={desktop} alt={s.title || ""} />
+                  <img className="jw-bannerImg" src={desktop} alt={s.title || ""} draggable={false} />
                 </picture>
               )}
             </div>
