@@ -1,0 +1,106 @@
+.jw-guestLoginPromptOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10050;
+  background: rgba(7, 19, 54, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.jw-guestLoginPrompt {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  background: #fff;
+  border-radius: 14px;
+  padding: 28px 24px 24px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(7, 19, 54, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.jw-guestLoginPrompt__brand {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 40px;
+}
+
+/* Modal-only: tall mark + brand name stacked below (overrides logo.css) */
+.jw-guestLoginPrompt__logoBrand.jw-logo-brand {
+  cursor: default;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.jw-guestLoginPrompt__logoBrand .jw-logo-img {
+  height: 200px;
+  width: auto;
+}
+
+.jw-guestLoginPrompt__logoBrand .jw-brand-jeet,
+.jw-guestLoginPrompt__logoBrand .jw-brand-o,
+.jw-guestLoginPrompt__logoBrand .jw-brand-win {
+  font-size: 40px;
+}
+
+.jw-guestLoginPrompt__body {
+  width: 100%;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.jw-guestLoginPrompt__close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 10px;
+  background: rgba(7, 19, 54, 0.06);
+  color: #071336;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.jw-guestLoginPrompt__close:hover {
+  background: rgba(7, 19, 54, 0.1);
+}
+
+.jw-guestLoginPrompt__body .jw-guestLoginPrompt__text:first-of-type {
+  margin-top: 0;
+}
+
+.jw-guestLoginPrompt__text {
+  margin: 0 0 14px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: #334155;
+}
+
+.jw-guestLoginPrompt__text:last-of-type {
+  margin-bottom: 0;
+}
+
+.jw-guestLoginPrompt__link {
+  color: #0b2a6d;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.jw-guestLoginPrompt__link:hover {
+  color: #071336;
+}

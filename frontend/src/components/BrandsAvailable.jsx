@@ -1,7 +1,12 @@
-import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import React, { useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { GuestContentContext } from "../contexts/GuestContentContext";
+import { isNavigableContentUrl } from "../utils/contentLinks";
 import "./brandsAvailable.css";
 
 export default function BrandsAvailable({ title = "Brands Available", items: itemsProp = undefined }) {
+  const navigate = useNavigate();
+  const guestCtx = useContext(GuestContentContext);
   const [remoteItems, setRemoteItems] = useState(undefined);
   const items = useMemo(() => {
     if (Array.isArray(itemsProp)) return itemsProp;
@@ -148,6 +153,20 @@ export default function BrandsAvailable({ title = "Brands Available", items: ite
             type="button"
             className="jw-brandsTile"
             aria-label={it.name || String(it.id)}
+            onClick={() => {
+              if (guestCtx?.enabled) {
+                guestCtx.handleContentUrl(it.linkUrl, !!it.openInNewTab);
+                return;
+              }
+              if (guestCtx && !guestCtx.enabled) {
+                navigate("/accounts");
+                return;
+              }
+              const raw = String(it.linkUrl || "").trim();
+              if (!isNavigableContentUrl(raw)) return;
+              if (it.openInNewTab) window.open(raw, "_blank", "noopener,noreferrer");
+              else window.location.assign(raw);
+            }}
           >
             <img
               className="jw-brandsImg"

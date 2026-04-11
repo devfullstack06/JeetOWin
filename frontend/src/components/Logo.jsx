@@ -6,7 +6,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import "./logo.css";
 
-export default function Logo({ onClick, className = "" }) {
+export default function Logo({ onClick, className = "", staticDisplay = false }) {
   const navigate = useNavigate();
 
   const handleClick = () => {
@@ -16,6 +16,21 @@ export default function Logo({ onClick, className = "" }) {
       navigate("/");
     }
   };
+
+  const inner = (
+    <>
+      <img src="/Frame.svg" alt="JeetOWin Logo" className="jw-logo-img" />
+      <div className="jw-brand-name">
+        <span className="jw-brand-jeet">Jeet</span>
+        <span className="jw-brand-o">O</span>
+        <span className="jw-brand-win">Win</span>
+      </div>
+    </>
+  );
+
+  if (staticDisplay) {
+    return <div className={`jw-logo-brand ${className}`}>{inner}</div>;
+  }
 
   return (
     <div
@@ -30,19 +45,7 @@ export default function Logo({ onClick, className = "" }) {
         }
       }}
     >
-      {/* Logo Image */}
-      <img 
-        src="/Frame.svg" 
-        alt="JeetOWin Logo" 
-        className="jw-logo-img"
-      />
-      
-      {/* Brand Name */}
-      <div className="jw-brand-name">
-        <span className="jw-brand-jeet">Jeet</span>
-        <span className="jw-brand-o">O</span>
-        <span className="jw-brand-win">Win</span>
-      </div>
+      {inner}
     </div>
   );
 }

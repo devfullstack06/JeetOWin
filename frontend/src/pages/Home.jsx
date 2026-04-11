@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import LoggedInLayout from "../layouts/LoggedInLayout";
 import LandingHeader from "../components/LandingHeader";
+import { GuestContentProvider } from "../contexts/GuestContentContext";
 
 import HomeBanner from "../components/HomeBanner";
 import TopSports from "../components/TopSports";
@@ -64,19 +65,23 @@ export default function Home() {
   // If logged in, use the full logged-in layout with sidebar
   if (isLoggedIn) {
     return (
-      <LoggedInLayout activeId="dashboard">
-        <HomeContent />
-      </LoggedInLayout>
+      <GuestContentProvider enabled={false}>
+        <LoggedInLayout activeId="dashboard">
+          <HomeContent />
+        </LoggedInLayout>
+      </GuestContentProvider>
     );
   }
 
   // If not logged in, use public layout with just header and content
   return (
-    <div className="jw-publicPage">
-      <LandingHeader isLoggedIn={false} />
-      <main className="jw-publicContent">
-        <HomeContent />
-      </main>
-    </div>
+    <GuestContentProvider enabled>
+      <div className="jw-publicPage">
+        <LandingHeader isLoggedIn={false} />
+        <main className="jw-publicContent">
+          <HomeContent />
+        </main>
+      </div>
+    </GuestContentProvider>
   );
 }

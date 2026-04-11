@@ -1,9 +1,12 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
+import { GuestContentContext } from "../contexts/GuestContentContext";
 import "./homeBanner.css";
 
 const DRAG_CLICK_THRESHOLD_PX = 10;
 
 export default function HomeBanner({ slides: slidesProp, intervalMs = 4000 }) {
+  const guestCtx = useContext(GuestContentContext);
+  const guestEnabled = guestCtx?.enabled ?? false;
   const [remoteSlides, setRemoteSlides] = useState(undefined);
   const containerRef = useRef(null);
   const [viewportW, setViewportW] = useState(0);
@@ -187,6 +190,14 @@ export default function HomeBanner({ slides: slidesProp, intervalMs = 4000 }) {
     return null;
   }
 
+  function onNoLinkBannerActivate() {
+    if (suppressLinkClickRef.current) {
+      suppressLinkClickRef.current = false;
+      return;
+    }
+    guestCtx?.handleContentUrl?.("", false);
+  }
+
   return (
     <section
       ref={containerRef}
@@ -223,6 +234,18 @@ export default function HomeBanner({ slides: slidesProp, intervalMs = 4000 }) {
                     <img className="jw-bannerImg" src={desktop} alt={s.title || ""} draggable={false} />
                   </picture>
                 </a>
+              ) : guestEnabled ? (
+                <button
+                  type="button"
+                  className="jw-bannerNoLinkHit"
+                  aria-label={s.title ? `${s.title} — sign in to continue` : "Banner — sign in to continue"}
+                  onClick={onNoLinkBannerActivate}
+                >
+                  <picture>
+                    <source media="(max-width: 768px)" srcSet={mobile} />
+                    <img className="jw-bannerImg" src={desktop} alt={s.title || ""} draggable={false} />
+                  </picture>
+                </button>
               ) : (
                 <picture>
                   <source media="(max-width: 768px)" srcSet={mobile} />
@@ -252,7 +275,10 @@ export default function HomeBanner({ slides: slidesProp, intervalMs = 4000 }) {
             aria-label={`Current banner: ${currentSlide.title}`}
             onClick={() => {
               const href = toSlideLink(currentSlide);
-              if (!href) return;
+              if (!href) {
+                guestCtx?.handleContentUrl?.("", false);
+                return;
+              }
               if (currentSlide.openInNewTab) {
                 window.open(href, "_blank", "noopener,noreferrer");
               } else {

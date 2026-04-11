@@ -1,10 +1,13 @@
-import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import React, { useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { GuestContentContext } from "../contexts/GuestContentContext";
+import { isNavigableContentUrl } from "../utils/contentLinks";
 import "./trendingGames.css";
 
 export default function TrendingGames({
   title = "Trending Games",
   items = undefined,
 }) {
+  const guestCtx = useContext(GuestContentContext);
   const [remoteItems, setRemoteItems] = useState(undefined);
   const safeItems = useMemo(() => {
     if (Array.isArray(items)) return items;
@@ -155,9 +158,12 @@ export default function TrendingGames({
             className="jw-trendingTile"
             aria-label={it.name || String(it.id)}
             onClick={() => {
+              if (guestCtx?.handleContentUrl) {
+                guestCtx.handleContentUrl(it.linkUrl, !!it.openInNewTab);
+                return;
+              }
               const raw = String(it.linkUrl || "").trim();
-              if (!raw) return;
-              if (!(raw.startsWith("/") || /^https?:\/\//i.test(raw))) return;
+              if (!isNavigableContentUrl(raw)) return;
               if (it.openInNewTab) window.open(raw, "_blank", "noopener,noreferrer");
               else window.location.assign(raw);
             }}

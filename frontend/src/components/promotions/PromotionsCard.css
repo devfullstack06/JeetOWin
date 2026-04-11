@@ -54,6 +54,20 @@
     color: #e6ecff;
     text-decoration: underline;
   }
+
+  .jw-promoLink--guest {
+    display: inline-block;
+    margin-top: auto;
+  }
+
+  article.jw-promoCard[role="button"] {
+    cursor: pointer;
+  }
+
+  article.jw-promoCard[role="button"]:focus-visible {
+    outline: 2px solid #e6ecff;
+    outline-offset: 2px;
+  }
   
   .jw-promoImgWrap {
     width: 110px;

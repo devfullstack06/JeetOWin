@@ -1,4 +1,6 @@
-import React, { useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import React, { useContext, useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { GuestContentContext } from "../contexts/GuestContentContext";
 import "./paymentMethods.css";
 
 export default function PaymentMethods({
@@ -16,6 +18,8 @@ export default function PaymentMethods({
     "pm (9).svg",
   ],
 }) {
+  const navigate = useNavigate();
+  const guestCtx = useContext(GuestContentContext);
   const items = useMemo(
     () =>
       imageFiles.map((file, idx) => ({
@@ -139,6 +143,17 @@ export default function PaymentMethods({
             type="button"
             className="jw-paymentsTile"
             aria-label={it.id}
+            onClick={() => {
+              if (guestCtx?.enabled) {
+                guestCtx.handleContentUrl("", false);
+                return;
+              }
+              if (guestCtx && !guestCtx.enabled) {
+                navigate("/deposit");
+                return;
+              }
+              guestCtx?.handleContentUrl?.("", false);
+            }}
           >
             <img
               className="jw-paymentsImg"
