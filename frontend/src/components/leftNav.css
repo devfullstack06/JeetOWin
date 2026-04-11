@@ -73,7 +73,7 @@
 .jw-leftNavHi {
   font-size: 12px;
   font-weight: 400;
-  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-family: var(--jw-font);
   opacity: 0.98;
 }
 .jw-leftNavUser {
@@ -81,7 +81,7 @@
   font-size: 24px;
   font-weight: 600;
   line-height: 1;
-  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-family: var(--jw-font);
 }
 
 /* Balance block */
@@ -111,7 +111,7 @@
 .jw-leftNavBalanceLabel {
   font-size: 16px;
   font-weight: 500;
-  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-family: var(--jw-font);
   opacity: 0.98;
 }
 
@@ -148,7 +148,7 @@
   width: 100%;                 /* ✅ ensures the value line uses full sidebar width */
   font-size: 24px;
   font-weight: 600;
-  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-family: var(--jw-font);
   letter-spacing: 0.2px;
 }
 
@@ -172,7 +172,7 @@
 
   font-size: 18px;
   font-weight: 600;
-  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-family: var(--jw-font);
 }
 
 .jw-leftNavBtnDeposit {
@@ -213,7 +213,7 @@
 .jw-leftNavItemLabel {
   font-size: 16px;
   font-weight: 500;
-  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-family: var(--jw-font);
 }
 
 .jw-leftNavItemIcon {
