@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Clock, Plus, X } from "lucide-react";
+import { Clock, Minus, Plus, X } from "lucide-react";
 import AdminPageShell from "../../components/AdminPageShell/AdminPageShell";
 import AdminTabs from "../../components/AdminTabs/AdminTabs";
 import AdminFilterBar, {
@@ -58,6 +58,37 @@ function EditIcon() {
   );
 }
 
+/** Companies: Yes/No; payment wallets: boolean */
+function isAvailableDeposit(v) {
+  if (typeof v === "boolean") return v;
+  return String(v || "").trim().toLowerCase() === "yes";
+}
+
+function isAvailableWithdraw(v) {
+  if (typeof v === "boolean") return v;
+  return String(v || "").trim().toLowerCase() === "yes";
+}
+
+function WalletDpWdBadges({ deposit, withdraw }) {
+  const showDp = isAvailableDeposit(deposit);
+  const showWd = isAvailableWithdraw(withdraw);
+  if (!showDp && !showWd) return null;
+  return (
+    <span className="jw-adminWalletDpWd">
+      {showDp ? (
+        <span className="jw-adminWalletDpWd__badge jw-adminWalletDpWd__badge--dp" title="Available for deposit">
+          DP
+        </span>
+      ) : null}
+      {showWd ? (
+        <span className="jw-adminWalletDpWd__badge jw-adminWalletDpWd__badge--wd" title="Available for withdraw">
+          WD
+        </span>
+      ) : null}
+    </span>
+  );
+}
+
 function getImageSrc(row) {
   return getWalletIconUrl(row) ?? null;
 }
@@ -101,8 +132,6 @@ function CompaniesTable({ rows, sort, onSort, onEdit, onImageClick, loading }) {
 
   const cols = [
     { key: "name", header: "Name", sortKey: "name" },
-    { key: "forDP", header: "For DP", sortKey: "forDP" },
-    { key: "forWD", header: "For WD", sortKey: "forWD" },
     { key: "minWd", header: "Min. WD" },
     {
       key: "dpProcess",
@@ -126,7 +155,7 @@ function CompaniesTable({ rows, sort, onSort, onEdit, onImageClick, loading }) {
   ];
 
   return (
-    <div className="jw-adminTableWrap">
+    <div className="jw-adminTableWrap jw-adminWalletsTableWrap">
       <table className="jw-adminTable">
         <thead>
           <tr>
@@ -152,12 +181,12 @@ function CompaniesTable({ rows, sort, onSort, onEdit, onImageClick, loading }) {
           {isLoading ? (
             Array.from({ length: 5 }).map((_, i) => (
               <tr key={`sk-${i}`}>
-                <td colSpan={9}><div className="jw-adminSkeleton" style={{ height: 20 }} /></td>
+                <td colSpan={7}><div className="jw-adminSkeleton" style={{ height: 20 }} /></td>
               </tr>
             ))
           ) : isEmpty ? (
             <tr>
-              <td colSpan={9} className="jw-adminEmpty">No results found</td>
+              <td colSpan={7} className="jw-adminEmpty">No results found</td>
             </tr>
           ) : (
             rows.map((r) => {
@@ -165,8 +194,6 @@ function CompaniesTable({ rows, sort, onSort, onEdit, onImageClick, loading }) {
               return (
                 <tr key={r.id}>
                   <td>{r.name}</td>
-                  <td>{r.forDP ?? "—"}</td>
-                  <td>{r.forWD ?? "—"}</td>
                   <td>{formatWalletCompanyMinWithdraw(r.minWithdraw)}</td>
                   <td>{formatWalletCompanyProcessMins(r.depositProcessMinutes)}</td>
                   <td>{formatWalletCompanyProcessMins(r.withdrawProcessMinutes)}</td>
@@ -185,14 +212,17 @@ function CompaniesTable({ rows, sort, onSort, onEdit, onImageClick, loading }) {
                     )}
                   </td>
                   <td className="jw-adminTd__actions">
-                    <button
-                      type="button"
-                      className="jw-adminEditBtn"
-                      title="Edit"
-                      onClick={() => onEdit?.(r)}
-                    >
-                      <EditIcon />
-                    </button>
+                    <div className="jw-adminTd__actionsInner">
+                      <WalletDpWdBadges deposit={r.forDP} withdraw={r.forWD} />
+                      <button
+                        type="button"
+                        className="jw-adminEditBtn"
+                        title="Edit"
+                        onClick={() => onEdit?.(r)}
+                      >
+                        <EditIcon />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );
@@ -535,7 +565,7 @@ function PaymentWalletsTable({ rows, sort, onSort, onEdit, onQrClick, loading })
     { key: "actions", header: "Actions" },
   ];
   return (
-    <div className="jw-adminTableWrap">
+    <div className="jw-adminTableWrap jw-adminWalletsTableWrap">
       <table className="jw-adminTable">
         <thead>
           <tr>
@@ -573,7 +603,12 @@ function PaymentWalletsTable({ rows, sort, onSort, onEdit, onQrClick, loading })
                   )}
                 </td>
                 <td className="jw-adminTd__actions">
-                  <button type="button" className="jw-adminEditBtn" title="Edit" onClick={() => onEdit?.(r)}><EditIcon /></button>
+                  <div className="jw-adminTd__actionsInner">
+                    <WalletDpWdBadges deposit={r.availableForDeposit} withdraw={r.availableForWithdraw} />
+                    <button type="button" className="jw-adminEditBtn" title="Edit" onClick={() => onEdit?.(r)}>
+                      <EditIcon />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))
@@ -639,8 +674,20 @@ export default function WalletsPage() {
   const [imagePopup, setImagePopup] = useState({ open: false, src: null, name: "" });
 
   // Payment Wallets tab state
-  const [pwFilters, setPwFilters] = useState({ name: "", number: "", status: "" });
-  const [pwApplied, setPwApplied] = useState({ name: "", number: "", status: "" });
+  const [pwFilters, setPwFilters] = useState({
+    name: "",
+    number: "",
+    status: "",
+    companyId: "",
+    availability: "",
+  });
+  const [pwApplied, setPwApplied] = useState({
+    name: "",
+    number: "",
+    status: "",
+    companyId: "",
+    availability: "",
+  });
   const [pwSort, setPwSort] = useState({ key: "name", dir: "asc" });
   const [pwPage, setPwPage] = useState(1);
   const [pwPageSize, setPwPageSize] = useState(25);
@@ -669,6 +716,7 @@ export default function WalletsPage() {
   const [pwAdjustSaving, setPwAdjustSaving] = useState(false);
   const [pwAdjustError, setPwAdjustError] = useState("");
   const [adminAccountBalance, setAdminAccountBalance] = useState(null);
+  const [pwAvailabilityStats, setPwAvailabilityStats] = useState({ forDeposit: 0, forWithdraw: 0 });
   const [qrPopup, setQrPopup] = useState({ open: false, src: null, name: "" });
 
   const openImagePopup = (row) => {
@@ -727,6 +775,8 @@ export default function WalletsPage() {
       name: pwApplied.name,
       number: pwApplied.number,
       status: pwApplied.status,
+      companyId: pwApplied.companyId || undefined,
+      availability: pwApplied.availability || undefined,
       page: pwPage,
       pageSize: pwPageSize,
       sortKey: pwSort.key,
@@ -743,14 +793,29 @@ export default function WalletsPage() {
         if (!data.items) {
           setPwRows([]);
           setPwTotal(0);
+          setPwAvailabilityStats({ forDeposit: 0, forWithdraw: 0 });
           setPwErrorText(data?.message || "Unable to load.");
           return;
         }
         setPwRows(data.items);
         setPwTotal(Number(data.total || 0));
+        const stats = data.availabilityStats;
+        setPwAvailabilityStats(
+          stats && typeof stats === "object"
+            ? {
+                forDeposit: Number(stats.forDeposit) || 0,
+                forWithdraw: Number(stats.forWithdraw) || 0,
+              }
+            : { forDeposit: 0, forWithdraw: 0 }
+        );
       })
       .catch(() => {
-        if (!ignore) setPwRows([]), setPwTotal(0), setPwErrorText("Unable to load payment wallets.");
+        if (!ignore) {
+          setPwRows([]);
+          setPwTotal(0);
+          setPwAvailabilityStats({ forDeposit: 0, forWithdraw: 0 });
+          setPwErrorText("Unable to load payment wallets.");
+        }
       })
       .finally(() => { if (!ignore) setPwLoading(false); });
     return () => { ignore = true; };
@@ -798,7 +863,7 @@ export default function WalletsPage() {
   };
 
   const pwOnClear = () => {
-    setPwFilters({ name: "", number: "", status: "" });
+    setPwFilters({ name: "", number: "", status: "", companyId: "", availability: "" });
   };
 
   const pwOnSort = (sortKey) => {
@@ -1100,12 +1165,41 @@ export default function WalletsPage() {
           </div>
         </div>
       }
+      summaryExtra={
+        <div className="jw-adminFilterField">
+          <div className="jw-adminFilterField__label">Wallets Availability</div>
+          <div className="jw-adminFilterField__control">
+            <div>
+              For Deposit:{" "}
+              <span style={{ fontSize: 20 }}>{pwAvailabilityStats.forDeposit.toLocaleString()}</span>
+            </div>
+            <div>
+              For Withdraw:{" "}
+              <span style={{ fontSize: 20 }}>{pwAvailabilityStats.forWithdraw.toLocaleString()}</span>
+            </div>
+          </div>
+        </div>
+      }
     >
       <AdminFilterField label="Name">
         <AdminInput value={pwFilters.name} onChange={(v) => setPwFilters((f) => ({ ...f, name: v }))} placeholder="Please Enter" />
       </AdminFilterField>
       <AdminFilterField label="Number">
         <AdminInput value={pwFilters.number} onChange={(v) => setPwFilters((f) => ({ ...f, number: v }))} placeholder="Please Enter" />
+      </AdminFilterField>
+      <AdminFilterField label="Company">
+        <select
+          className={`jw-adminInput ${!pwFilters.companyId ? "jw-adminInput--placeholder" : ""}`}
+          value={pwFilters.companyId}
+          onChange={(e) => setPwFilters((f) => ({ ...f, companyId: e.target.value }))}
+        >
+          <option value="">Please Select</option>
+          {(walletCompaniesActive || []).map((c) => (
+            <option key={c.id} value={String(c.id)}>
+              {c.name ?? `Company #${c.id}`}
+            </option>
+          ))}
+        </select>
       </AdminFilterField>
       <AdminFilterField label="Status">
         <select
@@ -1118,16 +1212,69 @@ export default function WalletsPage() {
           <option value="inactive">Inactive</option>
         </select>
       </AdminFilterField>
+      <AdminFilterField label="Availability">
+        <select
+          className={`jw-adminInput ${!pwFilters.availability ? "jw-adminInput--placeholder" : ""}`}
+          value={pwFilters.availability}
+          onChange={(e) => setPwFilters((f) => ({ ...f, availability: e.target.value }))}
+        >
+          <option value="">Please Select</option>
+          <option value="deposit">Deposit</option>
+          <option value="withdraw">Withdraw</option>
+        </select>
+      </AdminFilterField>
       <AdminFilterField label="">
         <AdminButton variant="green" onClick={() => { setPwCreateForm({ name: "", number: "", walletCompanyId: "", minDeposit: "", minWithdraw: "", maxDeposit: "", maxWithdraw: "", qrImageBase64: "", availableForDeposit: "yes", availableForWithdraw: "yes", sortOrder: "" }); setPwCreateError(""); setPwCreateOpen(true); }}>
           <span className="jw-adminCreateBtnInner">Create <Plus size={16} style={{ verticalAlign: "middle", marginLeft: 4 }} /></span>
         </AdminButton>
       </AdminFilterField>
       <AdminFilterField label="">
-        <AdminButton variant="light" onClick={() => { setPwAdjustType("topup"); setPwAdjustWalletId(""); setPwAdjustAmount(""); setPwAdjustNotes(""); setPwAdjustError(""); setPwAdjustOpen(true); }}>TopUp</AdminButton>
+        <AdminButton
+          variant="light"
+          onClick={() => {
+            setPwAdjustType("topup");
+            setPwAdjustWalletId("");
+            setPwAdjustAmount("");
+            setPwAdjustNotes("");
+            setPwAdjustError("");
+            setPwAdjustOpen(true);
+          }}
+        >
+          <span className="jw-adminWalletAdjustBtnInner">
+            TopUp{" "}
+            <Plus
+              size={16}
+              strokeWidth={2}
+              className="jw-adminWalletAdjustBtnInner__plusIcon"
+              style={{ verticalAlign: "middle", marginLeft: 4 }}
+              aria-hidden
+            />
+          </span>
+        </AdminButton>
       </AdminFilterField>
       <AdminFilterField label="">
-        <AdminButton variant="light" onClick={() => { setPwAdjustType("deduct"); setPwAdjustWalletId(""); setPwAdjustAmount(""); setPwAdjustNotes(""); setPwAdjustError(""); setPwAdjustOpen(true); }}>Deduct</AdminButton>
+        <AdminButton
+          variant="light"
+          onClick={() => {
+            setPwAdjustType("deduct");
+            setPwAdjustWalletId("");
+            setPwAdjustAmount("");
+            setPwAdjustNotes("");
+            setPwAdjustError("");
+            setPwAdjustOpen(true);
+          }}
+        >
+          <span className="jw-adminWalletAdjustBtnInner">
+            Deduct{" "}
+            <Minus
+              size={16}
+              strokeWidth={2}
+              className="jw-adminWalletAdjustBtnInner__minusIcon"
+              style={{ verticalAlign: "middle", marginLeft: 4 }}
+              aria-hidden
+            />
+          </span>
+        </AdminButton>
       </AdminFilterField>
     </AdminFilterBar>
   );

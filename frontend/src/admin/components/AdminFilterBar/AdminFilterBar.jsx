@@ -42,6 +42,7 @@ export function AdminButton({
 export default function AdminFilterBar({
   children,
   summary,
+  summaryExtra,
   actions,
   onClear,
   onSubmit,
@@ -58,6 +59,9 @@ export default function AdminFilterBar({
         <div className="jw-adminFilterBar__actionsBottom">
           {summary ? (
             <div className="jw-adminFilterBar__summary">{summary}</div>
+          ) : null}
+          {summaryExtra ? (
+            <div className="jw-adminFilterBar__summary">{summaryExtra}</div>
           ) : null}
           <div className="jw-adminFilterBar__buttons">
             {actions ? (

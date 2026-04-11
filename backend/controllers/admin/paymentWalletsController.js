@@ -47,7 +47,7 @@ const SORT_MAP = {
 
 /**
  * GET /api/admin/payment-wallets
- * List with filters: name, number, status. Pagination, sort.
+ * List with filters: name, number, status, companyId, availability (deposit | withdraw). Pagination, sort.
  */
 exports.getAdminPaymentWallets = async (req, res) => {
   try {
@@ -79,6 +79,12 @@ exports.getAdminPaymentWallets = async (req, res) => {
       where.push("p.wallet_company_id = ?");
       params.push(companyId);
     }
+    const availability = String(req.query.availability || "").trim().toLowerCase();
+    if (availability === "deposit") {
+      where.push("p.available_for_deposit = 1");
+    } else if (availability === "withdraw") {
+      where.push("p.available_for_withdraw = 1");
+    }
 
     const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
 
@@ -91,9 +97,33 @@ exports.getAdminPaymentWallets = async (req, res) => {
       total = Number(countRows?.[0]?.total || 0);
     } catch (e) {
       if (e.code === "ER_NO_SUCH_TABLE") {
-        return res.status(200).json({ items: [], total: 0, page: 1, pageSize, sortKey: "name", sortDir: "asc" });
+        return res.status(200).json({
+          items: [],
+          total: 0,
+          page: 1,
+          pageSize,
+          sortKey: "name",
+          sortDir: "asc",
+          availabilityStats: { forDeposit: 0, forWithdraw: 0 },
+        });
       }
       throw e;
+    }
+
+    let availabilityStats = { forDeposit: 0, forWithdraw: 0 };
+    try {
+      const [[statsRow]] = await pool.query(
+        `SELECT
+          COALESCE(SUM(CASE WHEN available_for_deposit = 1 THEN 1 ELSE 0 END), 0) AS for_deposit,
+          COALESCE(SUM(CASE WHEN available_for_withdraw = 1 THEN 1 ELSE 0 END), 0) AS for_withdraw
+         FROM payment_wallets`
+      );
+      availabilityStats = {
+        forDeposit: Number(statsRow?.for_deposit || 0),
+        forWithdraw: Number(statsRow?.for_withdraw || 0),
+      };
+    } catch (e) {
+      if (e.code !== "ER_NO_SUCH_TABLE") throw e;
     }
 
     const offset = (page - 1) * pageSize;
@@ -115,7 +145,15 @@ exports.getAdminPaymentWallets = async (req, res) => {
       rows = dataRows;
     } catch (e) {
       if (e.code === "ER_NO_SUCH_TABLE") {
-        return res.status(200).json({ items: [], total: 0, page: 1, pageSize, sortKey: "name", sortDir: "asc" });
+        return res.status(200).json({
+          items: [],
+          total: 0,
+          page: 1,
+          pageSize,
+          sortKey: "name",
+          sortDir: "asc",
+          availabilityStats,
+        });
       }
       throw e;
     }
@@ -147,6 +185,7 @@ exports.getAdminPaymentWallets = async (req, res) => {
       pageSize,
       sortKey,
       sortDir: sortDir.toLowerCase(),
+      availabilityStats,
     });
   } catch (err) {
     console.error("getAdminPaymentWallets error:", err);
