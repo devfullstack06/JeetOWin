@@ -106,39 +106,63 @@
   background: #f1c400;
 }
 
-.jw-accountsListStep .jw-accountsTableRow--pending {
-  cursor: pointer;
-}
-
-.jw-accountsListStep .jw-accountsTableRow--pending:focus-visible {
-  outline: 2px solid rgba(255, 255, 255, 0.55);
-  outline-offset: -2px;
-}
-
-.jw-accountsListStep .jw-accountsActionIcons--ticket {
-  justify-content: flex-end;
-}
-
-/* List step: 4-column table (inherits .jw-walletsDataTable from walletsBody.css) */
+/* List step: Username | Brand | Status | Actions (inherits .jw-walletsDataTable from walletsBody.css) */
 .jw-accountsListStep .jw-accountsDataTable col.jw-accountsColUser {
-  width: 26%;
-}
-
-.jw-accountsListStep .jw-accountsDataTable col.jw-accountsColCreated {
-  width: 22%;
+  width: 28%;
 }
 
 .jw-accountsListStep .jw-accountsDataTable col.jw-accountsColBrand {
+  width: 26%;
+}
+
+.jw-accountsListStep .jw-accountsDataTable col.jw-accountsColStatus {
   width: 28%;
 }
 
 .jw-accountsListStep .jw-accountsDataTable col.jw-accountsColAction {
-  width: 24%;
+  width: 18%;
+}
+
+/* Same status pill as admin (/admin/accounts/list) */
+.jw-accountsListStep .jw-adminStatus,
+.jw-accountsDetailModal .jw-adminStatus {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.jw-accountsListStep .jw-adminStatus.is-active,
+.jw-accountsDetailModal .jw-adminStatus.is-active {
+  background: #eaf8ef;
+  color: #159447;
+}
+
+.jw-accountsListStep .jw-adminStatus.is-inactive,
+.jw-accountsDetailModal .jw-adminStatus.is-inactive {
+  background: #f2f2f2;
+  color: #666;
+}
+
+.jw-accountsListStep .jw-adminStatus.is-pending,
+.jw-accountsDetailModal .jw-adminStatus.is-pending {
+  background: rgba(241, 196, 0, 0.22);
+  color: #f1c400;
+}
+
+.jw-accountsDetailModal__statusFallback {
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.jw-accountsListStep .jw-accountsColStatusCell {
+  vertical-align: middle;
 }
 
 .jw-accountsListStep .jw-accountsRowAction {
   text-align: right;
   white-space: nowrap;
+  padding: 10px 20px;
 }
 
 .jw-accountsListStep .jw-accountsRowAction .jw-accountsActionIcons {

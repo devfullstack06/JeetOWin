@@ -91,70 +91,67 @@ router.get("/brands", authenticateToken, requireClient, async (req, res) => {
   }
 });
 
+function mapClientAccountRow(r, statusFallback) {
+  const statusRaw =
+    statusFallback != null
+      ? statusFallback
+      : r.status != null
+        ? String(r.status).trim().toLowerCase()
+        : "active";
+  const status = statusRaw === "inactive" ? "Inactive" : "Active";
+  return {
+    id: r.id,
+    brand: r.brand,
+    username: r.username,
+    status,
+    createdAt: r.created_at ? new Date(r.created_at).toISOString() : null,
+    initialPassword:
+      r.initial_password != null && String(r.initial_password).trim() !== ""
+        ? String(r.initial_password)
+        : null,
+    websiteUrl:
+      r.brand_website_url != null && String(r.brand_website_url).trim() !== ""
+        ? String(r.brand_website_url).trim()
+        : null,
+  };
+}
+
 /**
  * GET /api/accounts
  * Returns client's created accounts (approved ones).
  */
 router.get("/", authenticateToken, requireClient, async (req, res) => {
-  try {
-    const [rows] = await pool.query(
-      `SELECT ca.id, ca.brand, ca.username, ca.created_at, ca.initial_password,
-              bc.website_url AS brand_website_url
-       FROM client_accounts ca
+  const clientId = req.user.userId;
+  const baseJoin = `FROM client_accounts ca
        LEFT JOIN brand_companies bc ON bc.id = ca.brand_company_id
        WHERE ca.client_id = ?
-       ORDER BY ca.created_at DESC`,
-      [req.user.userId]
-    );
+       ORDER BY ca.created_at DESC`;
 
-    const accounts = rows.map((r) => ({
-      id: r.id,
-      brand: r.brand,
-      username: r.username,
-      createdAt: r.created_at ? new Date(r.created_at).toISOString() : null,
-      initialPassword:
-        r.initial_password != null && String(r.initial_password).trim() !== ""
-          ? String(r.initial_password)
-          : null,
-      websiteUrl:
-        r.brand_website_url != null && String(r.brand_website_url).trim() !== ""
-          ? String(r.brand_website_url).trim()
-          : null,
-    }));
+  const tryQueries = [
+    `SELECT ca.id, ca.brand, ca.username, ca.created_at, ca.initial_password, ca.status,
+            bc.website_url AS brand_website_url ${baseJoin}`,
+    `SELECT ca.id, ca.brand, ca.username, ca.created_at, ca.initial_password,
+            bc.website_url AS brand_website_url ${baseJoin}`,
+    `SELECT ca.id, ca.brand, ca.username, ca.created_at, ca.status,
+            bc.website_url AS brand_website_url ${baseJoin}`,
+    `SELECT ca.id, ca.brand, ca.username, ca.created_at,
+            bc.website_url AS brand_website_url ${baseJoin}`,
+  ];
 
-    return res.json({ accounts });
-  } catch (e) {
-    if (e.code === "ER_BAD_FIELD_ERROR" && String(e.sqlMessage || "").includes("initial_password")) {
-      try {
-        const [rows] = await pool.query(
-          `SELECT ca.id, ca.brand, ca.username, ca.created_at,
-                  bc.website_url AS brand_website_url
-           FROM client_accounts ca
-           LEFT JOIN brand_companies bc ON bc.id = ca.brand_company_id
-           WHERE ca.client_id = ?
-           ORDER BY ca.created_at DESC`,
-          [req.user.userId]
-        );
-        const accounts = rows.map((r) => ({
-          id: r.id,
-          brand: r.brand,
-          username: r.username,
-          createdAt: r.created_at ? new Date(r.created_at).toISOString() : null,
-          initialPassword: null,
-          websiteUrl:
-            r.brand_website_url != null && String(r.brand_website_url).trim() !== ""
-              ? String(r.brand_website_url).trim()
-              : null,
-        }));
-        return res.json({ accounts });
-      } catch (e2) {
-        console.error("[accounts] GET / error:", e2);
+  for (let i = 0; i < tryQueries.length; i++) {
+    try {
+      const [rows] = await pool.query(tryQueries[i], [clientId]);
+      const statusFallback = i === 1 || i === 3 ? "active" : null;
+      const accounts = (rows || []).map((r) => mapClientAccountRow(r, statusFallback));
+      return res.json({ accounts });
+    } catch (e) {
+      if (e.code !== "ER_BAD_FIELD_ERROR") {
+        console.error("[accounts] GET / error:", e);
         return res.json({ accounts: [] });
       }
     }
-    console.error("[accounts] GET / error:", e);
-    return res.json({ accounts: [] });
   }
+  return res.json({ accounts: [] });
 });
 
 /**

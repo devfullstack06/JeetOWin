@@ -39,6 +39,32 @@ function formatTicketStatus(status) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
+/** Active / Inactive pill — matches admin `jw-adminStatus` */
+function AccountStatusBadge({ status }) {
+  const isActive = status !== "Inactive";
+  return (
+    <span className={`jw-adminStatus ${isActive ? "is-active" : "is-inactive"}`}>
+      {isActive ? "Active" : "Inactive"}
+    </span>
+  );
+}
+
+/** Account ticket status in View modal — same pill system as list + account modal */
+function TicketStatusBadge({ status }) {
+  const s = String(status || "").trim().toLowerCase();
+  if (!s) return <span className="jw-accountsDetailModal__statusFallback">—</span>;
+  if (s === "pending") {
+    return <span className="jw-adminStatus is-pending">Pending</span>;
+  }
+  if (s === "approved") {
+    return <span className="jw-adminStatus is-active">Approved</span>;
+  }
+  if (s === "rejected") {
+    return <span className="jw-adminStatus is-inactive">Rejected</span>;
+  }
+  return <span className="jw-adminStatus is-inactive">{formatTicketStatus(status)}</span>;
+}
+
 function accountWebsiteHref(url) {
   const s = String(url || "").trim();
   if (!s) return "";
@@ -286,6 +312,12 @@ export default function AccountsListStep({
                 </dd>
               </div>
               <div className="jw-accountsDetailModal__row">
+                <dt>Status:</dt>
+                <dd>
+                  <AccountStatusBadge status={detailAccount.status} />
+                </dd>
+              </div>
+              <div className="jw-accountsDetailModal__row">
                 <dt>Created at:</dt>
                 <dd>{formatRequestedAt(detailAccount.createdAt)}</dd>
               </div>
@@ -350,7 +382,9 @@ export default function AccountsListStep({
               </div>
               <div className="jw-accountsDetailModal__row">
                 <dt>Status:</dt>
-                <dd>{formatTicketStatus(detailTicket.status)}</dd>
+                <dd>
+                  <TicketStatusBadge status={detailTicket.status} />
+                </dd>
               </div>
             </dl>
           </div>
@@ -416,18 +450,18 @@ export default function AccountsListStep({
         <table className="jw-walletsDataTable jw-accountsDataTable">
           <colgroup>
             <col className="jw-accountsColUser" />
-            <col className="jw-accountsColCreated" />
             <col className="jw-accountsColBrand" />
+            <col className="jw-accountsColStatus" />
             <col className="jw-accountsColAction" />
           </colgroup>
           <thead>
             <tr>
               <th scope="col">Username</th>
               <th scope="col" className="jw-walletsThCenter">
-                Created
+                Brand
               </th>
               <th scope="col" className="jw-walletsThCenter">
-                Brand
+                Status
               </th>
               <th scope="col" className="jw-walletsThRight">
                 Actions
@@ -453,25 +487,22 @@ export default function AccountsListStep({
                     ? t.suggestedUsername
                     : "—";
                   return (
-                    <tr
-                      key={row.rowKey}
-                      className="jw-accountsTableRow--pending"
-                      onClick={() => openTicketDetail(t)}
-                    >
+                    <tr key={row.rowKey}>
                       <td className="jw-walletColName">{suggested}</td>
-                      <td className="jw-walletColWallet">{formatCreatedDate(t.createdAt)}</td>
                       <td className="jw-walletColWallet">{t.brand}</td>
+                      <td className="jw-walletColWallet jw-accountsColStatusCell">
+                        <span className="jw-adminStatus is-pending">Pending</span>
+                      </td>
                       <td className="jw-walletColNumber jw-accountsRowAction">
-                        <div className="jw-accountsActionIcons jw-accountsActionIcons--ticket">
+                        <div className="jw-accountsActionIcons">
                           <button
                             type="button"
-                            className="jw-transferBtnOut"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              openTicketDetail(t);
-                            }}
+                            className="jw-historyViewBtn"
+                            aria-label={`View pending ticket for ${suggested}`}
+                            title="View"
+                            onClick={() => openTicketDetail(t)}
                           >
-                            Pending
+                            <Eye size={16} strokeWidth={2} aria-hidden />
                           </button>
                         </div>
                       </td>
@@ -482,8 +513,10 @@ export default function AccountsListStep({
                 return (
                   <tr key={row.rowKey}>
                     <td className="jw-walletColName">{acc.username}</td>
-                    <td className="jw-walletColWallet">{formatCreatedDate(acc.createdAt)}</td>
                     <td className="jw-walletColWallet">{acc.brand}</td>
+                    <td className="jw-walletColWallet jw-accountsColStatusCell">
+                      <AccountStatusBadge status={acc.status} />
+                    </td>
                     <td className="jw-walletColNumber jw-accountsRowAction">
                       <div className="jw-accountsActionIcons">
                         <button
