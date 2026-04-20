@@ -1,0 +1,163 @@
+.jw-shareModalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100100;
+  background: rgba(7, 19, 54, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 16px;
+  box-sizing: border-box;
+}
+
+.jw-shareModal {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  max-height: min(90dvh, 640px);
+  overflow: auto;
+  background: #fff;
+  border-radius: 16px;
+  padding: 22px 18px 18px;
+  box-shadow: 0 24px 56px rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(7, 19, 54, 0.08);
+  -webkit-overflow-scrolling: touch;
+}
+
+.jw-shareModal__close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 10px;
+  background: rgba(7, 19, 54, 0.06);
+  color: #071336;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.jw-shareModal__close:hover {
+  background: rgba(7, 19, 54, 0.11);
+}
+
+.jw-shareModal__title {
+  margin: 0 40px 6px 0;
+  font-size: 18px;
+  font-weight: 700;
+  font-family: var(--jw-font);
+  color: #071336;
+}
+
+.jw-shareModal__sub {
+  margin: 0 40px 16px 0;
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.45;
+  word-break: break-all;
+}
+
+.jw-shareModal__hint {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  font-size: 13px;
+  color: #166534;
+  line-height: 1.4;
+}
+
+.jw-shareModal__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (min-width: 380px) {
+  .jw-shareModal__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.jw-shareModal__btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 88px;
+  padding: 12px 8px;
+  border: 1px solid rgba(7, 19, 54, 0.1);
+  border-radius: 12px;
+  background: #f8fafc;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--jw-font);
+  color: #0f172a;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.jw-shareModal__btn:hover {
+  background: #eef2ff;
+  border-color: rgba(7, 19, 54, 0.18);
+}
+
+.jw-shareModal__btn:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.jw-shareModal__iconWrap {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+.jw-shareModal__iconWrap svg {
+  flex-shrink: 0;
+}
+
+.jw-shareModal__iconWrap--wa {
+  background: #25d366;
+}
+.jw-shareModal__iconWrap--tg {
+  background: #229ed9;
+}
+.jw-shareModal__iconWrap--ig {
+  background: linear-gradient(135deg, #f58529, #dd2a7b, #8134af);
+}
+.jw-shareModal__iconWrap--sms {
+  background: #64748b;
+}
+.jw-shareModal__iconWrap--mail {
+  background: #6366f1;
+}
+.jw-shareModal__iconWrap--fb {
+  background: #1877f2;
+}
+.jw-shareModal__iconWrap--x {
+  background: #000;
+}
+.jw-shareModal__iconWrap--copy {
+  background: #071336;
+}
+
+.jw-shareModal__iconSvg {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+
+.jw-shareModal__btnLabel {
+  text-align: center;
+  line-height: 1.2;
+}

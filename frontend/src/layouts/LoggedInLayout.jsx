@@ -62,6 +62,13 @@ export default function LoggedInLayout({ activeId = "dashboard", children }) {
     const syncHeaderHeight = () => {
       const h = el.getBoundingClientRect().height;
       if (h > 0) root.style.setProperty("--jw-header-h", `${Math.round(h)}px`);
+
+      /* Mobile drawer: start below logo row (jw-landingTop), not under full header + ticker */
+      const topRow = el.querySelector(".jw-landingTop");
+      if (topRow) {
+        const belowLogo = Math.round(topRow.getBoundingClientRect().bottom) + 6;
+        root.style.setProperty("--jw-leftnav-drawer-top", `${belowLogo}px`);
+      }
     };
 
     syncHeaderHeight();
@@ -74,6 +81,7 @@ export default function LoggedInLayout({ activeId = "dashboard", children }) {
       window.removeEventListener("resize", syncHeaderHeight);
       window.removeEventListener("orientationchange", syncHeaderHeight);
       root.style.removeProperty("--jw-header-h");
+      root.style.removeProperty("--jw-leftnav-drawer-top");
     };
   }, []);
 

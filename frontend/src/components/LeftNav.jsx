@@ -14,7 +14,9 @@ import {
   X,
   ArrowUpDown,
   History,
+  Share2,
 } from "lucide-react";
+import ShareJeetOWinModal from "./ShareJeetOWinModal";
 import "./leftNav.css";
 
 export default function LeftNav({
@@ -40,6 +42,7 @@ export default function LeftNav({
   // ✅ default balance is shown
   const [isBalanceHidden, setIsBalanceHidden] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   const pages = useMemo(
     () => [
@@ -150,9 +153,24 @@ export default function LeftNav({
     </div>
   );
 
+  const openShareModal = () => {
+    setShareOpen(true);
+    if (variant === "drawer") onClose();
+  };
+
   const FooterSection = (
     <div className="jw-leftNavFooter">
       <div className="jw-leftNavList jw-leftNavLinks" aria-label="Links">
+        <button
+          type="button"
+          className="jw-leftNavItem"
+          onClick={openShareModal}
+        >
+          <span className="jw-leftNavItemLabel">Share</span>
+          <span className="jw-leftNavItemIcon" aria-hidden="true">
+            <Share2 size={20} />
+          </span>
+        </button>
         {links.map((it) => (
           <button
             key={it.id}
@@ -193,20 +211,28 @@ export default function LeftNav({
 
   if (variant === "drawer") {
     return (
-      <div className={`jw-leftNavDrawer ${isOpen ? "is-open" : ""}`} aria-hidden={!isOpen}>
-        <button
-          type="button"
-          className={`jw-leftNavOverlay ${isOpen ? "is-open" : ""}`}
-          aria-label="Close menu overlay"
-          onClick={onClose}
-          tabIndex={isOpen ? 0 : -1}
-        />
-        <div className={`jw-leftNavDrawerPanel ${isOpen ? "is-open" : ""}`}>
-          {NavPanel}
+      <>
+        <div className={`jw-leftNavDrawer ${isOpen ? "is-open" : ""}`} aria-hidden={!isOpen}>
+          <button
+            type="button"
+            className={`jw-leftNavOverlay ${isOpen ? "is-open" : ""}`}
+            aria-label="Close menu overlay"
+            onClick={onClose}
+            tabIndex={isOpen ? 0 : -1}
+          />
+          <div className={`jw-leftNavDrawerPanel ${isOpen ? "is-open" : ""}`}>
+            {NavPanel}
+          </div>
         </div>
-      </div>
+        <ShareJeetOWinModal open={shareOpen} onClose={() => setShareOpen(false)} />
+      </>
     );
   }
 
-  return <div className="jw-leftNavDesktop">{NavPanel}</div>;
+  return (
+    <>
+      <div className="jw-leftNavDesktop">{NavPanel}</div>
+      <ShareJeetOWinModal open={shareOpen} onClose={() => setShareOpen(false)} />
+    </>
+  );
 }
