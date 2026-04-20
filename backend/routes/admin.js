@@ -127,7 +127,10 @@ const {
   rejectAdminTransferTicket,
   patchAdminTransferTicket,
 } = require("../controllers/admin/transferTicketsController");
-const { getAdminDashboard } = require("../controllers/admin/dashboardController");
+const {
+  getAdminDashboard,
+  getAdminPendingTicketNotifications,
+} = require("../controllers/admin/dashboardController");
 const {
   getAdminChatWidgetSettings,
   patchAdminChatWidgetSettings,
@@ -140,6 +143,11 @@ const {
 const router = express.Router();
 
 router.get("/dashboard", requireAdminAuth, getAdminDashboard);
+router.get(
+  "/notifications/pending-tickets",
+  requireAdminAuth,
+  getAdminPendingTicketNotifications
+);
 router.get("/chat-widget-settings", requireAdminAuth, getAdminChatWidgetSettings);
 router.patch("/chat-widget-settings", requireAdminAuth, patchAdminChatWidgetSettings);
 router.get("/chat-widget-events", requireAdminAuth, getAdminChatWidgetEvents);

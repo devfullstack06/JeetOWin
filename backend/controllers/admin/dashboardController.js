@@ -295,3 +295,37 @@ exports.getAdminDashboard = async (req, res) => {
     });
   }
 };
+
+/**
+ * GET /api/admin/notifications/pending-tickets
+ * Lightweight pending-queue counts for admin header (same definitions as dashboard queues).
+ */
+exports.getAdminPendingTicketNotifications = async (req, res) => {
+  try {
+    const [accountsPending, transfersPending, depositsPending, withdrawsPending] =
+      await Promise.all([
+        scalarCount(
+          `SELECT COUNT(*) AS c FROM account_tickets WHERE LOWER(TRIM(status)) = 'pending'`
+        ),
+        scalarCount(`SELECT COUNT(*) AS c FROM transfer_tickets WHERE status = 'pending'`),
+        scalarCount(
+          `SELECT COUNT(*) AS c FROM deposit_tickets WHERE LOWER(TRIM(status)) = 'pending'`
+        ),
+        scalarCount(
+          `SELECT COUNT(*) AS c FROM withdraw_tickets WHERE LOWER(TRIM(status)) = 'pending'`
+        ),
+      ]);
+    const totalPending =
+      accountsPending + transfersPending + depositsPending + withdrawsPending;
+    return res.json({
+      accountsPending,
+      transfersPending,
+      depositsPending,
+      withdrawsPending,
+      totalPending,
+    });
+  } catch (e) {
+    console.error("[admin pending notifications] error:", e);
+    return res.status(500).json({ message: "Failed to load pending ticket counts." });
+  }
+};
