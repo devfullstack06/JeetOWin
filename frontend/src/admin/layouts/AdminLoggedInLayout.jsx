@@ -3,6 +3,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import AdminHeader from "../components/AdminHeader";
 import AdminLeftNav from "../components/AdminLeftNav";
 import { adminNavGroups, findAdminItemByPath } from "../adminNav";
+import { installAdminUnauthorizedFetchInterceptor } from "../adminUnauthorizedSession";
+import { startIdleLogout } from "../../utils/idleLogout";
 import "./adminLoggedInLayout.css";
 
 export default function AdminLoggedInLayout({ children }) {
@@ -45,6 +47,20 @@ export default function AdminLoggedInLayout({ children }) {
   useEffect(() => {
     if (role && role !== "admin") navigate("/login", { replace: true });
   }, [role, navigate]);
+
+  // ✅ Expired/invalid admin token: any 401 from /api/admin/* logs out and opens login
+  useEffect(() => {
+    return installAdminUnauthorizedFetchInterceptor();
+  }, []);
+
+  // ✅ admin idle auto-logout (3 hours)
+  useEffect(() => {
+    const stop = startIdleLogout({
+      timeoutMs: 3 * 60 * 60 * 1000,
+      onLogout: () => navigate("/login", { replace: true }),
+    });
+    return stop;
+  }, [navigate]);
 
   // ✅ Number inputs: do not change value on mouse wheel or ArrowUp/ArrowDown (all admin forms/modals)
   useEffect(() => {

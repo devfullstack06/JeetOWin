@@ -39,6 +39,18 @@ export default function Login() {
     }
   }, []);
 
+  // Admin session expired (invalid/expired JWT) — hard redirect from admin layout
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("reason") !== "session_expired") return;
+      setError("Your session has expired. Please sign in again.");
+      window.history.replaceState({}, document.title, "/login");
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
   // Auto-redirect if already logged in (client/admin)
   useEffect(() => {
     const token = localStorage.getItem("token");

@@ -62,10 +62,16 @@ function isLocallyDisabled() {
   }
 }
 
+/** Tawk loads async; hideWidget is a no-op until Tawk_API exists — retry a few times after route changes. */
+const HIDE_WIDGET_RETRY_MS = [0, 50, 150, 400, 1000, 2500, 5000];
+
 export default function ClientChatWidget() {
   const location = useLocation();
   const [settings, setSettings] = useState(() => normalizeSettings(ENV_FALLBACK_SETTINGS));
   const loadedScriptRef = useRef("");
+  /** Always read latest route / visibility inside Tawk onLoad (avoids stale closure). */
+  const tawkGateRef = useRef({ shouldShow: false, startMinimized: true });
+
   const effective = useMemo(() => normalizeSettings(settings), [settings]);
   const enabledForRoute = useMemo(
     () =>
@@ -76,6 +82,8 @@ export default function ClientChatWidget() {
     [location.pathname, effective.hideOnAdmin, effective.hideOnAuth]
   );
   const shouldShow = effective.enabled && effective.provider !== "none" && enabledForRoute && !isLocallyDisabled();
+
+  tawkGateRef.current = { shouldShow, startMinimized: effective.startMinimized };
 
   useEffect(() => {
     let ignore = false;
@@ -98,20 +106,22 @@ export default function ClientChatWidget() {
       window.Tawk_API?.hideWidget?.();
       return;
     }
-    if (!shouldShow) {
-      // Do not inject/load widget on routes where it must stay hidden.
-      window.Tawk_API?.hideWidget?.();
-      return;
-    }
 
     window.Tawk_API = window.Tawk_API || {};
     window.Tawk_LoadStart = window.Tawk_LoadStart || new Date();
 
-    // Keep widget as a floating bubble by default.
     window.Tawk_API.onLoad = () => {
-      if (effective.startMinimized) window.Tawk_API.minimize?.();
-      if (!shouldShow) window.Tawk_API.hideWidget?.();
+      const api = window.Tawk_API;
+      if (!api) return;
+      const g = tawkGateRef.current;
+      if (g.startMinimized) api.minimize?.();
+      if (!g.shouldShow) api.hideWidget?.();
     };
+
+    if (!shouldShow) {
+      window.Tawk_API?.hideWidget?.();
+      return;
+    }
 
     if (loadedScriptRef.current === effective.scriptSrc) return;
     const existing = document.querySelector('script[data-chat-provider="tawk"]');
@@ -145,7 +155,13 @@ export default function ClientChatWidget() {
       return;
     }
     api.hideWidget?.();
-  }, [effective.provider, effective.startMinimized, shouldShow]);
+  }, [effective.provider, effective.startMinimized, shouldShow, location.pathname]);
+
+  useEffect(() => {
+    if (effective.provider !== "tawk" || shouldShow) return;
+    const ids = HIDE_WIDGET_RETRY_MS.map((ms) => setTimeout(() => window.Tawk_API?.hideWidget?.(), ms));
+    return () => ids.forEach(clearTimeout);
+  }, [effective.provider, shouldShow, location.pathname]);
 
   return null;
 }
