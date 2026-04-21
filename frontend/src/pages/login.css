@@ -132,6 +132,16 @@
   margin-bottom: 0px;
 }
 
+.jw-fieldHint {
+  display: block;
+  margin: 4px 0 10px;
+  padding: 0 2px;
+  font-size: 12px;
+  line-height: 1.35;
+  color: #b91c1c;
+  font-weight: 500;
+}
+
 .jw-input {
   width: 100%;
   padding: 12px 14px;
