@@ -8,6 +8,16 @@ const roleCheck = require('../middleware/roleCheck');
 const { getDashboard, getTransactions } = require('../controllers/clientController');
 const { getClientHistory } = require('../controllers/clientHistoryController');
 const { getClientHistoryTickets } = require('../controllers/clientHistoryTicketsController');
+const {
+  getClientAnnouncements,
+  getClientAnnouncementUnreadCount,
+  markClientAnnouncementRead,
+} = require('../controllers/admin/announcementsController');
+const {
+  getClientInboxMessages,
+  getClientInboxUnreadCount,
+  markClientInboxMessageRead,
+} = require('../controllers/admin/inboxController');
 
 /**
  * GET /api/client/dashboard
@@ -42,6 +52,42 @@ router.get('/history/tickets', authenticateToken, roleCheck('client'), getClient
  * Ledger history (DP / WD / TRI / TRO) for History page.
  */
 router.get('/history', authenticateToken, roleCheck('client'), getClientHistory);
+router.get(
+  '/notifications/announcements/unread-count',
+  authenticateToken,
+  roleCheck('client'),
+  getClientAnnouncementUnreadCount
+);
+router.get(
+  '/notifications/announcements',
+  authenticateToken,
+  roleCheck('client'),
+  getClientAnnouncements
+);
+router.post(
+  '/notifications/announcements/:id/read',
+  authenticateToken,
+  roleCheck('client'),
+  markClientAnnouncementRead
+);
+router.get(
+  '/notifications/inbox/unread-count',
+  authenticateToken,
+  roleCheck('client'),
+  getClientInboxUnreadCount
+);
+router.get(
+  '/notifications/inbox',
+  authenticateToken,
+  roleCheck('client'),
+  getClientInboxMessages
+);
+router.post(
+  '/notifications/inbox/:id/read',
+  authenticateToken,
+  roleCheck('client'),
+  markClientInboxMessageRead
+);
 
 /**
  * Example: Route accessible by multiple roles

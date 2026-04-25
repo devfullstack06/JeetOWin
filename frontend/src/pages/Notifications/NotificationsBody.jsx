@@ -1,11 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Bell } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import usePageTitle from "../../hooks/usePageTitle";
 
 import "./notificationsBody.css";
 
-import { notificationsMock } from "./data/notificationsMock";
 import NotificationsTabs from "./components/NotificationsTabs";
 import NotificationsListStep from "./steps/NotificationsListStep";
 import NotificationsDetailsStep from "./steps/NotificationsDetailsStep";
@@ -37,10 +36,23 @@ function saveReadSet(tab, set) {
   window.localStorage.setItem(STORAGE_KEY[tab], JSON.stringify(ids));
 }
 
+function notifyAnnouncementsHeaderRefresh() {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new Event("jw-announcements-refresh"));
+}
+
+function notifyInboxHeaderRefresh() {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new Event("jw-inbox-refresh"));
+}
+
 export default function NotificationsBody() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   usePageTitle("Notifications");
 
+  const [announcementItems, setAnnouncementItems] = useState([]);
+  const [inboxItems, setInboxItems] = useState([]);
   // tab + step state machine
   const [activeTab, setActiveTab] = useState("announcements"); // announcements | inbox
   const [step, setStep] = useState("list"); // list | details
@@ -52,12 +64,77 @@ export default function NotificationsBody() {
   );
   const [readInbox, setReadInbox] = useState(() => loadReadSet("inbox"));
 
-  // data source (mock for now)
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab === "announcements" || tab === "inbox") {
+      setActiveTab(tab);
+      setStep("list");
+      setSelectedId(null);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    let ignore = false;
+    const token = localStorage.getItem("token") || "";
+    fetch("/api/client/notifications/announcements", {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (ignore) return;
+        setAnnouncementItems(Array.isArray(data.items) ? data.items : []);
+        const read = new Set(
+          (Array.isArray(data.items) ? data.items : [])
+            .filter((x) => x.isRead)
+            .map((x) => x.id)
+        );
+        setReadAnnouncements(read);
+        saveReadSet("announcements", read);
+      })
+      .catch(() => {
+        if (!ignore) setAnnouncementItems([]);
+      })
+      .finally(() => {
+        if (!ignore) notifyAnnouncementsHeaderRefresh();
+      });
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let ignore = false;
+    const token = localStorage.getItem("token") || "";
+    fetch("/api/client/notifications/inbox", {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (ignore) return;
+        setInboxItems(Array.isArray(data.items) ? data.items : []);
+        const read = new Set(
+          (Array.isArray(data.items) ? data.items : [])
+            .filter((x) => x.isRead)
+            .map((x) => x.id)
+        );
+        setReadInbox(read);
+        saveReadSet("inbox", read);
+      })
+      .catch(() => {
+        if (!ignore) setInboxItems([]);
+      })
+      .finally(() => {
+        if (!ignore) notifyInboxHeaderRefresh();
+      });
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  // data source
   const items = useMemo(() => {
-    return activeTab === "announcements"
-      ? notificationsMock.announcements
-      : notificationsMock.inbox;
-  }, [activeTab]);
+    return activeTab === "announcements" ? announcementItems : inboxItems;
+  }, [activeTab, announcementItems, inboxItems]);
 
   const readSet = useMemo(() => {
     return activeTab === "announcements" ? readAnnouncements : readInbox;
@@ -82,6 +159,15 @@ export default function NotificationsBody() {
     if (!selectedId) return;
 
     if (activeTab === "announcements") {
+      const token = localStorage.getItem("token") || "";
+      fetch(`/api/client/notifications/announcements/${selectedId}/read`, {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      })
+        .then((res) => {
+          if (res.ok) notifyAnnouncementsHeaderRefresh();
+        })
+        .catch(() => {});
       setReadAnnouncements((prev) => {
         const next = new Set(prev);
         next.add(selectedId);
@@ -91,6 +177,15 @@ export default function NotificationsBody() {
       return;
     }
 
+    const token = localStorage.getItem("token") || "";
+    fetch(`/api/client/notifications/inbox/${selectedId}/read`, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+      .then((res) => {
+        if (res.ok) notifyInboxHeaderRefresh();
+      })
+      .catch(() => {});
     setReadInbox((prev) => {
       const next = new Set(prev);
       next.add(selectedId);

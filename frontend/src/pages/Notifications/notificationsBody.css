@@ -217,6 +217,11 @@
     flex: 0 0 auto;
     margin-left: 4px;
   }
+
+  .jw-notifUnreadDot--announcements {
+    margin-left: 0;
+    margin-right: 6px;
+  }
   
   /* Empty */
   .jw-notifEmpty {
@@ -274,6 +279,136 @@
   .jw-notifParagraph {
     margin: 0 0 12px 0;
     line-height: 1.45;
+  }
+
+  .jw-notifMd p {
+    margin: 0 0 12px 0;
+    line-height: 1.45;
+  }
+
+  .jw-notifMd h1,
+  .jw-notifMd h2,
+  .jw-notifMd h3 {
+    margin: 0 0 12px;
+    line-height: 1.3;
+  }
+
+  .jw-notifMd ul {
+    margin: 0 0 12px 18px;
+    padding: 0;
+  }
+
+  .jw-notifMd code {
+    background: rgba(255, 255, 255, 0.18);
+    border-radius: 4px;
+    padding: 1px 4px;
+  }
+
+  .jw-notifAttachmentTiles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .jw-notifAttachmentThumb {
+    display: inline-block;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    border-radius: 8px;
+    line-height: 0;
+  }
+
+  .jw-notifAttachmentThumb:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.85);
+    outline-offset: 2px;
+  }
+
+  .jw-notifAttachmentTiles img {
+    width: 74px;
+    height: 74px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    vertical-align: middle;
+    pointer-events: none;
+  }
+
+  /* Full-size image lightbox (portaled to body) */
+  .jw-notifImageLightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 10050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 16px 24px;
+    box-sizing: border-box;
+  }
+
+  .jw-notifImageLightboxBackdrop {
+    position: absolute;
+    inset: 0;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    background: rgba(0, 0, 0, 0.82);
+  }
+
+  .jw-notifImageLightboxFrame {
+    position: relative;
+    z-index: 1;
+    max-width: min(96vw, 920px);
+    max-height: min(88vh, 900px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+
+  .jw-notifImageLightboxFrame img {
+    max-width: 100%;
+    max-height: min(88vh, 900px);
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border-radius: 10px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55);
+    pointer-events: auto;
+  }
+
+  .jw-notifImageLightboxClose {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 2;
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 10px;
+    margin: 0;
+    padding: 0;
+    cursor: pointer;
+    font-size: 28px;
+    line-height: 1;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .jw-notifImageLightboxClose:hover {
+    background: rgba(0, 0, 0, 0.65);
+  }
+
+  .jw-notifImageLightboxClose:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.85);
+    outline-offset: 2px;
   }
   
   .jw-notifDetailsActions {

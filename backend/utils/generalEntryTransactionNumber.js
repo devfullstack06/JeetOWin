@@ -18,6 +18,10 @@ const GE_TXN_SERIES = {
   TRANSFER_IN: "TRI",
   /** Transfer OUT: brand company → client */
   TRANSFER_OUT: "TRO",
+  /** Admin broadcast announcements */
+  ANNOUNCEMENT: "ANM",
+  /** Admin inbox messages (client Notifications → Inbox) */
+  INBOX: "IBX",
 };
 
 async function allocateGeneralEntryTransactionNumber(conn, seriesCode) {

@@ -77,6 +77,7 @@ export const adminNavGroups = [
       items: [
         { id: "admin-notif-ann", label: "Announcements", path: "/admin/notifications/announcements", crumb: "Admin > Notifications > Announcements" },
         { id: "admin-notif-inbox", label: "Inbox", path: "/admin/notifications/inbox", crumb: "Admin > Notifications > Inbox" },
+        { id: "admin-notif-groups", label: "Groups", path: "/admin/notifications/groups", crumb: "Admin > Notifications > Groups" },
       ],
     },
     {

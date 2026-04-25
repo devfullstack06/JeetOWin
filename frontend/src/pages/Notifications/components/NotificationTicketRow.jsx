@@ -50,6 +50,10 @@ export default function NotificationTicketRow({
         </div>
       )}
 
+      {isAnnouncements && !isRead ? (
+        <span className="jw-notifUnreadDot jw-notifUnreadDot--announcements" aria-label="Unread" />
+      ) : null}
+
       <div className="jw-notifRowTitleWrap">
         <span
           className={`jw-notifRowTitle ${

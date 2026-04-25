@@ -1,4 +1,5 @@
 const express = require("express");
+const fs = require("fs");
 const requireAdminAuth = require("../middleware/requireAdminAuth");
 const { optionalWalletIconUpload } = require("../middleware/uploadWalletIcon");
 const {
@@ -139,6 +140,38 @@ const {
   getAdminChatWidgetEvents,
   getAdminChatWidgetEventsSummary,
 } = require("../controllers/admin/chatWidgetEventsController");
+const {
+  getAdminNotificationGroupNames,
+  getAdminNotificationGroups,
+  getAdminNotificationGroupById,
+  createAdminNotificationGroup,
+  updateAdminNotificationGroup,
+  getAdminNotificationGroupAudienceBrands,
+  getAdminNotificationGroupAudienceWalletCompanies,
+  postAdminNotificationGroupAudienceResolve,
+} = require("../controllers/admin/notificationGroupsController");
+const {
+  getAdminAnnouncementFilterOptions,
+  getAdminAnnouncements,
+  getAdminAnnouncementById,
+  createAdminAnnouncement,
+  deleteAdminAnnouncement,
+  getAdminAnnouncementAudience,
+  getAdminAnnouncementSeenBy,
+  postAdminAnnouncementMemberCountPreview,
+} = require("../controllers/admin/announcementsController");
+const {
+  getAdminInboxFilterOptions,
+  postAdminInboxMemberCountPreview,
+  getAdminInboxMessages,
+  getAdminInboxMessageById,
+  createAdminInboxMessage,
+  deleteAdminInboxMessage,
+  getAdminInboxAudience,
+  getAdminInboxSeenBy,
+} = require("../controllers/admin/inboxController");
+const { uploadAnnouncementImages } = require("../middleware/uploadAnnouncementImages");
+const { uploadInboxImages } = require("../middleware/uploadInboxImages");
 
 const router = express.Router();
 
@@ -157,6 +190,100 @@ router.post("/update-password", requireAdminAuth, updateAdminPassword);
 router.get("/users", requireAdminAuth, getAdminUsers);
 router.get("/users/:id/detail", requireAdminAuth, getAdminUserDetail);
 router.patch("/users/:id", requireAdminAuth, updateAdminUser);
+
+router.get("/notification-groups/names", requireAdminAuth, getAdminNotificationGroupNames);
+router.get("/notification-groups/audience/brands", requireAdminAuth, getAdminNotificationGroupAudienceBrands);
+router.get(
+  "/notification-groups/audience/wallet-companies",
+  requireAdminAuth,
+  getAdminNotificationGroupAudienceWalletCompanies
+);
+router.post("/notification-groups/audience/resolve", requireAdminAuth, postAdminNotificationGroupAudienceResolve);
+router.get("/notification-groups", requireAdminAuth, getAdminNotificationGroups);
+router.get("/notification-groups/:id", requireAdminAuth, getAdminNotificationGroupById);
+router.post("/notification-groups", requireAdminAuth, createAdminNotificationGroup);
+router.patch("/notification-groups/:id", requireAdminAuth, updateAdminNotificationGroup);
+router.get("/announcements/options", requireAdminAuth, getAdminAnnouncementFilterOptions);
+router.post(
+  "/announcements/member-count-preview",
+  requireAdminAuth,
+  postAdminAnnouncementMemberCountPreview
+);
+router.get("/announcements", requireAdminAuth, getAdminAnnouncements);
+router.get("/announcements/:id", requireAdminAuth, getAdminAnnouncementById);
+router.get("/announcements/:id/audience", requireAdminAuth, getAdminAnnouncementAudience);
+router.get("/announcements/:id/seen", requireAdminAuth, getAdminAnnouncementSeenBy);
+router.post("/announcements", requireAdminAuth, createAdminAnnouncement);
+router.delete("/announcements/:id", requireAdminAuth, deleteAdminAnnouncement);
+const ANNOUNCEMENT_UPLOAD_MAX_TOTAL_BYTES = 25 * 1024 * 1024;
+
+router.post(
+  "/announcements/upload-images",
+  requireAdminAuth,
+  uploadAnnouncementImages,
+  (req, res) => {
+    const files = Array.isArray(req.files) ? req.files : [];
+    const totalBytes = files.reduce((s, f) => s + Number(f.size || 0), 0);
+    if (totalBytes > ANNOUNCEMENT_UPLOAD_MAX_TOTAL_BYTES) {
+      for (const f of files) {
+        try {
+          if (f.path) fs.unlinkSync(f.path);
+        } catch (_) {
+          /* ignore */
+        }
+      }
+      return res.status(400).json({
+        message: "Total upload size cannot exceed 25MB for this batch.",
+      });
+    }
+    return res.json({
+      items: files.map((f) => ({
+        path: `/uploads/announcements/${f.filename}`,
+        originalName: f.originalname || "",
+        mime: f.mimetype || "",
+        sizeBytes: Number(f.size || 0),
+      })),
+    });
+  }
+);
+
+router.get("/inbox/options", requireAdminAuth, getAdminInboxFilterOptions);
+router.post("/inbox/member-count-preview", requireAdminAuth, postAdminInboxMemberCountPreview);
+router.get("/inbox", requireAdminAuth, getAdminInboxMessages);
+router.get("/inbox/:id", requireAdminAuth, getAdminInboxMessageById);
+router.get("/inbox/:id/audience", requireAdminAuth, getAdminInboxAudience);
+router.get("/inbox/:id/seen", requireAdminAuth, getAdminInboxSeenBy);
+router.post("/inbox", requireAdminAuth, createAdminInboxMessage);
+router.delete("/inbox/:id", requireAdminAuth, deleteAdminInboxMessage);
+router.post(
+  "/inbox/upload-images",
+  requireAdminAuth,
+  uploadInboxImages,
+  (req, res) => {
+    const files = Array.isArray(req.files) ? req.files : [];
+    const totalBytes = files.reduce((s, f) => s + Number(f.size || 0), 0);
+    if (totalBytes > ANNOUNCEMENT_UPLOAD_MAX_TOTAL_BYTES) {
+      for (const f of files) {
+        try {
+          if (f.path) fs.unlinkSync(f.path);
+        } catch (_) {
+          /* ignore */
+        }
+      }
+      return res.status(400).json({
+        message: "Total upload size cannot exceed 25MB for this batch.",
+      });
+    }
+    return res.json({
+      items: files.map((f) => ({
+        path: `/uploads/inbox/${f.filename}`,
+        originalName: f.originalname || "",
+        mime: f.mimetype || "",
+        sizeBytes: Number(f.size || 0),
+      })),
+    });
+  }
+);
 
 router.get("/wallet-companies/active", requireAdminAuth, getAdminWalletCompaniesActive);
 router.get("/wallet-companies", requireAdminAuth, getAdminWalletCompanies);

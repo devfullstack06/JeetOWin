@@ -1,0 +1,183 @@
+/* Rich message editor (Create announcement) */
+
+.jw-annRich {
+  border: 1px solid #e2e5eb;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fafbfc;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+.jw-annRich__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  padding: 10px 12px;
+  background: linear-gradient(180deg, #ffffff 0%, #f4f6f9 100%);
+  border-bottom: 1px solid #e2e5eb;
+}
+
+.jw-annRich__toolbarGroup {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.jw-annRich__toolbarGroup--emoji {
+  margin-left: auto;
+  position: relative;
+  z-index: 1200;
+}
+
+.jw-annRich__emojiPicker {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 1300;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.2);
+}
+
+.jw-annRich__sep {
+  width: 1px;
+  height: 22px;
+  background: #d8dce4;
+  flex-shrink: 0;
+}
+
+.jw-annRich__tbBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 34px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #3d4a5c;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.jw-annRich__tbBtn:hover:not(:disabled) {
+  background: rgba(21, 148, 71, 0.1);
+  color: #0d5c2f;
+}
+
+.jw-annRich__tbBtn.is-active {
+  background: rgba(21, 148, 71, 0.18);
+  color: #0a4a26;
+  box-shadow: inset 0 0 0 1px rgba(21, 148, 71, 0.35);
+}
+
+.jw-annRich__tbBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.jw-annRich__tbU {
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  line-height: 1;
+}
+
+.jw-annRich__editorWrap {
+  background: #fff;
+  min-height: 200px;
+}
+
+.jw-annRich__editor.ProseMirror {
+  outline: none;
+  min-height: 200px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 14px 16px 18px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: #1a2332;
+}
+
+.jw-annRich__editor.ProseMirror p {
+  margin: 0 0 0.65em;
+}
+
+.jw-annRich__editor.ProseMirror p:last-child {
+  margin-bottom: 0;
+}
+
+.jw-annRich__editor.ProseMirror h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0.75em 0 0.4em;
+  color: #111827;
+}
+
+.jw-annRich__editor.ProseMirror h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0.65em 0 0.35em;
+  color: #1f2937;
+}
+
+.jw-annRich__editor.ProseMirror ul,
+.jw-annRich__editor.ProseMirror ol {
+  margin: 0.35em 0 0.65em 1.25rem;
+  padding: 0;
+}
+
+.jw-annRich__editor.ProseMirror li {
+  margin: 0.2em 0;
+}
+
+.jw-annRich__editor.ProseMirror blockquote {
+  margin: 0.65em 0;
+  padding: 0.5em 0 0.5em 14px;
+  border-left: 3px solid #159447;
+  color: #4b5563;
+  font-style: italic;
+  background: #f8faf9;
+  border-radius: 0 8px 8px 0;
+}
+
+.jw-annRich__editor.ProseMirror code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.9em;
+  background: #f0f2f5;
+  padding: 0.12em 0.35em;
+  border-radius: 4px;
+}
+
+.jw-annRich__editor.ProseMirror pre {
+  margin: 0.65em 0;
+  padding: 12px 14px;
+  background: #0f172a;
+  color: #e2e8f0;
+  border-radius: 10px;
+  font-size: 13px;
+  overflow-x: auto;
+}
+
+.jw-annRich__editor.ProseMirror pre code {
+  background: none;
+  padding: 0;
+  color: inherit;
+}
+
+.jw-annRich__editor.ProseMirror a {
+  color: #0d6efd;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.jw-annRich__editor.ProseMirror .is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #94a3b8;
+  pointer-events: none;
+  height: 0;
+}

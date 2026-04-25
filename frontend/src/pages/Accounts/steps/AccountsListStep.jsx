@@ -503,8 +503,8 @@ export default function AccountsListStep({
                             onClick={() => openTicketDetail(t)}
                           >
                             <Eye size={16} strokeWidth={2} aria-hidden />
-                          </button>
-                        </div>
+                </button>
+              </div>
                       </td>
                     </tr>
                   );
@@ -531,7 +531,7 @@ export default function AccountsListStep({
                         >
                           <Eye size={16} strokeWidth={2} aria-hidden />
                         </button>
-                      </div>
+          </div>
                     </td>
                   </tr>
                 );

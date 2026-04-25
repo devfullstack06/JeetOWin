@@ -1,0 +1,303 @@
+/* Notification groups tab: filters + table live inside AdminPageShell table slot */
+
+.jw-adminNgIntegrated__filters {
+  padding: 0 0 14px;
+  margin-bottom: 0;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.jw-adminNgIntegrated__notice {
+  margin: 0 0 12px;
+}
+
+.jw-adminNgIntegrated__pagination {
+  border-top: 1px solid #e5e5e5;
+  padding: 10px 12px;
+  background: #fff;
+}
+
+.jw-adminNgFilterUser {
+  position: relative;
+}
+
+.jw-adminNgFilterPicked {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid #d2d2d2;
+  border-radius: 8px;
+  background: #fafafa;
+  font-size: 14px;
+}
+
+.jw-adminNgFilterClear {
+  border: none;
+  background: transparent;
+  color: #159447;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.jw-adminNgFilterClear:hover {
+  background: #eefaf3;
+}
+
+.jw-adminNgUserDropdown {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 4px);
+  max-height: 220px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #d2d2d2;
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  z-index: 20;
+}
+
+.jw-adminNgUserDropdown--filter {
+  z-index: 30;
+}
+
+.jw-adminNgUserDropdown__row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-bottom: 1px solid #eee;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.jw-adminNgUserDropdown__row:last-child {
+  border-bottom: none;
+}
+
+.jw-adminNgUserDropdown__row:hover:not(:disabled) {
+  background: #f5f5f5;
+}
+
+.jw-adminNgUserDropdown__row:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.jw-adminNgUserDropdown__name {
+  font-weight: 500;
+  color: #111;
+}
+
+.jw-adminNgUserDropdown__sub {
+  font-size: 12px;
+  color: #666;
+}
+
+.jw-adminNgSelectedWrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.jw-adminNgChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px 6px 10px;
+  border-radius: 8px;
+  background: #eefaf3;
+  border: 1px solid #c5e9d4;
+  font-size: 13px;
+  color: #0f5132;
+}
+
+.jw-adminNgChipRemove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #159447;
+  cursor: pointer;
+}
+
+.jw-adminNgChipRemove:hover:not(:disabled) {
+  background: rgba(21, 148, 71, 0.12);
+}
+
+.jw-adminNgChipRemove:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.jw-adminCreateBtnInner {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Member search in Create/Edit modals: position dropdown under input (not under fixed overlay) */
+.jw-adminNgModalPickerSearch {
+  position: relative;
+  z-index: 10;
+}
+
+.jw-adminNgUserDropdown--modalPicker {
+  z-index: 25;
+}
+
+/* Scrollable modal body is flex-grown; default grid align-content stretches rows — pack to top */
+.jw-adminUsersModal--ngForm .jw-adminUsersModal__body {
+  gap: 10px;
+  align-content: start;
+}
+
+.jw-adminNgAudience {
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 12px 14px 14px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.jw-adminNgAudience__legend {
+  padding: 0 0 8px;
+  float: none;
+  width: 100%;
+}
+
+.jw-adminNgAudience__radio {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #111;
+  cursor: pointer;
+  margin: 10px 0 0;
+}
+
+.jw-adminNgAudience__radio:first-of-type {
+  margin-top: 4px;
+}
+
+.jw-adminNgAudience__radio input {
+  width: 16px;
+  height: 16px;
+  accent-color: #159447;
+}
+
+.jw-adminNgAudience__block {
+  margin: 8px 0 4px 22px;
+  padding-left: 6px;
+  border-left: 2px solid #e8ecef;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.jw-adminNgAudience__details {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: #333;
+}
+
+.jw-adminNgAudience__viewBtn {
+  border: 1px solid #159447;
+  background: #fff;
+  color: #159447;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.jw-adminNgAudience__viewBtn:hover:not(:disabled) {
+  background: #f3faf6;
+}
+
+.jw-adminNgAudience__viewBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.jw-adminNgAudience__addRow .jw-adminNgAudience__addRowInner {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.jw-adminNgAudience__addRowInner .jw-adminUsersModal__input {
+  flex: 1;
+  min-width: 0;
+}
+
+.jw-adminNgUsernameList {
+  margin: 0;
+  padding: 0 0 0 18px;
+  max-height: 52vh;
+  overflow-y: auto;
+  font-size: 14px;
+  line-height: 1.55;
+  color: #222;
+}
+
+.jw-adminNgUsernameList li {
+  margin: 4px 0;
+}
+
+/* Stacked modal: selected-users list must sit above create modal overlay (z-index 1200 in usersPage.css) */
+.jw-adminUsersModalOverlay.jw-adminNgDetailsOverlay {
+  z-index: 1300;
+}
+
+/* Same header + close control pattern as Create announcement (AnnouncementsTab) */
+.jw-adminNgModalHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.jw-adminNgModalHeader .jw-adminUsersModal__title {
+  flex: 1;
+  min-width: 0;
+}
+
+.jw-adminNgModalClose {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  margin: -6px -8px -4px 0;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: #555;
+  cursor: pointer;
+}
+
+.jw-adminNgModalClose:hover {
+  background: #f0f0f0;
+  color: #111;
+}

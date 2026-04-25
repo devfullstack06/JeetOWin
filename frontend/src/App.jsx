@@ -34,6 +34,7 @@ import AdminContentPage from "./admin/pages/Content/ContentPage";
 import AdminBrandsPage from "./admin/pages/Brands/BrandsPage";
 import AdminAccountsPage from "./admin/pages/Accounts/AccountsPage";
 import AdminTransactionsPage from "./admin/pages/Transactions/TransactionsPage";
+import AdminNotificationsPage from "./admin/pages/Notifications/AdminNotificationsPage";
 import { adminNavGroups } from "./admin/adminNav";
 
 function MobileNavLayout() {
@@ -147,6 +148,15 @@ export default function App() {
             <Route path="transactions/withdraw" element={<AdminTransactionsPage />} />
             <Route path="transactions/transfers" element={<AdminTransactionsPage />} />
 
+            {/* Notifications: shell + tabs (Announcements / Inbox) */}
+            <Route
+              path="notifications"
+              element={<Navigate to="/admin/notifications/announcements" replace />}
+            />
+            <Route path="notifications/announcements" element={<AdminNotificationsPage />} />
+            <Route path="notifications/inbox" element={<AdminNotificationsPage />} />
+            <Route path="notifications/groups" element={<AdminNotificationsPage />} />
+
             {/* Auto placeholders for remaining admin routes */}
             {adminItems.map((it) => {
               if (it.path === "/admin") return null;
@@ -172,6 +182,10 @@ export default function App() {
               if (nestedPath === "transactions/deposit") return null;
               if (nestedPath === "transactions/withdraw") return null;
               if (nestedPath === "transactions/transfers") return null;
+              if (nestedPath === "notifications") return null;
+              if (nestedPath === "notifications/announcements") return null;
+              if (nestedPath === "notifications/inbox") return null;
+              if (nestedPath === "notifications/groups") return null;
 
               return (
                 <Route

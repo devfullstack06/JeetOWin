@@ -75,6 +75,52 @@
    Logged-in Balance Widget
    =========================== */
 
+.jw-headerLoggedRight {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.jw-headerAnnounceBtn {
+  position: relative;
+  flex: 0 0 auto;
+  min-width: 40px;
+  min-height: 30px;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.jw-headerAnnounceIcon {
+  display: block;
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+.jw-headerAnnounceBadge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 1px;
+  border-radius: 999px;
+  background: #e53935;
+  color: #fff;
+  font-size: 8px;
+  font-weight: 800;
+  line-height: 18px;
+  text-align: center;
+  box-shadow: 0 0 0 2px #fff;
+}
+
 .jw-headerBalance {
   height: 32px;
   background: #071336;
@@ -204,7 +250,7 @@
   /* ✅ allow header to grow because mobile has 2 rows (top + ticker) */
   .jw-landingHeader {
     height: auto;
-    padding: 14px 16px; /* ✅ mobile padding at header level */
+    padding: 10px 8px; /* ✅ mobile padding at header level */
   }
 
   /* top row spacing in mobile */

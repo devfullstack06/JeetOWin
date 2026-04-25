@@ -1,0 +1,435 @@
+.jw-adminAnnDupHint {
+  margin-top: 6px;
+  font-size: 13px;
+}
+
+.jw-adminAnnTitleRow {
+  position: relative;
+}
+
+/* Keep emoji popovers above stacked modal fields/dropdowns */
+.jw-adminUsersModal--ngForm .jw-adminAnnTitleField {
+  position: relative;
+  z-index: 60;
+}
+
+.jw-adminUsersModal--ngForm .jw-adminAnnMessageField {
+  position: relative;
+  z-index: 50;
+}
+
+.jw-adminAnnTitleRow .jw-adminUsersModal__input {
+  padding-right: 46px;
+}
+
+.jw-adminEmojiWrap {
+  position: relative;
+  z-index: 1200;
+}
+
+.jw-adminEmojiWrap--title {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+}
+
+.jw-adminEmojiBtn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #d8dbe2;
+  border-radius: 8px;
+  background: #fff;
+  color: #435163;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.jw-adminEmojiBtn:hover:not(:disabled) {
+  background: #f4f7fb;
+}
+
+.jw-adminEmojiBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.jw-adminEmojiPickerPop {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 1300;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.22);
+}
+
+.jw-adminAnnLink {
+  border: none;
+  background: transparent;
+  color: #159447;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.jw-adminAnnAudienceMode {
+  display: flex;
+  gap: 16px;
+}
+
+.jw-adminAnnAudienceRow {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.jw-adminAnnMultiSelect {
+  min-height: 100px;
+}
+
+.jw-adminAnnMdToolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.jw-adminAnnMdToolbar button {
+  border: 1px solid #d5d5d5;
+  border-radius: 6px;
+  background: #fff;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.jw-adminAnnTextarea {
+  width: 100%;
+  border: 1px solid #dcdcdc;
+  border-radius: 10px;
+  padding: 10px 12px;
+  resize: vertical;
+  min-height: 120px;
+}
+
+.jw-adminAnnSchedulerGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.jw-adminAnnImageTiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.jw-adminAnnImageTiles img {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+}
+
+.jw-adminAnnPreviewBtns {
+  display: flex;
+  gap: 8px;
+}
+
+.jw-adminAnnModalHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.jw-adminAnnModalHeader .jw-adminUsersModal__title {
+  flex: 1;
+  min-width: 0;
+}
+
+.jw-adminAnnModalClose {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  margin: -6px -8px -4px 0;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: #555;
+  cursor: pointer;
+}
+
+.jw-adminAnnModalClose:hover {
+  background: #f0f0f0;
+  color: #111;
+}
+
+.jw-adminAnnPreviewBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1250;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(12, 18, 30, 0.45);
+}
+
+.jw-adminAnnPreviewModal {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.jw-adminAnnPreviewModalHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.jw-adminAnnPreviewModalTitle {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #111;
+  line-height: 1.25;
+}
+
+.jw-adminAnnPreviewModal.is-mobile {
+  width: min(360px, 95vw);
+}
+
+.jw-adminAnnPreviewModal.is-web {
+  width: min(760px, 95vw);
+}
+
+.jw-adminAnnPreviewBody {
+  padding: 10px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  margin-top: 8px;
+}
+
+.jw-adminAnnLivePreviewLabel {
+  margin-top: 10px;
+}
+
+.jw-adminMd p {
+  margin: 0 0 10px;
+  line-height: 1.45;
+}
+
+.jw-adminMd h1,
+.jw-adminMd h2,
+.jw-adminMd h3 {
+  margin: 0 0 10px;
+  line-height: 1.3;
+}
+
+.jw-adminMd ul {
+  margin: 0 0 10px 18px;
+  padding: 0;
+}
+
+.jw-adminMd code {
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 4px;
+  padding: 1px 4px;
+}
+
+.jw-adminAnnBandsLine {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.jw-adminAnnUsersList {
+  max-height: 420px;
+  overflow: auto;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.jw-adminNgModalPickerSearch {
+  position: relative;
+  z-index: 10;
+}
+
+.jw-adminNgUserDropdown {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 4px);
+  max-height: 220px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #d2d2d2;
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  z-index: 20;
+}
+
+.jw-adminNgUserDropdown--modalPicker {
+  z-index: 25;
+}
+
+.jw-adminNgUserDropdown__row {
+  display: flex;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-bottom: 1px solid #eee;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.jw-adminNgUserDropdown__row:last-child {
+  border-bottom: none;
+}
+
+.jw-adminNgSelectedWrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.jw-adminNgChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 8px;
+  border: 1px solid #c5e9d4;
+  background: #eefaf3;
+  padding: 5px 8px;
+}
+
+.jw-adminNgChipRemove {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.jw-adminUsersModal--ngForm .jw-adminUsersModal__body {
+  gap: 10px;
+  align-content: start;
+}
+
+/*
+ * Create announcement: stacked dropdowns. Later DOM siblings paint on top at z-index:auto,
+ * so the Add-users list was covered by Exclude. Stack order: Groups > Add users > Exclude
+ * so group checklists stay above Add users, and Add users search results stay above Exclude.
+ */
+.jw-adminUsersModal--ngForm .jw-adminAnnGroupsField {
+  position: relative;
+  z-index: 6;
+}
+
+.jw-adminUsersModal--ngForm .jw-adminAnnAddUsersField {
+  position: relative;
+  z-index: 5;
+}
+
+.jw-adminUsersModal--ngForm .jw-adminAnnExcludeUsersField {
+  position: relative;
+  z-index: 4;
+}
+
+.jw-adminAnnAddUsersField .jw-adminNgModalPickerSearch {
+  z-index: 20;
+}
+
+.jw-adminAnnAddUsersField .jw-adminNgUserDropdown--modalPicker {
+  z-index: 30;
+}
+
+/* Create announcement: group checkbox dropdown */
+.jw-adminAnnGroupDd {
+  position: relative;
+  z-index: 12;
+}
+
+.jw-adminAnnGroupDdBtn {
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border: 1px solid #dcdcdc;
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  color: #111;
+}
+
+.jw-adminAnnGroupDdBtn:hover:not(:disabled) {
+  border-color: #bbb;
+  background: #fafafa;
+}
+
+.jw-adminAnnGroupDdBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.jw-adminAnnGroupDdPanel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 4px);
+  max-height: 240px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #d2d2d2;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  z-index: 25;
+}
+
+.jw-adminAnnGroupDdRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+  font-size: 14px;
+  margin: 0;
+}
+
+.jw-adminAnnGroupDdRow:last-child {
+  border-bottom: none;
+}
+
+.jw-adminAnnGroupDdRow:hover {
+  background: #f7f7f7;
+}
+
+.jw-adminAnnGroupDdRow input {
+  width: 16px;
+  height: 16px;
+  accent-color: #159447;
+  flex-shrink: 0;
+}
+
+.jw-adminAnnGroupCountHint {
+  font-weight: 500;
+  color: #333;
+}
