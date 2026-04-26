@@ -31,6 +31,11 @@ const {
   getAdminAccountBalance,
 } = require("../controllers/admin/generalEntriesController");
 const {
+  getAdminGeneralLedgerAccounts,
+  getAdminGeneralLedgerStatement,
+} = require("../controllers/admin/generalLedgerController");
+const { getAdminBalanceSheet } = require("../controllers/admin/balanceSheetController");
+const {
   getAdminSocialLinks,
   createAdminSocialLink,
   updateAdminSocialLink,
@@ -305,6 +310,10 @@ router.get(
 );
 router.get("/general-entries/:id", requireAdminAuth, getAdminGeneralEntryById);
 router.patch("/general-entries/:id", requireAdminAuth, updateAdminGeneralEntryNarration);
+
+router.get("/reports/general-ledger/accounts", requireAdminAuth, getAdminGeneralLedgerAccounts);
+router.get("/reports/general-ledger/statement", requireAdminAuth, getAdminGeneralLedgerStatement);
+router.get("/reports/balance-sheet", requireAdminAuth, getAdminBalanceSheet);
 
 router.get("/social-links", requireAdminAuth, getAdminSocialLinks);
 router.post("/social-links", requireAdminAuth, optionalSocialIconUpload, createAdminSocialLink);

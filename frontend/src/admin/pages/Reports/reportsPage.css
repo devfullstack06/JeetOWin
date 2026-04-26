@@ -7,6 +7,25 @@
   font-size: 14px;
 }
 
+.jw-adminReportsGlSummary {
+  margin-bottom: 14px;
+  padding: 12px 10px 4px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #333;
+  border-bottom: 1px solid #ececec;
+}
+
+.jw-adminReportsGlSummary__account {
+  font-weight: 600;
+  color: #111;
+}
+
+.jw-adminReportsGlSummary__opening {
+  font-weight: 400;
+  color: #555;
+}
+
 .jw-adminTd__narration {
   max-width: 200px;
   overflow: hidden;
@@ -63,4 +82,315 @@
   margin-top: 4px;
   padding-top: 16px;
   border-top: 1px solid #ececec;
+}
+
+.jw-adminReportsToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.jw-adminReportsToolbar--iconsRight {
+  width: 100%;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
+.jw-adminReportsBsTopRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.jw-adminReportsBsZeroToggle {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px solid #d2d2d2;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  color: #222;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.jw-adminReportsBsZeroToggle:hover {
+  background: #f5f5f5;
+  border-color: #c4c4c4;
+}
+
+.jw-adminReportsBsZeroToggle[aria-pressed="false"] {
+  background: #fafafa;
+  color: #444;
+}
+
+.jw-adminReportsBsTopRow .jw-adminReportsBsMeta {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  color: #555;
+  line-height: 1.45;
+}
+
+.jw-adminReportsBsTopRow .jw-adminReportsToolbar {
+  margin-bottom: 0;
+  flex-shrink: 0;
+}
+
+.jw-adminReportsBsMeta {
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: #555;
+  line-height: 1.45;
+}
+
+.jw-adminReportsIconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid #d2d2d2;
+  border-radius: 8px;
+  background: #fafafa;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.jw-adminReportsIconBtn:hover:not(:disabled) {
+  background: #f0f0f0;
+  border-color: #c4c4c4;
+}
+
+.jw-adminReportsIconBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.jw-adminReportsIconBtn img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
+}
+
+/* Balance sheet: stay within shell + print block; two columns share width */
+.jw-adminReportsBsWrap {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.jw-adminBsGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px 16px;
+  align-items: start;
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .jw-adminBsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.jw-adminBsCol {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  padding-left: 10px;
+  padding-right: 10px;
+  box-sizing: border-box;
+}
+
+.jw-adminBsCol__title {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #111;
+  text-align: center;
+}
+
+.jw-adminBsTableWrap {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* Full width inside column; Account / Type / Balance as % of table (overrides global .jw-adminTable) */
+.jw-adminBsTable.jw-adminTable {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  table-layout: fixed;
+}
+
+.jw-adminBsTable.jw-adminTable thead th,
+.jw-adminBsTable.jw-adminTable tbody td {
+  padding: 10px;
+  vertical-align: middle;
+}
+
+.jw-adminBsTable__account {
+  width: 42%;
+  min-width: 0;
+}
+
+.jw-adminBsTable__type {
+  width: 33%;
+  min-width: 0;
+}
+
+.jw-adminBsTable__balance {
+  width: 25%;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Override global .jw-adminTable thead th { text-align: left } for Balance header & cells */
+.jw-adminBsTable.jw-adminTable thead th.jw-adminBsTable__balance,
+.jw-adminBsTable.jw-adminTable tbody td.jw-adminBsTable__balance {
+  text-align: right;
+}
+
+.jw-adminBsTable__cellText {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+.jw-adminBsTable thead th {
+  font-size: 12px;
+}
+
+.jw-adminBsTable__total td {
+  border-top: 2px solid #ddd;
+  padding-top: 10px;
+}
+
+.jw-adminBsTable__total .jw-adminBsTable__balance {
+  white-space: nowrap;
+}
+
+.jw-adminReportsBsRec {
+  margin-top: 20px;
+  padding: 14px 16px;
+  background: #f8f9fb;
+  border: 1px solid #e2e6ee;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.jw-adminReportsBsRec__title {
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #111;
+}
+
+.jw-adminReportsBsRec__body {
+  margin: 0;
+  color: #333;
+}
+
+.jw-adminReportsBsRec__totalsErr {
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #7a1e1e;
+  background: #fdeaea;
+  border: 1px solid #f0b4b4;
+  border-radius: 8px;
+}
+
+.jw-adminReportsBsRec__divider {
+  height: 1px;
+  margin: 14px 0;
+  background: #e2e6ee;
+}
+
+.jw-adminReportsBsRec__warn {
+  color: #b35c00;
+}
+
+.jw-adminReportsPrintTitle {
+  display: none;
+  margin: 0 0 10px;
+  font-size: 17px;
+  font-weight: 600;
+  color: #111;
+}
+
+@media print {
+  .jw-adminHeader,
+  .jw-adminLoggedNav {
+    display: none !important;
+  }
+
+  .jw-adminLoggedBody {
+    position: static !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    padding: 10px !important;
+  }
+
+  .jw-adminReportsNoPrint {
+    display: none !important;
+  }
+
+  .jw-adminPageShell__tabs,
+  .jw-adminPageShell__filters,
+  .jw-adminPageShell__pagination {
+    display: none !important;
+  }
+
+  .jw-adminReportsPrintTitle {
+    display: block !important;
+  }
+
+  .jw-adminPageShell {
+    padding: 0 !important;
+  }
+
+  .jw-adminPageShell__table {
+    border: none !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+  }
+
+  .jw-adminReportsPrintBlock .jw-adminTableWrap {
+    overflow: visible !important;
+  }
+
+  .jw-adminTable {
+    break-inside: avoid;
+  }
+
+  .jw-adminBsTable__cellText {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  .jw-adminBsGrid {
+    gap: 10px 12px;
+  }
 }
