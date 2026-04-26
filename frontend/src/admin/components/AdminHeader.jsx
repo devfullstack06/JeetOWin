@@ -4,8 +4,10 @@ import { Bell } from "lucide-react";
 import Logo from "../../components/Logo";
 import {
   getAlarmCycleIntervalMs,
+  getNotificationVolumePercent,
   playPendingAlarmCycle,
   resumeNotifAudioContext,
+  setNotificationVolumePercent,
 } from "../utils/adminNotificationBellSounds";
 import "./adminHeader.css";
 
@@ -49,6 +51,7 @@ export default function AdminHeader({
   const [notifOpen, setNotifOpen] = useState(false);
   const [pending, setPending] = useState(emptyPending);
   const [soundOn, setSoundOn] = useState(readSoundPref);
+  const [notifVolume, setNotifVolume] = useState(getNotificationVolumePercent);
   const dropdownRef = useRef(null);
   const notifRef = useRef(null);
   const pendingRef = useRef(pending);
@@ -199,6 +202,11 @@ export default function AdminHeader({
     navigate(path);
   };
 
+  const onVolumeChange = (e) => {
+    const v = setNotificationVolumePercent(Number(e.target.value));
+    setNotifVolume(v);
+  };
+
   const notifFooter = (
     <div className="jw-adminNotifFooter">
       <div className="jw-adminNotifSoundRow">
@@ -213,6 +221,31 @@ export default function AdminHeader({
         >
           <span className="jw-adminNotifSoundThumb" aria-hidden />
         </button>
+      </div>
+      <div className="jw-adminNotifVolumeRow">
+        <span className="jw-adminNotifSoundLabel" id="jw-admin-notif-volume-label">
+          Volume
+        </span>
+        <div className="jw-adminNotifVolumeControls">
+          <input
+            id="jw-admin-notif-volume"
+            type="range"
+            className="jw-adminNotifVolumeSlider"
+            min={0}
+            max={100}
+            step={1}
+            value={notifVolume}
+            onChange={onVolumeChange}
+            aria-labelledby="jw-admin-notif-volume-label"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={notifVolume}
+            aria-valuetext={`${notifVolume}%`}
+          />
+          <span className="jw-adminNotifVolumeValue" aria-hidden="true">
+            {notifVolume}%
+          </span>
+        </div>
       </div>
     </div>
   );

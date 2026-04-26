@@ -7,13 +7,35 @@
   font-size: 14px;
 }
 
-.jw-adminReportsGlSummary {
+/* General ledger: summary line lives in jw-adminReportsGlTopRow (same bar pattern as balance sheet) */
+.jw-adminReportsGlTopRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   margin-bottom: 14px;
-  padding: 12px 10px 4px;
-  font-size: 14px;
-  line-height: 1.5;
-  color: #333;
-  border-bottom: 1px solid #ececec;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.jw-adminReportsGlTopRow .jw-adminReportsGlSummary {
+  margin: 0;
+  padding: 0;
+  border: none;
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #555;
+}
+
+.jw-adminReportsGlTopRow .jw-adminReportsToolbar.jw-adminReportsGlToolbar,
+.jw-adminReportsGlTopRow .jw-adminReportsGlToolbar {
+  width: auto;
+  max-width: none;
+  margin-bottom: 0;
+  flex-shrink: 0;
+  justify-content: flex-end;
 }
 
 .jw-adminReportsGlSummary__account {

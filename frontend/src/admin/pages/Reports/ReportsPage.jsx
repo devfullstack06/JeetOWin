@@ -1164,44 +1164,46 @@ export default function ReportsPage() {
                 </div>
               ) : (
                 <div className="jw-adminReportsPrintBlock">
-                  <div className="jw-adminReportsToolbar jw-adminReportsToolbar--iconsRight jw-adminReportsNoPrint">
-                    <button
-                      type="button"
-                      className="jw-adminReportsIconBtn"
-                      onClick={exportGlCsv}
-                      disabled={glLoading}
-                      aria-label="Export CSV"
-                      title="Export CSV"
-                    >
-                      <img src={csvFileIcon} alt="" width={22} height={22} />
-                    </button>
-                    <button
-                      type="button"
-                      className="jw-adminReportsIconBtn"
-                      onClick={() => window.print()}
-                      disabled={glLoading}
-                      aria-label="Print"
-                      title="Print"
-                    >
-                      <img src={printerIcon} alt="" width={22} height={22} />
-                    </button>
+                  <div className="jw-adminReportsGlTopRow jw-adminReportsNoPrint">
+                    <div className="jw-adminReportsGlSummary" aria-live="polite">
+                      <span className="jw-adminReportsGlSummary__account">{glSelectedAccountLabel}</span>
+                      {glApplied.startDate ? (
+                        <span className="jw-adminReportsGlSummary__opening">
+                          {" "}
+                          · Opening balance (before {glApplied.startDate}):{" "}
+                          {(Number(glOpeningBalance) || 0).toLocaleString()}
+                        </span>
+                      ) : (
+                        <span className="jw-adminReportsGlSummary__opening">
+                          {" "}
+                          · Set a start date to carry forward an opening balance from prior movements.
+                        </span>
+                      )}
+                    </div>
+                    <div className="jw-adminReportsToolbar jw-adminReportsToolbar--iconsRight jw-adminReportsGlToolbar">
+                      <button
+                        type="button"
+                        className="jw-adminReportsIconBtn"
+                        onClick={exportGlCsv}
+                        disabled={glLoading}
+                        aria-label="Export CSV"
+                        title="Export CSV"
+                      >
+                        <img src={csvFileIcon} alt="" width={22} height={22} />
+                      </button>
+                      <button
+                        type="button"
+                        className="jw-adminReportsIconBtn"
+                        onClick={() => window.print()}
+                        disabled={glLoading}
+                        aria-label="Print"
+                        title="Print"
+                      >
+                        <img src={printerIcon} alt="" width={22} height={22} />
+                      </button>
+                    </div>
                   </div>
                   <h2 className="jw-adminReportsPrintTitle">General ledger</h2>
-                  <div className="jw-adminReportsGlSummary" aria-live="polite">
-                    <span className="jw-adminReportsGlSummary__account">{glSelectedAccountLabel}</span>
-                    {glApplied.startDate ? (
-                      <span className="jw-adminReportsGlSummary__opening">
-                        {" "}
-                        · Opening balance (before {glApplied.startDate}):{" "}
-                        {(Number(glOpeningBalance) || 0).toLocaleString()}
-                      </span>
-                    ) : (
-                      <span className="jw-adminReportsGlSummary__opening">
-                        {" "}
-                        · Set a start date to carry forward an opening balance from prior movements.
-                      </span>
-                    )}
-                  </div>
                   <GeneralLedgerTable
                     rows={glDisplayRows}
                     loading={glLoading}

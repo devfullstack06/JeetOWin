@@ -196,6 +196,47 @@
   transform: translateX(15px);
 }
 
+.jw-adminNotifVolumeRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 4px 2px;
+}
+
+.jw-adminNotifVolumeControls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  justify-content: flex-end;
+}
+
+.jw-adminNotifVolumeSlider {
+  flex: 1;
+  min-width: 72px;
+  max-width: 160px;
+  height: 6px;
+  border-radius: 3px;
+  accent-color: #159447;
+  cursor: pointer;
+}
+
+.jw-adminNotifVolumeSlider:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.jw-adminNotifVolumeValue {
+  flex-shrink: 0;
+  min-width: 38px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
+  text-align: right;
+}
+
 .jw-adminDropdownMuted {
   padding: 8px 10px;
   font-size: 13px;
