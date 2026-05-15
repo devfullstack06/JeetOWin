@@ -36,11 +36,20 @@ const {
 } = require("../controllers/admin/generalLedgerController");
 const { getAdminBalanceSheet } = require("../controllers/admin/balanceSheetController");
 const {
+  getAdminPromotions,
+  getAdminPromotionClickSummary,
+  createAdminPromotion,
+  updateAdminPromotion,
+  patchAdminPromotionFlags,
+  duplicateAdminPromotion,
+} = require("../controllers/admin/promotionsController");
+const {
   getAdminSocialLinks,
   createAdminSocialLink,
   updateAdminSocialLink,
 } = require("../controllers/admin/socialLinksController");
 const { optionalSocialIconUpload } = require("../middleware/uploadSocialIcon");
+const { optionalPromotionImageUpload } = require("../middleware/uploadPromotionsImage");
 const { optionalHomeBannerImagesUpload, optionalLoginBannerImagesUpload } = require("../middleware/uploadHomeBannerImages");
 const { optionalTopSportsImageUpload } = require("../middleware/uploadTopSportsImage");
 const { optionalTrendingGamesImageUpload } = require("../middleware/uploadTrendingGamesImage");
@@ -314,6 +323,12 @@ router.patch("/general-entries/:id", requireAdminAuth, updateAdminGeneralEntryNa
 router.get("/reports/general-ledger/accounts", requireAdminAuth, getAdminGeneralLedgerAccounts);
 router.get("/reports/general-ledger/statement", requireAdminAuth, getAdminGeneralLedgerStatement);
 router.get("/reports/balance-sheet", requireAdminAuth, getAdminBalanceSheet);
+router.get("/promotions/click-summary", requireAdminAuth, getAdminPromotionClickSummary);
+router.get("/promotions", requireAdminAuth, getAdminPromotions);
+router.post("/promotions", requireAdminAuth, optionalPromotionImageUpload, createAdminPromotion);
+router.patch("/promotions/:id/flags", requireAdminAuth, patchAdminPromotionFlags);
+router.patch("/promotions/:id", requireAdminAuth, optionalPromotionImageUpload, updateAdminPromotion);
+router.post("/promotions/:id/duplicate", requireAdminAuth, duplicateAdminPromotion);
 
 router.get("/social-links", requireAdminAuth, getAdminSocialLinks);
 router.post("/social-links", requireAdminAuth, optionalSocialIconUpload, createAdminSocialLink);

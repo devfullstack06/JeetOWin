@@ -1,17 +1,31 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import { Megaphone } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import "./promotionsBody.css";
 import usePageTitle from "../../hooks/usePageTitle";
 import PromotionsList from "../../components/promotions/PromotionsList";
-import { getActivePromotions } from "../../config/promotions";
+import { fetchClientPromotions, logPromotionClick } from "../../services/promotionsApi";
 
 export default function PromotionsBody() {
   const navigate = useNavigate();
   usePageTitle("Promotions");
 
-  const promos = useMemo(() => getActivePromotions(), []);
+  const [promos, setPromos] = useState([]);
+
+  useEffect(() => {
+    let ignore = false;
+    fetchClientPromotions({ placement: "home_rail" })
+      .then((rows) => {
+        if (!ignore) setPromos(rows);
+      })
+      .catch(() => {
+        if (!ignore) setPromos([]);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   const handleClose = () => {
     navigate("/home");
@@ -50,7 +64,12 @@ export default function PromotionsBody() {
         <div className="jw-promotionsPanelOuter">
           <div className="jw-promotionsPanel">
             <div className="jw-promotionsScroll">
-              <PromotionsList items={promos} />
+              <PromotionsList
+                items={promos}
+                onCardActivate={(promo) =>
+                  logPromotionClick({ promotionId: promo?.id, source: "promotions_page" })
+                }
+              />
             </div>
           </div>
         </div>

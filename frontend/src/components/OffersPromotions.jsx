@@ -184,11 +184,30 @@
 // }
 
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import PromotionsRail from "./promotions/PromotionsRail";
-import { getActivePromotions } from "../config/promotions";
+import { fetchClientPromotions, logPromotionClick } from "../services/promotionsApi";
 
 export default function OffersPromotions({ title = "Offers & Promotions" }) {
-  const items = getActivePromotions();
-  return <PromotionsRail title={title} items={items} />;
+  const [items, setItems] = useState([]);
+
+  useEffect(() => {
+    let ignore = false;
+    fetchClientPromotions({ placement: "home_rail" })
+      .then((rows) => {
+        if (!ignore) setItems(rows);
+      })
+      .catch(() => {
+        if (!ignore) setItems([]);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  const onCardActivate = (promo) => {
+    logPromotionClick({ promotionId: promo?.id, source: "home_rail" });
+  };
+
+  return <PromotionsRail title={title} items={items} onCardActivate={onCardActivate} />;
 }

@@ -1,0 +1,229 @@
+.jw-adminPromosThumb {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #e4e4e4;
+  background: #f3f3f3;
+}
+
+.jw-adminPromosStatus {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 82px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.jw-adminPromosStatus.is-draft { background: #eef2ff; color: #4558c8; }
+.jw-adminPromosStatus.is-scheduled { background: #fff7e6; color: #9d6500; }
+.jw-adminPromosStatus.is-active { background: #eaf8ef; color: #159447; }
+.jw-adminPromosStatus.is-ended { background: #f3f4f6; color: #525a67; }
+
+.jw-adminPromosStatusReadonly {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 8px 0;
+}
+
+.jw-adminPromosStatusReadonly__hint {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.jw-adminPromosFlagCell {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.jw-adminPromosFlagCell .jw-adminAutoRefresh__switch {
+  margin: 0 auto;
+  display: block;
+}
+
+.jw-adminPromosModal {
+  max-width: 860px;
+}
+
+.jw-adminPromosCtaModeRow {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.jw-adminPromosCtaModeBtn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+}
+
+.jw-adminPromosCtaModeBtn:hover {
+  border-color: #9ca3af;
+  background: #f9fafb;
+}
+
+.jw-adminPromosCtaModeBtn.is-active {
+  border-color: #159447;
+  background: #ecfdf5;
+  color: #065f46;
+}
+
+.jw-adminPromosFormGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 14px;
+}
+
+.jw-adminPromosFormGrid__full {
+  grid-column: 1 / -1;
+}
+
+.jw-adminPromosPreview {
+  margin-top: 10px;
+  width: 116px;
+  height: 116px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid #d9d9d9;
+  background: #f6f6f6;
+}
+
+.jw-adminCreateBtnInner {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Same layout as /admin/notifications/announcements (Scheduler) */
+.jw-adminAnnSchedulerGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.jw-adminPromosSchedulerTimes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.jw-adminPromosSchedulerTimes .jw-adminInput {
+  width: 100%;
+}
+
+.jw-adminPromosTopBlocks {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+@media (max-width: 1100px) {
+  .jw-adminPromosTopBlocks {
+    grid-template-columns: 1fr;
+  }
+}
+
+.jw-adminPromosPreviewBlock {
+  border: 1px solid #e6e8eb;
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: #fafbfc;
+}
+
+.jw-adminPromosPreviewBlock__head {
+  margin-bottom: 10px;
+}
+
+.jw-adminPromosPreviewBlock__title {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1a1d21;
+}
+
+.jw-adminPromosPreviewBlock__sub {
+  margin: 0;
+  font-size: 12px;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
+.jw-adminPromosPreviewBlock__empty {
+  margin: 0;
+  font-size: 13px;
+  color: #5c6470;
+  line-height: 1.45;
+}
+
+.jw-adminPromosPreviewScale {
+  overflow: hidden;
+  border-radius: 8px;
+  border: 1px solid #e4e6ea;
+  background: #0f1420;
+}
+
+.jw-adminPromosClickSummary {
+  border: 1px solid #e6e8eb;
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: #fff;
+}
+
+.jw-adminPromosClickSummary__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.jw-adminPromosClickSummary__title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1a1d21;
+}
+
+.jw-adminPromosClickSummary__filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #374151;
+}
+
+.jw-adminPromosClickSummary__filter select {
+  min-width: 160px;
+  max-width: 220px;
+}
+
+.jw-adminPromosClickTableWrap {
+  max-height: 220px;
+  overflow: auto;
+}
+
+.jw-adminPromosClickTable th,
+.jw-adminPromosClickTable td {
+  font-size: 13px;
+}
+
+@media (max-width: 900px) {
+  .jw-adminPromosFormGrid {
+    grid-template-columns: 1fr;
+  }
+}

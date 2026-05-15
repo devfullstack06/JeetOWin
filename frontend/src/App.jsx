@@ -35,6 +35,7 @@ import AdminBrandsPage from "./admin/pages/Brands/BrandsPage";
 import AdminAccountsPage from "./admin/pages/Accounts/AccountsPage";
 import AdminTransactionsPage from "./admin/pages/Transactions/TransactionsPage";
 import AdminNotificationsPage from "./admin/pages/Notifications/AdminNotificationsPage";
+import ManagePromosPage from "./admin/pages/Promotions/ManagePromosPage";
 import { adminNavGroups } from "./admin/adminNav";
 
 function MobileNavLayout() {
@@ -156,6 +157,7 @@ export default function App() {
             <Route path="notifications/announcements" element={<AdminNotificationsPage />} />
             <Route path="notifications/inbox" element={<AdminNotificationsPage />} />
             <Route path="notifications/groups" element={<AdminNotificationsPage />} />
+            <Route path="promotions/manage-promos" element={<ManagePromosPage />} />
 
             {/* Auto placeholders for remaining admin routes */}
             {adminItems.map((it) => {
@@ -186,6 +188,7 @@ export default function App() {
               if (nestedPath === "notifications/announcements") return null;
               if (nestedPath === "notifications/inbox") return null;
               if (nestedPath === "notifications/groups") return null;
+              if (nestedPath === "promotions/manage-promos") return null;
 
               return (
                 <Route

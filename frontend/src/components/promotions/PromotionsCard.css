@@ -55,12 +55,37 @@
     text-decoration: underline;
   }
 
-  .jw-promoLink--guest {
+  .jw-promoLink--guest,
+  .jw-promoLink--preview {
     display: inline-block;
     margin-top: auto;
   }
 
-  article.jw-promoCard[role="button"] {
+  .jw-promoLink--preview {
+    cursor: default;
+    text-decoration: none;
+    color: #e6ecff;
+    opacity: 0.85;
+  }
+
+  .jw-promoLink--button {
+    display: inline-block;
+    margin-top: auto;
+    border: none;
+    background: none;
+    padding: 0;
+    font: inherit;
+    font-weight: 700;
+    font-size: 14px;
+    color: #e6ecff;
+    text-decoration: underline;
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .jw-promoLink--button:hover {
+    opacity: 0.92;
+  }
     cursor: pointer;
   }
 

@@ -2,7 +2,12 @@ import React, { useEffect, useLayoutEffect, useRef } from "react";
 import PromotionsCard from "./PromotionsCard";
 import "./PromotionsRail.css";
 
-export default function PromotionsRail({ title = "Offers & Promotions", items = [] }) {
+export default function PromotionsRail({
+  title = "Offers & Promotions",
+  items = [],
+  onCardActivate,
+  preview = false,
+}) {
   const viewportRef = useRef(null);
   const stepRef = useRef(0);
   const autoTimerRef = useRef(null);
@@ -111,7 +116,7 @@ export default function PromotionsRail({ title = "Offers & Promotions", items = 
         <div className="jw-promoRailTrack">
           {items.map((promo, idx) => (
             <div key={`${promo.id}-${idx}`} className="jw-promoRailCard">
-              <PromotionsCard promo={promo} variant="rail" />
+              <PromotionsCard promo={promo} variant="rail" onActivate={onCardActivate} preview={preview} />
             </div>
           ))}
         </div>

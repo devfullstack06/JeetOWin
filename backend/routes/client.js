@@ -18,6 +18,10 @@ const {
   getClientInboxUnreadCount,
   markClientInboxMessageRead,
 } = require('../controllers/admin/inboxController');
+const {
+  getClientPromotions,
+  logPromotionClick,
+} = require("../controllers/admin/promotionsController");
 
 /**
  * GET /api/client/dashboard
@@ -88,6 +92,9 @@ router.post(
   roleCheck('client'),
   markClientInboxMessageRead
 );
+
+router.get("/promotions", getClientPromotions);
+router.post("/promotions/:id/click", logPromotionClick);
 
 /**
  * Example: Route accessible by multiple roles
