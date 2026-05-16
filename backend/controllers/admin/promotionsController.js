@@ -532,35 +532,44 @@ exports.createAdminPromotion = async (req, res) => {
     const saved = savePromotionImage(file);
     if (saved.error) return res.status(400).json({ message: saved.error });
 
+    const imageUrl = saved.imageUrl;
+    const storedDetailsMarkdown = ctaMode === "popup" ? detailsMarkdown || null : null;
     const isPaused = 0;
     const isArchived = 0;
-    const [result] = await pool.query(
-      `INSERT INTO promotions
-        (title, description, tag, image_url, button_label, cta_link, open_in_new_tab, cta_mode, details_markdown, placement,
-         sort_order, status, is_paused, is_archived, starts_at, ends_at, locale, created_by_admin_id, updated_by_admin_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        title,
-        description,
-        tag || null,
-        saved.imageUrl,
-        buttonLabel,
-        ctaLink,
-        openInNewTab,
-        ctaMode,
-        ctaMode === "popup" ? detailsMarkdown || null : null,
-        placement,
-        sortOrder,
-        status,
-        isPaused,
-        isArchived,
-        startsAt,
-        endsAt,
-        locale,
-        adminId,
-        adminId,
-      ]
-    );
+
+    const sql = `
+INSERT INTO promotions
+(title, description, tag, image_url, button_label, cta_link,
+ open_in_new_tab, cta_mode, details_markdown, placement,
+ sort_order, status, is_paused, is_archived,
+ starts_at, ends_at, locale,
+ created_by_admin_id, updated_by_admin_id)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+`;
+
+    const values = [
+      title,
+      description,
+      tag || null,
+      imageUrl,
+      buttonLabel,
+      ctaLink,
+      openInNewTab,
+      ctaMode,
+      storedDetailsMarkdown,
+      placement,
+      sortOrder,
+      status,
+      isPaused,
+      isArchived,
+      startsAt,
+      endsAt,
+      locale,
+      adminId,
+      adminId,
+    ];
+
+    const [result] = await pool.query(sql, values);
     const id = Number(result?.insertId || 0);
     if (!id) return res.status(500).json({ message: "Failed to create promotion." });
 
@@ -808,28 +817,39 @@ exports.duplicateAdminPromotion = async (req, res) => {
     const [[maxRow]] = await pool.query("SELECT COALESCE(MAX(sort_order), 0) AS m FROM promotions");
     const nextSort = Number(maxRow?.m || 0) + 1;
 
-    const [result] = await pool.query(
-      `INSERT INTO promotions
-        (title, description, tag, image_url, button_label, cta_link, open_in_new_tab, cta_mode, details_markdown, placement,
-         sort_order, status, is_paused, is_archived, starts_at, ends_at, locale, created_by_admin_id, updated_by_admin_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft', 0, 0, NULL, NULL, ?, ?, ?)`,
-      [
-        `${p.title} (Copy)`,
-        p.description,
-        p.tag,
-        p.image_url,
-        p.button_label,
-        p.cta_link,
-        Number(p.open_in_new_tab) ? 1 : 0,
-        normalizeCtaMode(p.cta_mode),
-        p.details_markdown != null ? String(p.details_markdown) : null,
-        p.placement || "home_rail",
-        nextSort,
-        p.locale || "en",
-        adminId,
-        adminId,
-      ]
-    );
+    const sql = `
+INSERT INTO promotions
+(title, description, tag, image_url, button_label, cta_link,
+ open_in_new_tab, cta_mode, details_markdown, placement,
+ sort_order, status, is_paused, is_archived,
+ starts_at, ends_at, locale,
+ created_by_admin_id, updated_by_admin_id)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+`;
+
+    const values = [
+      `${p.title} (Copy)`,
+      p.description,
+      p.tag,
+      p.image_url,
+      p.button_label,
+      p.cta_link,
+      Number(p.open_in_new_tab) ? 1 : 0,
+      normalizeCtaMode(p.cta_mode),
+      p.details_markdown != null ? String(p.details_markdown) : null,
+      p.placement || "home_rail",
+      nextSort,
+      "draft",
+      0,
+      0,
+      null,
+      null,
+      p.locale || "en",
+      adminId,
+      adminId,
+    ];
+
+    const [result] = await pool.query(sql, values);
     const newId = Number(result?.insertId || 0);
     const [latest] = await pool.query("SELECT * FROM promotions WHERE id = ? LIMIT 1", [newId]);
     return res.status(201).json({ item: mapPromotionRow(latest[0]) });
