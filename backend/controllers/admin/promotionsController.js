@@ -96,6 +96,39 @@ function normalizeDateTime(value) {
   return s.length === 16 ? `${s}:00` : s;
 }
 
+/**
+ * Naive YYYY-MM-DD HH:mm:ss: if wall time is >= 24h, roll into the next calendar day(s).
+ * e.g. 2026-05-16 24:01:00 -> 2026-05-17 00:01:00
+ */
+function normalizeMysqlWallDatetimeRollOverflow(sql) {
+  if (sql == null || sql === "") return null;
+  const s = String(sql).trim().replace("T", " ");
+  const full = s.length === 16 ? `${s}:00` : s.slice(0, 19);
+  const m = full.match(/^(\d{4})-(\d{2})-(\d{2}) (\d{1,2}):(\d{2}):(\d{2})$/);
+  if (!m) return sql;
+  const y = parseInt(m[1], 10);
+  const mo = parseInt(m[2], 10);
+  const d = parseInt(m[3], 10);
+  const H = parseInt(m[4], 10);
+  const M = parseInt(m[5], 10);
+  const S = parseInt(m[6], 10);
+  if (![y, mo, d, H, M, S].every((n) => Number.isFinite(n))) return null;
+  if (mo < 1 || mo > 12 || d < 1 || d > 31 || M < 0 || M > 59 || S < 0 || S > 59 || H < 0) return null;
+  const pad = (n) => String(n).padStart(2, "0");
+  let secTotal = H * 3600 + M * 60 + S;
+  if (secTotal < 86400) {
+    return `${y}-${pad(mo)}-${pad(d)} ${pad(H)}:${pad(M)}:${pad(S)}`;
+  }
+  const dayCarry = Math.floor(secTotal / 86400);
+  secTotal %= 86400;
+  const nh = Math.floor(secTotal / 3600);
+  const nm = Math.floor((secTotal % 3600) / 60);
+  const ns = secTotal % 60;
+  const t = Date.UTC(y, mo - 1, d + dayCarry);
+  const ud = new Date(t);
+  return `${ud.getUTCFullYear()}-${pad(ud.getUTCMonth() + 1)}-${pad(ud.getUTCDate())} ${pad(nh)}:${pad(nm)}:${pad(ns)}`;
+}
+
 /** mysql2 returns DATETIME as Date — Date vs string comparisons break; normalize to YYYY-MM-DD HH:mm:ss */
 function normalizePromoWallDatetime(value) {
   if (value == null || value === "") return null;
@@ -115,9 +148,10 @@ function normalizeIncomingScheduleValue(raw) {
   if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(s) || s.endsWith("Z") || /[+-]\d{2}:?\d{2}$/.test(s)) {
     const d = new Date(s);
     if (Number.isNaN(d.getTime())) return null;
-    return dateToKarachiSql(d);
+    return normalizeMysqlWallDatetimeRollOverflow(dateToKarachiSql(d));
   }
-  return normalizeDateTime(s);
+  const naive = normalizeDateTime(s);
+  return normalizeMysqlWallDatetimeRollOverflow(naive);
 }
 
 function looksExternalLink(url) {
@@ -498,11 +532,13 @@ exports.createAdminPromotion = async (req, res) => {
     const saved = savePromotionImage(file);
     if (saved.error) return res.status(400).json({ message: saved.error });
 
+    const isPaused = 0;
+    const isArchived = 0;
     const [result] = await pool.query(
       `INSERT INTO promotions
         (title, description, tag, image_url, button_label, cta_link, open_in_new_tab, cta_mode, details_markdown, placement,
          sort_order, status, is_paused, is_archived, starts_at, ends_at, locale, created_by_admin_id, updated_by_admin_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         title,
         description,
@@ -516,6 +552,8 @@ exports.createAdminPromotion = async (req, res) => {
         placement,
         sortOrder,
         status,
+        isPaused,
+        isArchived,
         startsAt,
         endsAt,
         locale,
