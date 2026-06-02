@@ -1,3 +1,33 @@
+/** Roll Intl hour 24+ into valid MySQL DATETIME (e.g. 2026-06-03 24:45:00 → 2026-06-04 00:45:00). */
+export function normalizeMysqlWallDatetimeRollOverflow(sql) {
+  if (sql == null || sql === "") return null;
+  const s = String(sql).trim().replace("T", " ");
+  const full = s.length === 16 ? `${s}:00` : s.slice(0, 19);
+  const m = full.match(/^(\d{4})-(\d{2})-(\d{2}) (\d{1,2}):(\d{2}):(\d{2})$/);
+  if (!m) return sql;
+  const y = parseInt(m[1], 10);
+  const mo = parseInt(m[2], 10);
+  const d = parseInt(m[3], 10);
+  const H = parseInt(m[4], 10);
+  const M = parseInt(m[5], 10);
+  const S = parseInt(m[6], 10);
+  if (![y, mo, d, H, M, S].every((n) => Number.isFinite(n))) return null;
+  if (mo < 1 || mo > 12 || d < 1 || d > 31 || M < 0 || M > 59 || S < 0 || S > 59 || H < 0) return null;
+  const pad = (n) => String(n).padStart(2, "0");
+  let secTotal = H * 3600 + M * 60 + S;
+  if (secTotal < 86400) {
+    return `${y}-${pad(mo)}-${pad(d)} ${pad(H)}:${pad(M)}:${pad(S)}`;
+  }
+  const dayCarry = Math.floor(secTotal / 86400);
+  secTotal %= 86400;
+  const nh = Math.floor(secTotal / 3600);
+  const nm = Math.floor((secTotal % 3600) / 60);
+  const ns = secTotal % 60;
+  const t = Date.UTC(y, mo - 1, d + dayCarry);
+  const ud = new Date(t);
+  return `${ud.getUTCFullYear()}-${pad(ud.getUTCMonth() + 1)}-${pad(ud.getUTCDate())} ${pad(nh)}:${pad(nm)}:${pad(ns)}`;
+}
+
 /** Wall-clock YYYY-MM-DD HH:mm:ss in Asia/Karachi for a given instant (matches server promotions logic). */
 export function formatInstantToKarachiSql(date) {
   const d = date instanceof Date && !Number.isNaN(date.getTime()) ? date : new Date();
@@ -14,7 +44,8 @@ export function formatInstantToKarachiSql(date) {
   const parts = dtf.formatToParts(d);
   const obj = {};
   for (const p of parts) obj[p.type] = p.value;
-  return `${obj.year}-${obj.month}-${obj.day} ${obj.hour}:${obj.minute}:${obj.second}`;
+  const raw = `${obj.year}-${obj.month}-${obj.day} ${obj.hour}:${obj.minute}:${obj.second}`;
+  return normalizeMysqlWallDatetimeRollOverflow(raw) || raw;
 }
 
 const PK_OFFSET = "+05:00";

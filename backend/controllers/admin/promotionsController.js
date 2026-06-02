@@ -24,7 +24,8 @@ function dateToKarachiSql(date) {
   const parts = dtf.formatToParts(d);
   const obj = {};
   for (const p of parts) obj[p.type] = p.value;
-  return `${obj.year}-${obj.month}-${obj.day} ${obj.hour}:${obj.minute}:${obj.second}`;
+  const raw = `${obj.year}-${obj.month}-${obj.day} ${obj.hour}:${obj.minute}:${obj.second}`;
+  return normalizeMysqlWallDatetimeRollOverflow(raw) || raw;
 }
 
 function nowKarachiSql() {
@@ -65,7 +66,7 @@ function normalizeStatus(value, fallback = "draft") {
 function computeStatusFromSchedule(startsAt, endsAt, now = nowKarachiSql()) {
   const sStart = normalizePromoWallDatetime(startsAt);
   const sEnd = normalizePromoWallDatetime(endsAt);
-  const sNow = typeof now === "string" ? normalizeDateTime(now) || now : normalizePromoWallDatetime(now) || nowKarachiSql();
+  const sNow = normalizePromoWallDatetime(now) || nowKarachiSql();
   const hasStart = sStart != null && sStart !== "";
   const hasEnd = sEnd != null && sEnd !== "";
   if (hasStart !== hasEnd) return null;
@@ -132,12 +133,12 @@ function normalizeMysqlWallDatetimeRollOverflow(sql) {
 /** mysql2 returns DATETIME as Date — Date vs string comparisons break; normalize to YYYY-MM-DD HH:mm:ss */
 function normalizePromoWallDatetime(value) {
   if (value == null || value === "") return null;
-  if (typeof value === "string") return normalizeDateTime(value);
   if (value instanceof Date && !Number.isNaN(value.getTime())) {
-    const pad = (n) => String(n).padStart(2, "0");
-    return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())} ${pad(value.getHours())}:${pad(value.getMinutes())}:${pad(value.getSeconds())}`;
+    return normalizeMysqlWallDatetimeRollOverflow(dateToKarachiSql(value));
   }
-  return normalizeDateTime(value);
+  const naive = normalizeDateTime(value);
+  if (!naive) return null;
+  return normalizeMysqlWallDatetimeRollOverflow(naive);
 }
 
 /** Accept ISO (announcements-style) or naive YYYY-MM-DD HH:mm:ss; store Karachi wall in DB. */
@@ -306,9 +307,55 @@ function decodeOptionalClientUserId(authHeader) {
 }
 
 /**
+ * Fix rows saved with invalid wall times (e.g. Intl hour "24" → 24:45:06) so job UPDATEs can run.
+ */
+async function repairInvalidPromotionScheduleDatetimes() {
+  try {
+    const [rows] = await pool.query(
+      `SELECT id,
+         CAST(starts_at AS CHAR(19)) AS starts_at_str,
+         CAST(ends_at AS CHAR(19)) AS ends_at_str
+       FROM promotions
+       WHERE CAST(starts_at AS CHAR) LIKE '% 24:%'
+          OR CAST(ends_at AS CHAR) LIKE '% 24:%'`
+    );
+    for (const row of rows || []) {
+      const updates = [];
+      const params = [];
+      const startStr = row.starts_at_str != null ? String(row.starts_at_str) : "";
+      const endStr = row.ends_at_str != null ? String(row.ends_at_str) : "";
+      if (/ 24:/.test(startStr)) {
+        const fixed = normalizeMysqlWallDatetimeRollOverflow(startStr.slice(0, 19));
+        if (fixed) {
+          updates.push("starts_at = ?");
+          params.push(fixed);
+        }
+      }
+      if (/ 24:/.test(endStr)) {
+        const fixed = normalizeMysqlWallDatetimeRollOverflow(endStr.slice(0, 19));
+        if (fixed) {
+          updates.push("ends_at = ?");
+          params.push(fixed);
+        }
+      }
+      if (!updates.length) continue;
+      params.push(row.id);
+      await pool.query(
+        `UPDATE promotions SET ${updates.join(", ")}, updated_at = NOW() WHERE id = ?`,
+        params
+      );
+    }
+  } catch (err) {
+    if (err.code === "ER_NO_SUCH_TABLE") return;
+    console.error("[promotions-job] repair datetime failed:", err.message || err);
+  }
+}
+
+/**
  * Job tick: recompute stored status from schedule (Asia/Karachi wall DATETIME strings).
  */
 async function runPromotionStatusTransitions() {
+  await repairInvalidPromotionScheduleDatetimes();
   const now = nowKarachiSql();
   try {
     const [toEnded] = await pool.query(
