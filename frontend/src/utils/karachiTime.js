@@ -1,4 +1,10 @@
-/** Roll Intl hour 24+ into valid MySQL DATETIME (e.g. 2026-06-03 24:45:00 → 2026-06-04 00:45:00). */
+const PK_OFFSET_MS = 5 * 60 * 60 * 1000;
+
+function pad2(n) {
+  return String(n).padStart(2, "0");
+}
+
+/** Roll hour 24+ into valid MySQL DATETIME (e.g. 2026-06-03 24:45:00 → 2026-06-04 00:45:00). */
 export function normalizeMysqlWallDatetimeRollOverflow(sql) {
   if (sql == null || sql === "") return null;
   const s = String(sql).trim().replace("T", " ");
@@ -28,24 +34,11 @@ export function normalizeMysqlWallDatetimeRollOverflow(sql) {
   return `${ud.getUTCFullYear()}-${pad(ud.getUTCMonth() + 1)}-${pad(ud.getUTCDate())} ${pad(nh)}:${pad(nm)}:${pad(ns)}`;
 }
 
-/** Wall-clock YYYY-MM-DD HH:mm:ss in Asia/Karachi for a given instant (matches server promotions logic). */
+/** Wall-clock YYYY-MM-DD HH:mm:ss in Asia/Karachi (UTC+5, matches server promotions logic). */
 export function formatInstantToKarachiSql(date) {
   const d = date instanceof Date && !Number.isNaN(date.getTime()) ? date : new Date();
-  const dtf = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Karachi",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false,
-  });
-  const parts = dtf.formatToParts(d);
-  const obj = {};
-  for (const p of parts) obj[p.type] = p.value;
-  const raw = `${obj.year}-${obj.month}-${obj.day} ${obj.hour}:${obj.minute}:${obj.second}`;
-  return normalizeMysqlWallDatetimeRollOverflow(raw) || raw;
+  const k = new Date(d.getTime() + PK_OFFSET_MS);
+  return `${k.getUTCFullYear()}-${pad2(k.getUTCMonth() + 1)}-${pad2(k.getUTCDate())} ${pad2(k.getUTCHours())}:${pad2(k.getUTCMinutes())}:${pad2(k.getUTCSeconds())}`;
 }
 
 const PK_OFFSET = "+05:00";

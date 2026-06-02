@@ -6,26 +6,18 @@ const { pool } = require("../../config/database");
 const { UPLOADS_PROMOTIONS } = require("../../middleware/uploadPromotionsImage");
 
 const STATUS_SET = new Set(["draft", "scheduled", "active", "ended"]);
-const KARACHI_TIMEZONE = "Asia/Karachi";
+/** Asia/Karachi is UTC+5 year-round (no DST). */
+const KARACHI_OFFSET_MS = 5 * 60 * 60 * 1000;
 
-/** Wall-clock in Asia/Karachi for a given Date (for DATETIME string compare with DB values). */
+function pad2(n) {
+  return String(n).padStart(2, "0");
+}
+
+/** Wall-clock YYYY-MM-DD HH:mm:ss in Asia/Karachi (fixed UTC+5 — avoids Intl hour "24" bug). */
 function dateToKarachiSql(date) {
   const d = date instanceof Date && !Number.isNaN(date.getTime()) ? date : new Date();
-  const dtf = new Intl.DateTimeFormat("en-CA", {
-    timeZone: KARACHI_TIMEZONE,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false,
-  });
-  const parts = dtf.formatToParts(d);
-  const obj = {};
-  for (const p of parts) obj[p.type] = p.value;
-  const raw = `${obj.year}-${obj.month}-${obj.day} ${obj.hour}:${obj.minute}:${obj.second}`;
-  return normalizeMysqlWallDatetimeRollOverflow(raw) || raw;
+  const k = new Date(d.getTime() + KARACHI_OFFSET_MS);
+  return `${k.getUTCFullYear()}-${pad2(k.getUTCMonth() + 1)}-${pad2(k.getUTCDate())} ${pad2(k.getUTCHours())}:${pad2(k.getUTCMinutes())}:${pad2(k.getUTCSeconds())}`;
 }
 
 function nowKarachiSql() {
@@ -307,44 +299,23 @@ function decodeOptionalClientUserId(authHeader) {
 }
 
 /**
- * Fix rows saved with invalid wall times (e.g. Intl hour "24" → 24:45:06) so job UPDATEs can run.
+ * Fix rows with invalid wall hour 24 (legacy Intl bug) using string ops — no SELECT of bad DATETIME needed.
  */
 async function repairInvalidPromotionScheduleDatetimes() {
-  try {
-    const [rows] = await pool.query(
-      `SELECT id,
-         CAST(starts_at AS CHAR(19)) AS starts_at_str,
-         CAST(ends_at AS CHAR(19)) AS ends_at_str
-       FROM promotions
-       WHERE CAST(starts_at AS CHAR) LIKE '% 24:%'
-          OR CAST(ends_at AS CHAR) LIKE '% 24:%'`
+  const fixColumn = async (column) => {
+    await pool.query(
+      `UPDATE promotions
+       SET ${column} = DATE_ADD(
+         STR_TO_DATE(REPLACE(CAST(${column} AS CHAR(19)), ' 24:', ' 00:'), '%Y-%m-%d %H:%i:%s'),
+         INTERVAL 1 DAY
+       )
+       WHERE ${column} IS NOT NULL
+         AND CAST(${column} AS CHAR) LIKE '% 24:%'`
     );
-    for (const row of rows || []) {
-      const updates = [];
-      const params = [];
-      const startStr = row.starts_at_str != null ? String(row.starts_at_str) : "";
-      const endStr = row.ends_at_str != null ? String(row.ends_at_str) : "";
-      if (/ 24:/.test(startStr)) {
-        const fixed = normalizeMysqlWallDatetimeRollOverflow(startStr.slice(0, 19));
-        if (fixed) {
-          updates.push("starts_at = ?");
-          params.push(fixed);
-        }
-      }
-      if (/ 24:/.test(endStr)) {
-        const fixed = normalizeMysqlWallDatetimeRollOverflow(endStr.slice(0, 19));
-        if (fixed) {
-          updates.push("ends_at = ?");
-          params.push(fixed);
-        }
-      }
-      if (!updates.length) continue;
-      params.push(row.id);
-      await pool.query(
-        `UPDATE promotions SET ${updates.join(", ")}, updated_at = NOW() WHERE id = ?`,
-        params
-      );
-    }
+  };
+  try {
+    await fixColumn("starts_at");
+    await fixColumn("ends_at");
   } catch (err) {
     if (err.code === "ER_NO_SUCH_TABLE") return;
     console.error("[promotions-job] repair datetime failed:", err.message || err);
