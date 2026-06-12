@@ -9,7 +9,7 @@
 /* Whole page */
 .jw-page {
   min-height: 100vh;
-  background: #e9e9e9;
+  background: transparent;
   font-family: var(--jw-font);
   color: #0b2a6d;
 }
@@ -62,7 +62,7 @@
 /* BODY wrapper */
 .jw-body {
   display: flex;
-  background: #e9e9e9;
+  background: transparent;
   min-height: calc(100vh - var(--header-h)); /* Footer is hidden on login/signup pages */
 }
 
@@ -78,7 +78,7 @@
   flex: 1;
   position: relative;
   overflow: hidden;
-  background: #e9e9e9;
+  background: transparent;
 }
 
 /* Banner stage */

@@ -129,8 +129,70 @@ function getPktOverviewPeriodBounds(date = new Date()) {
   };
 }
 
+/**
+ * Last calendar day YYYY-MM-DD for a Karachi month (ym = YYYY-MM).
+ * @param {string} ym
+ * @returns {string}
+ */
+function pktLastDayOfMonthYmd(ym) {
+  const [y, m] = String(ym).split("-").map(Number);
+  const next =
+    m === 12
+      ? `${y + 1}-01-01`
+      : `${y}-${String(m + 1).padStart(2, "0")}-01`;
+  return pktCalendarAddDays(next, -1);
+}
+
+/**
+ * Inclusive UTC bounds for a full Karachi calendar month.
+ * @param {string} ym - YYYY-MM
+ * @returns {{ start: Date, end: Date, ym: string }}
+ */
+function pktMonthBoundsUtc(ym) {
+  const firstYmd = `${String(ym).slice(0, 7)}-01`;
+  const lastYmd = pktLastDayOfMonthYmd(String(ym).slice(0, 7));
+  const { start } = pktDayBoundsUtc(firstYmd);
+  const { end } = pktDayBoundsUtc(lastYmd);
+  return { start, end, ym: String(ym).slice(0, 7) };
+}
+
+/**
+ * Previous Karachi calendar month as YYYY-MM.
+ * @param {Date} [date]
+ * @returns {string}
+ */
+function pktPreviousMonthYm(date = new Date()) {
+  const ymd = pktYmdForInstant(date);
+  const [y, m] = ymd.split("-").map(Number);
+  let py = y;
+  let pm = m - 1;
+  if (pm < 1) {
+    pm = 12;
+    py -= 1;
+  }
+  return `${py}-${String(pm).padStart(2, "0")}`;
+}
+
+/**
+ * Format month label like Oct'25 for client UI.
+ * @param {string} ym - YYYY-MM
+ */
+function pktMonthLabel(ym) {
+  const [y, m] = String(ym).split("-").map(Number);
+  const names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const mon = names[m - 1] || String(m);
+  return `${mon}'${String(y).slice(-2)}`;
+}
+
 module.exports = {
   getPktDashboardBounds,
   getPktOverviewPeriodBounds,
   pktYmdForInstant,
+  pktCalendarAddDays,
+  pktDayBoundsUtc,
+  pktLastDayOfMonthYmd,
+  pktMonthBoundsUtc,
+  pktPreviousMonthYm,
+  pktMonthLabel,
 };
+

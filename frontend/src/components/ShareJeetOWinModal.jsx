@@ -3,8 +3,7 @@ import { createPortal } from "react-dom";
 import { X, Mail, MessageSquare, Copy, Check, Send } from "lucide-react";
 import "./shareJeetOWinModal.css";
 
-const SHARE_URL = "https://www.jeetowin.com";
-const SHARE_LINE = `Check out JeetOWin — ${SHARE_URL}`;
+const DEFAULT_SHARE_URL = "https://www.jeetowin.com";
 
 function openCentered(url) {
   window.open(url, "_blank", "noopener,noreferrer");
@@ -97,7 +96,9 @@ function IconX() {
   );
 }
 
-export default function ShareJeetOWinModal({ open, onClose }) {
+export default function ShareJeetOWinModal({ open, onClose, shareUrl }) {
+  const resolvedUrl = shareUrl || DEFAULT_SHARE_URL;
+  const shareLine = `Check out JeetOWin — ${resolvedUrl}`;
   const [hint, setHint] = useState("");
   const [copied, setCopied] = useState(false);
 
@@ -125,62 +126,62 @@ export default function ShareJeetOWinModal({ open, onClose }) {
 
   const copyLink = useCallback(() => {
     setHint("");
-    void copyTextBestEffort(SHARE_URL).then((ok) => {
+    void copyTextBestEffort(resolvedUrl).then((ok) => {
       if (ok) {
         setCopied(true);
         window.setTimeout(() => setCopied(false), 2000);
       } else {
-        setHint("Could not copy automatically. Select and copy: " + SHARE_URL);
+        setHint("Could not copy automatically. Select and copy: " + resolvedUrl);
       }
     });
-  }, []);
+  }, [resolvedUrl]);
 
   const shareWhatsApp = useCallback(() => {
     setHint("");
-    openCentered(`https://api.whatsapp.com/send?text=${encodeURIComponent(SHARE_LINE)}`);
-  }, []);
+    openCentered(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareLine)}`);
+  }, [shareLine]);
 
   const shareTelegram = useCallback(() => {
     setHint("");
     openCentered(
-      `https://t.me/share/url?url=${encodeURIComponent(SHARE_URL)}&text=${encodeURIComponent("Check out JeetOWin")}`
+      `https://t.me/share/url?url=${encodeURIComponent(resolvedUrl)}&text=${encodeURIComponent("Check out JeetOWin")}`
     );
-  }, []);
+  }, [resolvedUrl]);
 
   const shareInstagram = useCallback(() => {
     setHint("");
-    void copyTextBestEffort(SHARE_URL).then((ok) => {
+    void copyTextBestEffort(resolvedUrl).then((ok) => {
       if (ok) {
         setHint(
           "Link copied. Instagram has no web share for links — open the Instagram app and paste the link in a story, DM, or bio."
         );
       } else {
-        setHint("Could not copy automatically. Select and copy: " + SHARE_URL);
+        setHint("Could not copy automatically. Select and copy: " + resolvedUrl);
       }
     });
-  }, []);
+  }, [resolvedUrl]);
 
   const shareSms = useCallback(() => {
     setHint("");
-    window.location.href = `sms:?body=${encodeURIComponent(SHARE_LINE)}`;
-  }, []);
+    window.location.href = `sms:?body=${encodeURIComponent(shareLine)}`;
+  }, [shareLine]);
 
   const shareEmail = useCallback(() => {
     setHint("");
-    window.location.href = `mailto:?subject=${encodeURIComponent("JeetOWin")}&body=${encodeURIComponent(SHARE_LINE)}`;
-  }, []);
+    window.location.href = `mailto:?subject=${encodeURIComponent("JeetOWin")}&body=${encodeURIComponent(shareLine)}`;
+  }, [shareLine]);
 
   const shareFacebook = useCallback(() => {
     setHint("");
-    openCentered(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(SHARE_URL)}`);
-  }, []);
+    openCentered(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(resolvedUrl)}`);
+  }, [resolvedUrl]);
 
   const shareX = useCallback(() => {
     setHint("");
     openCentered(
-      `https://twitter.com/intent/tweet?text=${encodeURIComponent(SHARE_LINE)}`
+      `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareLine)}`
     );
-  }, []);
+  }, [shareLine]);
 
   if (!open || typeof document === "undefined") return null;
 
@@ -203,7 +204,7 @@ export default function ShareJeetOWinModal({ open, onClose }) {
         <h2 id="jw-shareModal-title" className="jw-shareModal__title">
           Share JeetOWin
         </h2>
-        <p className="jw-shareModal__sub">{SHARE_URL}</p>
+        <p className="jw-shareModal__sub">{resolvedUrl}</p>
         {hint ? <p className="jw-shareModal__hint">{hint}</p> : null}
         <div className="jw-shareModal__grid">
           <button type="button" className="jw-shareModal__btn" onClick={shareWhatsApp}>

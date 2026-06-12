@@ -22,6 +22,11 @@ const {
   getClientPromotions,
   logPromotionClick,
 } = require("../controllers/admin/promotionsController");
+const {
+  getClientReferralOverview,
+  getClientReferralStats,
+  getClientReferralCommission,
+} = require("../controllers/client/referralController");
 
 /**
  * GET /api/client/dashboard
@@ -95,6 +100,10 @@ router.post(
 
 router.get("/promotions", getClientPromotions);
 router.post("/promotions/:id/click", logPromotionClick);
+
+router.get("/referral/overview", authenticateToken, roleCheck("client"), getClientReferralOverview);
+router.get("/referral/stats", authenticateToken, roleCheck("client"), getClientReferralStats);
+router.get("/referral/commission", authenticateToken, roleCheck("client"), getClientReferralCommission);
 
 /**
  * Example: Route accessible by multiple roles

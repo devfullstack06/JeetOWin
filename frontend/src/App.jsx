@@ -15,6 +15,7 @@ import TransfersPage from "./pages/Transfers/TransfersPage";
 import WalletsPage from "./pages/Wallets/WalletsPage";
 import ContactUsPage from "./pages/contactUs/ContactUsPage";
 import PromotionsPage from "./pages/Promotions/PromotionsPage";
+import ReferralPage from "./pages/Referral/ReferralPage";
 import NotificationsPage from "./pages/Notifications/NotificationsPage";
 import TransactionsPage from "./pages/Transactions/TransactionsPage";
 import HistoryPage from "./pages/History/HistoryPage";
@@ -36,6 +37,8 @@ import AdminAccountsPage from "./admin/pages/Accounts/AccountsPage";
 import AdminTransactionsPage from "./admin/pages/Transactions/TransactionsPage";
 import AdminNotificationsPage from "./admin/pages/Notifications/AdminNotificationsPage";
 import ManagePromosPage from "./admin/pages/Promotions/ManagePromosPage";
+import ManageReferrerPage from "./admin/pages/Referral/ManageReferrerPage";
+import ReleaseCommissionPage from "./admin/pages/Referral/ReleaseCommissionPage";
 import { adminNavGroups } from "./admin/adminNav";
 
 function MobileNavLayout() {
@@ -158,6 +161,8 @@ export default function App() {
             <Route path="notifications/inbox" element={<AdminNotificationsPage />} />
             <Route path="notifications/groups" element={<AdminNotificationsPage />} />
             <Route path="promotions/manage-promos" element={<ManagePromosPage />} />
+            <Route path="referral/manage-referrer" element={<ManageReferrerPage />} />
+            <Route path="referral/release-commission" element={<ReleaseCommissionPage />} />
 
             {/* Auto placeholders for remaining admin routes */}
             {adminItems.map((it) => {
@@ -189,6 +194,8 @@ export default function App() {
               if (nestedPath === "notifications/inbox") return null;
               if (nestedPath === "notifications/groups") return null;
               if (nestedPath === "promotions/manage-promos") return null;
+              if (nestedPath === "referral/manage-referrer") return null;
+              if (nestedPath === "referral/release-commission") return null;
 
               return (
                 <Route
@@ -230,6 +237,7 @@ export default function App() {
               <Route path="dashboard" element={<Home />} />
               <Route path="contact" element={<ContactUsPage />} />
               <Route path="promotions" element={<PromotionsPage />} />
+              <Route path="referral" element={<ReferralPage />} />
               <Route path="notifications" element={<NotificationsPage />} />
               <Route path="transactions" element={<TransactionsPage />} />
               <Route

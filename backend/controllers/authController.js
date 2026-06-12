@@ -6,6 +6,7 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { pool } = require("../config/database");
+const { generateUniqueReferralCode } = require("../utils/referralCode");
 
 /**
  * REGISTER - Create a new client account
@@ -95,55 +96,36 @@ async function register(req, res) {
       );
 
       const userId = userResult.insertId;
-      let partnerId = null;
+      const ownReferralCode = await generateUniqueReferralCode(username.trim(), connection);
 
-      // If referral_code is provided, find the partner and link them
-      if (referral_code) {
-        const [partners] = await connection.query(
-          "SELECT id FROM partners WHERE referral_code = ?",
-          [referral_code],
+      let referredByClientId = null;
+      const codeTrimmed = referral_code ? String(referral_code).trim() : "";
+
+      if (codeTrimmed) {
+        const [referrers] = await connection.query(
+          `SELECT id FROM clients
+           WHERE referral_code = ? AND referrer_status = 'active'
+           LIMIT 1`,
+          [codeTrimmed],
         );
 
-        if (partners.length > 0) {
-          partnerId = partners[0].id;
-
-          // Create client with partner_id, full_name, and mobile
-          await connection.query(
-            `INSERT INTO clients (user_id, partner_id, full_name, mobile, balance, status) 
-             VALUES (?, ?, ?, ?, 0.00, 'active')`,
-            [userId, partnerId, fullName?.trim() || null, mobile || null],
-          );
-
-          // Get the client_id we just created
-          const [clients] = await connection.query(
-            "SELECT id FROM clients WHERE user_id = ?",
-            [userId],
-          );
-          const clientId = clients[0].id;
-
-          // Create referral record (commission starts at 0)
-          await connection.query(
-            `INSERT INTO referrals (partner_id, client_id, commission_earned) 
-             VALUES (?, ?, 0.00)`,
-            [partnerId, clientId],
-          );
-        } else {
-          // Referral code invalid, but we'll still create the client
-          // (you might want to reject registration instead - your choice)
-          await connection.query(
-            `INSERT INTO clients (user_id, partner_id, full_name, mobile, balance, status) 
-             VALUES (?, NULL, ?, ?, 0.00, 'active')`,
-            [userId, fullName?.trim() || null, mobile || null],
-          );
+        if (referrers.length > 0) {
+          referredByClientId = referrers[0].id;
         }
-      } else {
-        // No referral code, create client without partner
-        await connection.query(
-          `INSERT INTO clients (user_id, partner_id, full_name, mobile, balance, status) 
-           VALUES (?, NULL, ?, ?, 0.00, 'active')`,
-          [userId, fullName?.trim() || null, mobile || null],
-        );
       }
+
+      await connection.query(
+        `INSERT INTO clients
+          (user_id, partner_id, referred_by_client_id, referral_code, full_name, mobile, balance, status)
+         VALUES (?, NULL, ?, ?, ?, ?, 0.00, 'active')`,
+        [
+          userId,
+          referredByClientId,
+          ownReferralCode,
+          fullName?.trim() || null,
+          mobile || null,
+        ],
+      );
 
       // Commit the transaction (all inserts succeeded)
       await connection.commit();

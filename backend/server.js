@@ -32,6 +32,7 @@ const brandsPublicRouter = require("./routes/brandsPublic");
 const leaderboardPublicRouter = require("./routes/leaderboardPublic");
 const chatWidgetRouter = require("./routes/chatWidget");
 const { startPromotionStatusJob } = require("./scripts/promotionStatusJob");
+const { startReferralAccrualJob } = require("./scripts/referralAccrualJob");
 
 const app = express();
 
@@ -81,4 +82,5 @@ app.listen(PORT, () => {
   // Test the database connection once when the server starts
   testDbConnection();
   startPromotionStatusJob();
+  startReferralAccrualJob();
 });

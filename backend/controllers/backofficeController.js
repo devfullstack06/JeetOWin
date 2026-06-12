@@ -25,24 +25,24 @@ async function getAllClients(req, res) {
     // LIMIT 200: Maximum 200 clients per request
     const [clientRows] = await pool.query(
       `SELECT c.id AS client_id, u.username, c.status, c.balance,
-              p.referral_code
+              c.referral_code AS own_referral_code,
+              ref_u.username AS referred_by_username
        FROM clients c
        JOIN users u ON u.id = c.user_id
-       LEFT JOIN partners p ON p.id = c.partner_id
+       LEFT JOIN clients ref_c ON ref_c.id = c.referred_by_client_id
+       LEFT JOIN users ref_u ON ref_u.id = ref_c.user_id
        ORDER BY c.created_at DESC
        LIMIT 200`,
       []
     );
 
-    // Convert DECIMAL balance to number for JSON response
-    // MySQL returns DECIMAL as strings, so we parse them to numbers
-    // referral_code can be NULL if client wasn't referred by a partner
     const clients = clientRows.map(client => ({
       client_id: client.client_id,
       username: client.username,
-      status: client.status, // 'active' or 'suspended'
+      status: client.status,
       balance: parseFloat(client.balance),
-      referral_code: client.referral_code || null // null if no partner
+      referral_code: client.own_referral_code || null,
+      referred_by_username: client.referred_by_username || null,
     }));
 
     // Return clients array

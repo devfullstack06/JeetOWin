@@ -1,0 +1,88 @@
+.smoke-bg {
+  position: fixed;
+  inset: -10%;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* Animated smoke image — slight blur for soft depth */
+.smoke-bg::before {
+  content: "";
+  position: absolute;
+  inset: -8%;
+  background-image: url("/blue-smoke.png");
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.75;
+  filter: blur(6px);
+  will-change: transform;
+  animation: smokeFloat 10s ease-in-out infinite alternate;
+}
+
+/* Frosted glass veil over the smoke */
+.smoke-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    165deg,
+    rgba(7, 19, 54, 0.18) 0%,
+    rgba(20, 55, 156, 0.1) 45%,
+    rgba(7, 19, 54, 0.22) 100%
+  );
+  backdrop-filter: blur(14px) saturate(125%);
+  -webkit-backdrop-filter: blur(14px) saturate(125%);
+}
+
+@keyframes smokeFloat {
+  0% {
+    transform: translate(-2%, -1%) scale(1);
+  }
+
+  25% {
+    transform: translate(2%, -2%) scale(1.05);
+  }
+
+  50% {
+    transform: translate(1%, 2%) scale(1.08);
+  }
+
+  75% {
+    transform: translate(-3%, 1%) scale(1.04);
+  }
+
+  100% {
+    transform: translate(2%, -1%) scale(1.1);
+  }
+}
+
+@media (max-width: 768px) {
+  .smoke-bg {
+    inset: -5%;
+  }
+
+  .smoke-bg::before {
+    inset: -4%;
+    background-size: auto 100%;
+    background-position: center top;
+    filter: blur(5px);
+    animation: smokeFloatMobile 20s ease-in-out infinite alternate;
+  }
+
+  .smoke-bg::after {
+    backdrop-filter: blur(10px) saturate(120%);
+    -webkit-backdrop-filter: blur(10px) saturate(120%);
+  }
+
+  @keyframes smokeFloatMobile {
+    0% {
+      transform: translateX(-3%) scale(1.05);
+    }
+
+    100% {
+      transform: translateX(3%) scale(1.12);
+    }
+  }
+}

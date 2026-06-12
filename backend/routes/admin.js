@@ -44,6 +44,20 @@ const {
   duplicateAdminPromotion,
 } = require("../controllers/admin/promotionsController");
 const {
+  getAdminReferralSettings,
+  patchAdminReferralSettings,
+  getAdminReferrers,
+  patchAdminReferrer,
+  getAdminReferrerTree,
+  getAdminBrandRules,
+  postAdminBrandRule,
+  getAdminAccrualPreview,
+  postAdminRunAccrual,
+  getAdminReleaseQueue,
+  postAdminReleaseCommission,
+  getAdminReleaseHistory,
+} = require("../controllers/admin/referralController");
+const {
   getAdminSocialLinks,
   createAdminSocialLink,
   updateAdminSocialLink,
@@ -329,6 +343,19 @@ router.post("/promotions", requireAdminAuth, optionalPromotionImageUpload, creat
 router.patch("/promotions/:id/flags", requireAdminAuth, patchAdminPromotionFlags);
 router.patch("/promotions/:id", requireAdminAuth, optionalPromotionImageUpload, updateAdminPromotion);
 router.post("/promotions/:id/duplicate", requireAdminAuth, duplicateAdminPromotion);
+
+router.get("/referral/settings", requireAdminAuth, getAdminReferralSettings);
+router.patch("/referral/settings", requireAdminAuth, patchAdminReferralSettings);
+router.get("/referral/referrers", requireAdminAuth, getAdminReferrers);
+router.patch("/referral/referrers/:clientId", requireAdminAuth, patchAdminReferrer);
+router.get("/referral/referrers/:clientId/tree", requireAdminAuth, getAdminReferrerTree);
+router.get("/referral/brand-rules", requireAdminAuth, getAdminBrandRules);
+router.post("/referral/brand-rules", requireAdminAuth, postAdminBrandRule);
+router.get("/referral/accruals", requireAdminAuth, getAdminAccrualPreview);
+router.post("/referral/accruals/run", requireAdminAuth, postAdminRunAccrual);
+router.get("/referral/releases/queue", requireAdminAuth, getAdminReleaseQueue);
+router.post("/referral/releases", requireAdminAuth, postAdminReleaseCommission);
+router.get("/referral/releases/history", requireAdminAuth, getAdminReleaseHistory);
 
 router.get("/social-links", requireAdminAuth, getAdminSocialLinks);
 router.post("/social-links", requireAdminAuth, optionalSocialIconUpload, createAdminSocialLink);

@@ -2,7 +2,7 @@
 // Sign Up page with full form implementation
 
 import React, { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { register as registerApi } from "../services/authService";
 import {
   Home,
@@ -65,6 +65,7 @@ function sanitizeFullNameInput(raw) {
 
 export default function Signup() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   usePageTitle("Signup");
   const [loginBanners, setLoginBanners] = useState({ desktop: "", mobile: "" });
 
@@ -85,6 +86,11 @@ export default function Signup() {
   const [passwordHint, setPasswordHint] = useState("");
   const [confirmPasswordHint, setConfirmPasswordHint] = useState("");
   const hasLoginBanner = !!(loginBanners.mobile || loginBanners.desktop);
+
+  useEffect(() => {
+    const ref = searchParams.get("ref");
+    if (ref) setReferralCode(ref.trim());
+  }, [searchParams]);
 
   // Auto-redirect if already logged in (client)
   useEffect(() => {

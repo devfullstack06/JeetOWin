@@ -8,7 +8,7 @@
   min-height: 100vh;
   display: grid;
   grid-template-columns: 300px 1fr;
-  background: #efefef;
+  background: transparent;
 }
 
 /* Sidebar (dark gradient like your screenshot) */

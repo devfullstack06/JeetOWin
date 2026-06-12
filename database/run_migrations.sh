@@ -58,7 +58,8 @@ for f in migration_accounts_client_type.sql \
   migration_clients_notes.sql \
   migration_promotions.sql \
   migration_promotions_status_flags.sql \
-  migration_promotions_cta_popup.sql; do
+  migration_promotions_cta_popup.sql \
+  migration_referral_program.sql; do
   if [ -f "$f" ]; then
     echo "Running $f (incremental)..."
     if [ -n "$MYSQL_PWD" ]; then

@@ -10,7 +10,7 @@
 /* Public page layout (for non-logged-in users) */
 .jw-publicPage {
   min-height: 100vh;
-  background: #e9e9e9;
+  background: transparent;
   display: flex;
   flex-direction: column;
 }
@@ -41,7 +41,7 @@
 
 .jw-homePage {
   min-height: 100vh;
-  background: #e9e9e9;
+  background: transparent;
 }
 
 /* Overall grid under header */
