@@ -26,6 +26,7 @@ const {
   getClientReferralOverview,
   getClientReferralStats,
   getClientReferralCommission,
+  getClientReferralDownline,
 } = require("../controllers/client/referralController");
 
 /**
@@ -103,6 +104,7 @@ router.post("/promotions/:id/click", logPromotionClick);
 
 router.get("/referral/overview", authenticateToken, roleCheck("client"), getClientReferralOverview);
 router.get("/referral/stats", authenticateToken, roleCheck("client"), getClientReferralStats);
+router.get("/referral/downline", authenticateToken, roleCheck("client"), getClientReferralDownline);
 router.get("/referral/commission", authenticateToken, roleCheck("client"), getClientReferralCommission);
 
 /**

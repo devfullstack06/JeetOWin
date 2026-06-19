@@ -2,6 +2,7 @@ const { pool } = require("../../config/database");
 const { pktMonthLabel, pktYmdForInstant } = require("../../utils/pakistanTime");
 const { getProgramSettings, effectiveRatesForEarner } = require("../../services/referralRates");
 const { getCommissionTotals, getCommissionByMonth } = require("../../services/referralLedgerService");
+const { buildReferralDownline } = require("../../services/referralDownlineService");
 
 async function getClientIdForUser(userId) {
   const [[row]] = await pool.query("SELECT * FROM clients WHERE user_id = ? LIMIT 1", [userId]);
@@ -108,6 +109,27 @@ exports.getClientReferralStats = async (req, res) => {
   } catch (e) {
     console.error("[client referral] stats:", e);
     return res.status(500).json({ error: "Failed to load referral stats." });
+  }
+};
+
+exports.getClientReferralDownline = async (req, res) => {
+  try {
+    const client = await getClientIdForUser(req.user.userId);
+    if (!client) return res.status(404).json({ error: "Client profile not found." });
+
+    const settings = await getProgramSettings();
+    if (!settings?.is_enabled) {
+      return res.status(404).json({
+        error: "Referral program is not available.",
+        hidden: true,
+      });
+    }
+
+    const downline = await buildReferralDownline(client.id);
+    return res.json(downline);
+  } catch (e) {
+    console.error("[client referral] downline:", e);
+    return res.status(500).json({ error: "Failed to load referral details." });
   }
 };
 

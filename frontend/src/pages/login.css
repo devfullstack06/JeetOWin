@@ -161,6 +161,16 @@
   background: rgba(0, 0, 0, 0.5);
 }
 
+.jw-input--locked {
+  cursor: not-allowed;
+  opacity: 0.92;
+}
+
+.jw-input--locked:focus {
+  background: rgba(0, 0, 0, 0.5);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
 /* Password field + eye toggle (login / signup) */
 .jw-passwordWrap {
   position: relative;
@@ -210,28 +220,57 @@
 
 /* Mobile input wrapper with +92 prefix */
 .jw-mobileWrapper {
+  height: 40px;
   display: flex;
   align-items: stretch;
   width: 100%;
+  box-sizing: border-box;
+  border: 0.5px solid rgba(255, 255, 255, 0.75);
+  border-radius: 10px;
+  overflow: hidden;
+  background: transparent;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.jw-mobileWrapper:focus-within,
+.jw-mobileWrapper:has(.jw-mobileInput:not(:placeholder-shown)) {
+  background: rgba(0, 0, 0, 0.5);
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 .jw-mobilePrefix {
   padding: 12px 8px 12px 14px;
-  background: rgba(255, 255, 255, 0.35);
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  border-right: none;
-  border-radius: 10px 0 0 10px;
-  color: rgba(0, 0, 0, 0.7);
+  border: none;
+  border-right: 1px solid rgba(255, 255, 255, 0.25);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.9);
   font-weight: 600;
   white-space: nowrap;
   display: flex;
   align-items: center;
+  flex-shrink: 0;
+  font-size: 14px;
 }
 
-.jw-mobileInput {
-  border-radius: 0 10px 10px 0;
-  border-left: none;
+.jw-mobileWrapper .jw-mobileInput {
   flex: 1;
+  min-width: 0;
+  width: auto;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-sizing: border-box;
+  color: #fff;
+}
+
+.jw-mobileWrapper .jw-mobileInput:focus {
+  background: transparent;
+  border-color: transparent;
+  outline: none;
+}
+
+.jw-mobileWrapper .jw-mobileInput:not(:placeholder-shown) {
+  background: transparent;
 }
 
 /* Checkbox wrapper */

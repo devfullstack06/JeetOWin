@@ -233,10 +233,14 @@ exports.getAdminUserDetail = async (req, res) => {
         COALESCE(c.balance, 0) AS balance,
         c.status,
         c.created_at AS joinDateISO,
-        COALESCE(c.notes, '') AS notes
+        COALESCE(c.notes, '') AS notes,
+        c.referral_code AS referralCode,
+        ref_u.username AS referredByUsername
       FROM users u
       INNER JOIN roles r ON r.id = u.role_id
       INNER JOIN clients c ON c.user_id = u.id
+      LEFT JOIN clients ref_c ON ref_c.id = c.referred_by_client_id
+      LEFT JOIN users ref_u ON ref_u.id = ref_c.user_id
       WHERE u.id = ? AND r.name = 'client'
       LIMIT 1
     `;
@@ -267,6 +271,8 @@ exports.getAdminUserDetail = async (req, res) => {
         joinDateText: row.joinDateISO,
         lastLoginAt: row.lastLoginAt || null,
         notes: row.notes != null ? String(row.notes) : "",
+        referralCode: row.referralCode ? String(row.referralCode) : "",
+        referredBy: row.referredByUsername ? String(row.referredByUsername) : "",
       },
       stats,
       warning: warning || null,

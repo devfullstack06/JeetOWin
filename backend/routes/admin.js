@@ -48,6 +48,9 @@ const {
   patchAdminReferralSettings,
   getAdminReferrers,
   patchAdminReferrer,
+  getAdminReferrerCommission,
+  getAdminReferrerStats,
+  getAdminReferrerDownline,
   getAdminReferrerTree,
   getAdminBrandRules,
   postAdminBrandRule,
@@ -348,6 +351,9 @@ router.get("/referral/settings", requireAdminAuth, getAdminReferralSettings);
 router.patch("/referral/settings", requireAdminAuth, patchAdminReferralSettings);
 router.get("/referral/referrers", requireAdminAuth, getAdminReferrers);
 router.patch("/referral/referrers/:clientId", requireAdminAuth, patchAdminReferrer);
+router.get("/referral/referrers/:clientId/commission", requireAdminAuth, getAdminReferrerCommission);
+router.get("/referral/referrers/:clientId/stats", requireAdminAuth, getAdminReferrerStats);
+router.get("/referral/referrers/:clientId/downline", requireAdminAuth, getAdminReferrerDownline);
 router.get("/referral/referrers/:clientId/tree", requireAdminAuth, getAdminReferrerTree);
 router.get("/referral/brand-rules", requireAdminAuth, getAdminBrandRules);
 router.post("/referral/brand-rules", requireAdminAuth, postAdminBrandRule);

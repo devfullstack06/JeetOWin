@@ -44,6 +44,35 @@ export async function patchAdminReferrer(clientId, body) {
   return data;
 }
 
+export async function fetchAdminReferrerCommission(clientId) {
+  const res = await fetch(`/api/admin/referral/referrers/${clientId}/commission`, {
+    headers: adminHeaders(false),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data?.error || "Failed to load commission data.");
+  return data;
+}
+
+export async function fetchAdminReferrerStats(clientId, { tier = 1, month } = {}) {
+  const params = new URLSearchParams({ tier: String(tier) });
+  if (month) params.set("month", month);
+  const res = await fetch(`/api/admin/referral/referrers/${clientId}/stats?${params}`, {
+    headers: adminHeaders(false),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data?.error || "Failed to load referral stats.");
+  return data;
+}
+
+export async function fetchAdminReferrerDownline(clientId) {
+  const res = await fetch(`/api/admin/referral/referrers/${clientId}/downline`, {
+    headers: adminHeaders(false),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data?.error || "Failed to load referral downline.");
+  return data;
+}
+
 export async function fetchAdminBrandRules({ clientId } = {}) {
   const q = clientId ? `?clientId=${clientId}` : "";
   const res = await fetch(`/api/admin/referral/brand-rules${q}`, { headers: adminHeaders() });

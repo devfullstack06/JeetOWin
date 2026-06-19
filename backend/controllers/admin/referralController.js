@@ -4,9 +4,16 @@ const { toMysqlDatetime } = require("../../services/referralBrandRules");
 const { runAccrualForMonth } = require("../../services/referralAccrualService");
 const {
   getCommissionTotals,
+  getCommissionByMonth,
   releaseCommission,
   applyNegativeAccrualRelease,
 } = require("../../services/referralLedgerService");
+const { pktMonthLabel, pktYmdForInstant } = require("../../utils/pakistanTime");
+const { buildReferralDownline } = require("../../services/referralDownlineService");
+
+function currentMonthYm() {
+  return pktYmdForInstant().slice(0, 7);
+}
 
 function mapSettings(row) {
   if (!row) return null;
@@ -190,6 +197,129 @@ exports.patchAdminReferrer = async (req, res) => {
   } catch (e) {
     console.error("[admin referral] patch referrer:", e);
     return res.status(500).json({ error: "Failed to update referrer." });
+  }
+};
+
+exports.getAdminReferrerCommission = async (req, res) => {
+  try {
+    const clientId = Number(req.params.clientId);
+    if (!Number.isFinite(clientId)) {
+      return res.status(400).json({ error: "Invalid client id." });
+    }
+
+    const [[row]] = await pool.query(
+      `SELECT c.id AS clientId, u.username
+       FROM clients c
+       INNER JOIN users u ON u.id = c.user_id
+       WHERE c.id = ?
+       LIMIT 1`,
+      [clientId]
+    );
+    if (!row) return res.status(404).json({ error: "Client not found." });
+
+    const totals = await getCommissionTotals(clientId);
+    const byMonth = await getCommissionByMonth(clientId);
+
+    return res.json({
+      username: row.username || "",
+      overall: {
+        earned: totals.earned,
+        withdrawn: totals.withdrawn,
+        balance: totals.balance,
+      },
+      byMonth: byMonth.map((m, i) => ({
+        id: i + 1,
+        month: pktMonthLabel(m.monthYm),
+        monthYm: m.monthYm,
+        commission: m.commission,
+      })),
+    });
+  } catch (e) {
+    console.error("[admin referral] referrer commission:", e);
+    return res.status(500).json({ error: "Failed to load referrer commission." });
+  }
+};
+
+exports.getAdminReferrerStats = async (req, res) => {
+  try {
+    const clientId = Number(req.params.clientId);
+    if (!Number.isFinite(clientId)) {
+      return res.status(400).json({ error: "Invalid client id." });
+    }
+
+    const [[clientRow]] = await pool.query("SELECT c.id FROM clients c WHERE c.id = ? LIMIT 1", [
+      clientId,
+    ]);
+    if (!clientRow) return res.status(404).json({ error: "Client not found." });
+
+    const tier = Math.min(3, Math.max(1, Number(req.query.tier) || 1));
+    const monthYm = String(req.query.month || currentMonthYm()).slice(0, 7);
+
+    const [rows] = await pool.query(
+      `SELECT ra.id, ra.tier, ra.transfer_in_total AS transferIn,
+              ra.transfer_out_total AS transferOut, ra.net_base AS net,
+              ra.amount AS commission, us.username AS username
+       FROM referral_accruals ra
+       INNER JOIN clients cs ON cs.id = ra.source_client_id
+       INNER JOIN users us ON us.id = cs.user_id
+       WHERE ra.earner_client_id = ? AND ra.accrual_month = ? AND ra.tier = ?
+       ORDER BY ra.amount DESC, ra.id DESC`,
+      [clientId, monthYm, tier]
+    );
+
+    const summary = (rows || []).reduce(
+      (acc, r) => {
+        acc.totalReferrals += 1;
+        acc.totalCommission += Number(r.commission) || 0;
+        acc.totalTransferIn += Number(r.transferIn) || 0;
+        acc.totalTransferOut += Number(r.transferOut) || 0;
+        return acc;
+      },
+      { totalReferrals: 0, totalCommission: 0, totalTransferIn: 0, totalTransferOut: 0 }
+    );
+
+    const round = (n) => Math.round(n * 100) / 100;
+    summary.totalCommission = round(summary.totalCommission);
+    summary.totalTransferIn = round(summary.totalTransferIn);
+    summary.totalTransferOut = round(summary.totalTransferOut);
+
+    return res.json({
+      tier,
+      monthYm,
+      monthLabel: pktMonthLabel(monthYm),
+      summary,
+      rows: (rows || []).map((r) => ({
+        id: r.id,
+        username: r.username,
+        transferIn: Number(r.transferIn),
+        transferOut: Number(r.transferOut),
+        net: Number(r.net),
+        commission: Number(r.commission),
+      })),
+    });
+  } catch (e) {
+    console.error("[admin referral] referrer stats:", e);
+    return res.status(500).json({ error: "Failed to load referrer stats." });
+  }
+};
+
+exports.getAdminReferrerDownline = async (req, res) => {
+  try {
+    const clientId = Number(req.params.clientId);
+    if (!Number.isFinite(clientId)) {
+      return res.status(400).json({ error: "Invalid client id." });
+    }
+
+    const [[clientRow]] = await pool.query("SELECT c.id FROM clients c WHERE c.id = ? LIMIT 1", [
+      clientId,
+    ]);
+    if (!clientRow) return res.status(404).json({ error: "Client not found." });
+
+    const downline = await buildReferralDownline(clientId);
+    return res.json(downline);
+  } catch (e) {
+    console.error("[admin referral] referrer downline:", e);
+    return res.status(500).json({ error: "Failed to load referrer downline." });
   }
 };
 

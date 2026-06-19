@@ -34,6 +34,18 @@ export async function fetchReferralCommission() {
   return data;
 }
 
+export async function fetchReferralDownline() {
+  const res = await fetch("/api/client/referral/downline", {
+    headers: clientAuthHeaders(),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    if (data?.hidden) return null;
+    throw new Error(data?.error || "Failed to load referral details.");
+  }
+  return data;
+}
+
 export function formatReferralAmount(value) {
   const n = Number(value);
   if (!Number.isFinite(n)) return "0";

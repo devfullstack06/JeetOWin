@@ -63,6 +63,26 @@ function sanitizeFullNameInput(raw) {
   return { value: cleaned, hadInvalid };
 }
 
+const REFERRAL_STORAGE_KEY = "jw:signupReferralCode";
+
+function readStoredReferralCode() {
+  try {
+    return sessionStorage.getItem(REFERRAL_STORAGE_KEY)?.trim() || "";
+  } catch {
+    return "";
+  }
+}
+
+function writeStoredReferralCode(code) {
+  try {
+    const trimmed = String(code || "").trim();
+    if (trimmed) sessionStorage.setItem(REFERRAL_STORAGE_KEY, trimmed);
+    else sessionStorage.removeItem(REFERRAL_STORAGE_KEY);
+  } catch {
+    /* ignore storage errors */
+  }
+}
+
 export default function Signup() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -77,6 +97,7 @@ export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [referralCode, setReferralCode] = useState("");
+  const [referralLocked, setReferralLocked] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -87,10 +108,21 @@ export default function Signup() {
   const [confirmPasswordHint, setConfirmPasswordHint] = useState("");
   const hasLoginBanner = !!(loginBanners.mobile || loginBanners.desktop);
 
+  const refFromUrl = searchParams.get("ref")?.trim() || "";
+
   useEffect(() => {
-    const ref = searchParams.get("ref");
-    if (ref) setReferralCode(ref.trim());
-  }, [searchParams]);
+    if (refFromUrl) {
+      writeStoredReferralCode(refFromUrl);
+      setReferralCode(refFromUrl);
+      setReferralLocked(true);
+      return;
+    }
+    const stored = readStoredReferralCode();
+    if (stored) {
+      setReferralCode(stored);
+      setReferralLocked(true);
+    }
+  }, [refFromUrl]);
 
   // Auto-redirect if already logged in (client)
   useEffect(() => {
@@ -286,6 +318,7 @@ export default function Signup() {
 
       // Show success message
       setSuccess(data?.message || "Registration successful! Redirecting to login...");
+      writeStoredReferralCode("");
 
       // Redirect to login after 2 seconds
       setTimeout(() => {
@@ -409,15 +442,17 @@ export default function Signup() {
                 </div>
               </label>
 
-              {/* Referral Code (Optional) */}
+              {/* Referral Code (Optional; locked when opened via ?ref= link) */}
               <label className="jw-field">
                 <input
-                  className="jw-input"
+                  className={`jw-input${referralLocked ? " jw-input--locked" : ""}`}
                   type="text"
                   placeholder="Referral Code (Optional)"
                   value={referralCode}
-                  onChange={(e) => setReferralCode(e.target.value)}
+                  onChange={referralLocked ? undefined : (e) => setReferralCode(e.target.value)}
                   autoComplete="off"
+                  readOnly={referralLocked}
+                  aria-readonly={referralLocked}
                   disabled={loading}
                 />
               </label>

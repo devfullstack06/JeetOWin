@@ -11,6 +11,7 @@ import {
   fetchReferralOverview,
   fetchReferralStats,
   fetchReferralCommission,
+  fetchReferralDownline,
 } from "../../services/referralApi";
 
 import "./referralBody.css";
@@ -25,7 +26,23 @@ export default function ReferralBody() {
   const [error, setError] = useState("");
   const [overview, setOverview] = useState(null);
   const [referralStats, setReferralStats] = useState({ summary: {}, rows: [] });
+  const [referralDownline, setReferralDownline] = useState(null);
+  const [programEnabled, setProgramEnabled] = useState(false);
   const [commission, setCommission] = useState({ overall: {}, byMonth: [] });
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchReferralOverview()
+      .then((data) => {
+        if (!cancelled) setProgramEnabled(!!data?.isProgramEnabled);
+      })
+      .catch(() => {
+        if (!cancelled) setProgramEnabled(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -38,8 +55,14 @@ export default function ReferralBody() {
           const data = await fetchReferralOverview();
           if (!cancelled) setOverview(data);
         } else if (activeTab === "referral") {
-          const data = await fetchReferralStats({ tier: tierFilter });
-          if (!cancelled) setReferralStats(data);
+          const [statsData, downlineData] = await Promise.all([
+            fetchReferralStats({ tier: tierFilter }),
+            programEnabled ? fetchReferralDownline() : Promise.resolve(null),
+          ]);
+          if (!cancelled) {
+            setReferralStats(statsData);
+            setReferralDownline(downlineData);
+          }
         } else {
           const data = await fetchReferralCommission();
           if (!cancelled) setCommission(data);
@@ -55,7 +78,7 @@ export default function ReferralBody() {
     return () => {
       cancelled = true;
     };
-  }, [activeTab, tierFilter]);
+  }, [activeTab, tierFilter, programEnabled]);
 
   const handleClose = () => {
     navigate("/home");
@@ -90,6 +113,8 @@ export default function ReferralBody() {
               monthLabel={referralStats.monthLabel}
               tierFilter={tierFilter}
               onTierFilterChange={setTierFilter}
+              downline={referralDownline}
+              showReferralDetails={programEnabled}
             />
           ) : null}
           {!loading && activeTab === "overview" && overview ? (

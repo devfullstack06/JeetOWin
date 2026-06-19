@@ -256,6 +256,14 @@ function ViewUserModal({ open, loading, errorText, usernameTitle, detail, onClos
                     <span className="jw-adminUserViewLabel">Last Login:</span>{" "}
                     {item.lastLoginAt ? formatAdminDateTime(item.lastLoginAt) : "—"}
                   </div>
+                  <div className="jw-adminUserViewDetails__cell">
+                    <span className="jw-adminUserViewLabel">Referral Code:</span>{" "}
+                    {item.referralCode || "—"}
+                  </div>
+                  <div className="jw-adminUserViewDetails__cell">
+                    <span className="jw-adminUserViewLabel">Referred By:</span>{" "}
+                    {item.referredBy || "—"}
+                  </div>
                 </div>
               </div>
 

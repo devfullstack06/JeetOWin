@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { formatReferralAmount } from "../../../services/referralApi";
+import ReferralNetworkModal from "./ReferralNetworkModal";
 
 const TIER_OPTIONS = [
   { value: 1, label: "Direct" },
@@ -7,13 +8,36 @@ const TIER_OPTIONS = [
   { value: 3, label: "Tier 3" },
 ];
 
+function ReferralDetailsCounts({ totals }) {
+  const t1 = totals?.tier1 ?? 0;
+  const t2 = totals?.tier2 ?? 0;
+  const t3 = totals?.tier3 ?? 0;
+  return (
+    <span className="jw-refDetailsBtn__counts">
+      <span className="jw-refDetailsBtn__count is-tier1">{t1}</span>
+      <span className="jw-refDetailsBtn__sep" aria-hidden>
+        |
+      </span>
+      <span className="jw-refDetailsBtn__count is-tier2">{t2}</span>
+      <span className="jw-refDetailsBtn__sep" aria-hidden>
+        |
+      </span>
+      <span className="jw-refDetailsBtn__count is-tier3">{t3}</span>
+    </span>
+  );
+}
+
 export default function ReferralTabPanel({
   summary = {},
   rows = [],
   monthLabel,
   tierFilter = 1,
   onTierFilterChange,
+  downline = null,
+  showReferralDetails = false,
 }) {
+  const [networkOpen, setNetworkOpen] = useState(false);
+
   const tiles = [
     { key: "totalReferrals", label: "Total Referrals", value: summary.totalReferrals },
     { key: "totalCommission", label: "Total Commission", value: summary.totalCommission },
@@ -21,22 +45,44 @@ export default function ReferralTabPanel({
     { key: "totalTransferOut", label: "Total Transfer Out", value: summary.totalTransferOut },
   ];
 
+  const totals = downline?.totals || { tier1: 0, tier2: 0, tier3: 0 };
+
   return (
     <div className="jw-refPanelContent">
-      <div className="jw-refTierFilters" role="tablist" aria-label="Referral tier filter">
-        {TIER_OPTIONS.map((opt) => (
+      <div className="jw-refTierToolbar">
+        <div className="jw-refTierFilters" role="tablist" aria-label="Referral tier filter">
+          {TIER_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              role="tab"
+              aria-selected={tierFilter === opt.value}
+              className={`jw-refTierFilter ${tierFilter === opt.value ? "is-active" : ""}`}
+              onClick={() => onTierFilterChange?.(opt.value)}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+
+        {showReferralDetails ? (
           <button
-            key={opt.value}
             type="button"
-            role="tab"
-            aria-selected={tierFilter === opt.value}
-            className={`jw-refTierFilter ${tierFilter === opt.value ? "is-active" : ""}`}
-            onClick={() => onTierFilterChange?.(opt.value)}
+            className="jw-refDetailsBtn"
+            onClick={() => setNetworkOpen(true)}
           >
-            {opt.label}
+            <span className="jw-refDetailsBtn__label">Details</span>
+            <ReferralDetailsCounts totals={totals} />
           </button>
-        ))}
+        ) : null}
       </div>
+
+      <ReferralNetworkModal
+        open={networkOpen}
+        totals={totals}
+        direct={downline?.direct || []}
+        onClose={() => setNetworkOpen(false)}
+      />
 
       <div className="jw-refSectionHead">
         <h3 className="jw-refSectionTitle">Summary</h3>

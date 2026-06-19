@@ -9,11 +9,15 @@ import AdminFilterBar, {
 import AdminPagination from "../../components/AdminPagination/AdminPagination";
 import { formatAdminDateTime } from "../../utils/adminDateUtils";
 import ReferralDetailsRichEditor from "../../components/ReferralDetailsRichEditor";
+import ReferrerCommissionModal from "./ReferrerCommissionModal";
 import {
   fetchReferralSettings,
   patchReferralSettings,
   fetchAdminReferrers,
   patchAdminReferrer,
+  fetchAdminReferrerCommission,
+  fetchAdminReferrerStats,
+  fetchAdminReferrerDownline,
   fetchAdminBrandRules,
   postAdminBrandRule,
   fetchAdminAccrualPreview,
@@ -183,6 +187,20 @@ export default function ManageReferrerPage() {
   const [tierSaving, setTierSaving] = useState(false);
   const [tierModalError, setTierModalError] = useState("");
 
+  const [commissionModalOpen, setCommissionModalOpen] = useState(false);
+  const [commissionModalClientId, setCommissionModalClientId] = useState(null);
+  const [commissionModalUsername, setCommissionModalUsername] = useState("");
+  const [commissionLoading, setCommissionLoading] = useState(false);
+  const [commissionError, setCommissionError] = useState("");
+  const [commissionOverall, setCommissionOverall] = useState({});
+  const [commissionByMonth, setCommissionByMonth] = useState([]);
+  const [referralTierFilter, setReferralTierFilter] = useState(1);
+  const [referralStatsLoading, setReferralStatsLoading] = useState(false);
+  const [referralSummary, setReferralSummary] = useState({});
+  const [referralRows, setReferralRows] = useState([]);
+  const [referralMonthLabel, setReferralMonthLabel] = useState("");
+  const [referralDownline, setReferralDownline] = useState(null);
+
   const [brandRules, setBrandRules] = useState([]);
   const [brands, setBrands] = useState([]);
   const [brandsLoading, setBrandsLoading] = useState(false);
@@ -330,6 +348,80 @@ export default function ManageReferrerPage() {
     setTierModalOpen(false);
     setTierModalRow(null);
     setTierModalError("");
+  };
+
+  const closeCommissionModal = () => {
+    setCommissionModalOpen(false);
+    setCommissionModalClientId(null);
+    setCommissionModalUsername("");
+    setCommissionError("");
+    setCommissionOverall({});
+    setCommissionByMonth([]);
+    setReferralTierFilter(1);
+    setReferralStatsLoading(false);
+    setReferralSummary({});
+    setReferralRows([]);
+    setReferralMonthLabel("");
+    setReferralDownline(null);
+  };
+
+  const applyReferralStats = (statsData) => {
+    setReferralSummary(statsData?.summary || {});
+    setReferralRows(Array.isArray(statsData?.rows) ? statsData.rows : []);
+    setReferralMonthLabel(statsData?.monthLabel || "");
+  };
+
+  const loadReferralStatsForTier = async (clientId, tier) => {
+    setReferralStatsLoading(true);
+    setCommissionError("");
+    try {
+      const statsData = await fetchAdminReferrerStats(clientId, { tier });
+      applyReferralStats(statsData);
+      setReferralTierFilter(tier);
+    } catch (e) {
+      setCommissionError(e.message || "Failed to load referral stats.");
+    } finally {
+      setReferralStatsLoading(false);
+    }
+  };
+
+  const openCommissionModal = async (row) => {
+    if (!row?.clientId) return;
+    setCommissionModalOpen(true);
+    setCommissionModalClientId(row.clientId);
+    setCommissionModalUsername(row.username || "");
+    setCommissionLoading(true);
+    setCommissionError("");
+    setCommissionOverall({});
+    setCommissionByMonth([]);
+    setReferralTierFilter(1);
+    setReferralSummary({});
+    setReferralRows([]);
+    setReferralMonthLabel("");
+    setReferralDownline(null);
+
+    try {
+      const [commissionData, statsData, downlineData] = await Promise.all([
+        fetchAdminReferrerCommission(row.clientId),
+        fetchAdminReferrerStats(row.clientId, { tier: 1 }),
+        fetchAdminReferrerDownline(row.clientId),
+      ]);
+      setCommissionModalUsername(commissionData.username || row.username || "");
+      setCommissionOverall(commissionData.overall || {});
+      setCommissionByMonth(Array.isArray(commissionData.byMonth) ? commissionData.byMonth : []);
+      applyReferralStats(statsData);
+      setReferralTierFilter(1);
+      setReferralDownline(downlineData);
+    } catch (e) {
+      setCommissionError(e.message || "Failed to load referrer data.");
+    } finally {
+      setCommissionLoading(false);
+    }
+  };
+
+  const handleReferralTierFilterChange = (tier) => {
+    if (!commissionModalClientId || tier === referralTierFilter) return;
+    loadReferralStatsForTier(commissionModalClientId, tier);
   };
 
   const parseTierInput = (value) => {
@@ -672,7 +764,13 @@ export default function ManageReferrerPage() {
                 referrerDisplayRows.map((r) => (
                   <tr key={r.clientId}>
                     <td className="jw-adminTd__username">
-                      <span className="jw-adminLinkLike">{r.username}</span>
+                      <button
+                        type="button"
+                        className="jw-adminUsernameLinkBtn"
+                        onClick={() => openCommissionModal(r)}
+                      >
+                        {r.username}
+                      </button>
                     </td>
                     <td>{r.referralCode}</td>
                     <td>
@@ -843,6 +941,22 @@ export default function ManageReferrerPage() {
         onChange={(key, value) => setTierForm((prev) => ({ ...prev, [key]: value }))}
         onClear={() => setTierForm({ tier1: "", tier2: "", tier3: "" })}
         onSave={saveTierOverrides}
+      />
+      <ReferrerCommissionModal
+        open={commissionModalOpen}
+        username={commissionModalUsername}
+        loading={commissionLoading}
+        referralStatsLoading={referralStatsLoading}
+        errorText={commissionError}
+        overall={commissionOverall}
+        commissionRows={commissionByMonth}
+        referralSummary={referralSummary}
+        referralRows={referralRows}
+        referralMonthLabel={referralMonthLabel}
+        referralTierFilter={referralTierFilter}
+        onReferralTierFilterChange={handleReferralTierFilterChange}
+        referralDownline={referralDownline}
+        onClose={closeCommissionModal}
       />
       <AdminPageShell
         title="Manage Referrer"
