@@ -30,33 +30,24 @@ async function fetchMonthTransfers(monthYm) {
 }
 
 /**
- * Aggregate TRI/TRO per source client for month after brand filtering.
+ * Aggregate TRI/TRO per source client (clients.id) for month after brand filtering.
  */
-function aggregateNetByClient(transfers, allBrandRules) {
-  const byClient = new Map();
+function aggregateNetByClient(transfers, allBrandRules, clientIdByUserId) {
+  const byUserId = new Map();
 
   for (const t of transfers) {
-    const clientId = Number(t.client_id);
-    const brandId = Number(t.brand_id);
-    const at = new Date(t.updated_at);
-    if (!resolveBrandIncludedAt(clientId, brandId, at, allBrandRules)) continue;
-
-    if (!byClient.has(clientId)) {
-      byClient.set(clientId, { tri: 0, tro: 0 });
+    const userId = Number(t.client_id);
+    if (!byUserId.has(userId)) {
+      byUserId.set(userId, []);
     }
-    const bucket = byClient.get(clientId);
-    const amt = Number(t.amount) || 0;
-    if (String(t.direction).toUpperCase() === "IN") bucket.tri += amt;
-    else if (String(t.direction).toUpperCase() === "OUT") bucket.tro += amt;
+    byUserId.get(userId).push(t);
   }
 
   const result = new Map();
-  for (const [clientId, { tri, tro }] of byClient) {
-    result.set(clientId, {
-      transferIn: roundMoney(tri),
-      transferOut: roundMoney(tro),
-      net: roundMoney(tri - tro),
-    });
+  for (const [userId, userTransfers] of byUserId) {
+    const sourceClientId = clientIdByUserId.get(userId);
+    if (!sourceClientId) continue;
+    result.set(sourceClientId, computeNetForSourceClient(sourceClientId, userTransfers, allBrandRules));
   }
   return result;
 }
@@ -67,6 +58,137 @@ function earnerCanAccrue(earnerRow) {
     return false;
   }
   return true;
+}
+
+async function getClientIdForUserId(userId) {
+  const [[row]] = await pool.query("SELECT id FROM clients WHERE user_id = ? LIMIT 1", [userId]);
+  return row?.id ?? null;
+}
+
+async function buildClientIdByUserIdMap(userIds) {
+  const map = new Map();
+  const ids = [...new Set(userIds.filter((id) => id != null))];
+  if (!ids.length) return map;
+  const [rows] = await pool.query("SELECT id, user_id FROM clients WHERE user_id IN (?)", [ids]);
+  for (const row of rows || []) {
+    map.set(Number(row.user_id), Number(row.id));
+  }
+  return map;
+}
+
+function computeNetForSourceClient(sourceClientId, transfers, allBrandRules) {
+  let tri = 0;
+  let tro = 0;
+
+  for (const t of transfers || []) {
+    const brandId = Number(t.brand_id);
+    const at = new Date(t.updated_at);
+    if (!resolveBrandIncludedAt(sourceClientId, brandId, at, allBrandRules)) continue;
+
+    const amt = Number(t.amount) || 0;
+    if (String(t.direction).toUpperCase() === "IN") tri += amt;
+    else if (String(t.direction).toUpperCase() === "OUT") tro += amt;
+  }
+
+  return {
+    transferIn: roundMoney(tri),
+    transferOut: roundMoney(tro),
+    net: roundMoney(tri - tro),
+  };
+}
+
+async function upsertAccrualsForSourceClient(sourceClientId, monthYm, totals, settings) {
+  const earners = await getUplineEarners(sourceClientId);
+  let rowsWritten = 0;
+  const { transferIn, transferOut, net } = totals;
+
+  for (const { tier, clientId: earnerId } of earners) {
+    const [[earner]] = await pool.query("SELECT * FROM clients WHERE id = ? LIMIT 1", [earnerId]);
+    if (!earnerCanAccrue(earner)) continue;
+
+    const rate = resolveTierRate(settings, earner, tier);
+    const amount = roundMoney((net * rate) / 100);
+
+    await pool.query(
+      `INSERT INTO referral_accruals
+        (earner_client_id, source_client_id, tier, accrual_month,
+         transfer_in_total, transfer_out_total, net_base, rate_applied, amount, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+       ON DUPLICATE KEY UPDATE
+         transfer_in_total = VALUES(transfer_in_total),
+         transfer_out_total = VALUES(transfer_out_total),
+         net_base = VALUES(net_base),
+         rate_applied = VALUES(rate_applied),
+         amount = VALUES(amount)`,
+      [earnerId, sourceClientId, tier, monthYm, transferIn, transferOut, net, rate, amount]
+    );
+    rowsWritten += 1;
+  }
+
+  return rowsWritten;
+}
+
+/**
+ * Recalculate referral accruals for one source client and Karachi month.
+ */
+async function recalculateAccrualsForSourceClient(sourceClientId, monthYm, settings = null) {
+  const activeSettings = settings || (await getProgramSettings());
+  if (!activeSettings?.is_enabled) {
+    return { skipped: true, reason: "program_disabled" };
+  }
+
+  const startMonth = activeSettings.accrual_start_month;
+  if (startMonth && String(monthYm) < String(startMonth)) {
+    return { skipped: true, reason: "before_go_live", monthYm };
+  }
+
+  const [[clientRow]] = await pool.query("SELECT user_id FROM clients WHERE id = ? LIMIT 1", [
+    sourceClientId,
+  ]);
+  if (!clientRow?.user_id) {
+    return { skipped: true, reason: "client_not_found" };
+  }
+
+  const { start, end } = pktMonthBoundsUtc(monthYm);
+  const [transfers] = await pool.query(
+    `SELECT tt.client_id, tt.direction, tt.amount, tt.updated_at, b.id AS brand_id
+     FROM transfer_tickets tt
+     INNER JOIN brand_companies bc ON bc.id = tt.brand_companies_id
+     INNER JOIN brands b ON b.id = bc.brand_id
+     WHERE tt.status = 'approved'
+       AND tt.client_id = ?
+       AND tt.updated_at >= ? AND tt.updated_at <= ?`,
+    [clientRow.user_id, start, end]
+  );
+
+  const allBrandRules = await loadAllBrandRules();
+  const totals = computeNetForSourceClient(sourceClientId, transfers, allBrandRules);
+  const rowsWritten = await upsertAccrualsForSourceClient(
+    sourceClientId,
+    monthYm,
+    totals,
+    activeSettings
+  );
+
+  return { ok: true, sourceClientId, monthYm, rowsWritten, ...totals };
+}
+
+/**
+ * After a transfer ticket is approved, refresh accruals for that client/month.
+ */
+async function recalculateReferralAccrualsAfterTransferApproval(userId, approvedAt = new Date()) {
+  const settings = await getProgramSettings();
+  if (!settings?.is_enabled) {
+    return { skipped: true, reason: "program_disabled" };
+  }
+
+  const monthYm = pktYmdForInstant(approvedAt).slice(0, 7);
+  const sourceClientId = await getClientIdForUserId(userId);
+  if (!sourceClientId) {
+    return { skipped: true, reason: "not_a_client" };
+  }
+
+  return recalculateAccrualsForSourceClient(sourceClientId, monthYm, settings);
 }
 
 /**
@@ -103,52 +225,11 @@ async function runAccrualForMonth(monthYm) {
   try {
     const allBrandRules = await loadAllBrandRules();
     const transfers = await fetchMonthTransfers(monthYm);
-    const netsByClient = aggregateNetByClient(transfers, allBrandRules);
+    const clientIdByUserId = await buildClientIdByUserIdMap(transfers.map((t) => t.client_id));
+    const netsByClient = aggregateNetByClient(transfers, allBrandRules, clientIdByUserId);
 
-    const earnerCache = new Map();
-
-    async function loadEarner(clientId) {
-      if (earnerCache.has(clientId)) return earnerCache.get(clientId);
-      const [[row]] = await pool.query("SELECT * FROM clients WHERE id = ? LIMIT 1", [clientId]);
-      earnerCache.set(clientId, row || null);
-      return row;
-    }
-
-    for (const [sourceClientId, { transferIn, transferOut, net }] of netsByClient) {
-      const earners = await getUplineEarners(sourceClientId);
-
-      for (const { tier, clientId: earnerId } of earners) {
-        const earner = await loadEarner(earnerId);
-        if (!earnerCanAccrue(earner)) continue;
-
-        const rate = resolveTierRate(settings, earner, tier);
-        const amount = roundMoney((net * rate) / 100);
-
-        await pool.query(
-          `INSERT INTO referral_accruals
-            (earner_client_id, source_client_id, tier, accrual_month,
-             transfer_in_total, transfer_out_total, net_base, rate_applied, amount, status)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
-           ON DUPLICATE KEY UPDATE
-             transfer_in_total = VALUES(transfer_in_total),
-             transfer_out_total = VALUES(transfer_out_total),
-             net_base = VALUES(net_base),
-             rate_applied = VALUES(rate_applied),
-             amount = VALUES(amount)`,
-          [
-            earnerId,
-            sourceClientId,
-            tier,
-            monthYm,
-            transferIn,
-            transferOut,
-            net,
-            rate,
-            amount,
-          ]
-        );
-        rowsWritten += 1;
-      }
+    for (const [sourceClientId, totals] of netsByClient) {
+      rowsWritten += await upsertAccrualsForSourceClient(sourceClientId, monthYm, totals, settings);
     }
 
     await pool.query(
@@ -192,4 +273,6 @@ module.exports = {
   runReferralAccrualTick,
   fetchMonthTransfers,
   aggregateNetByClient,
+  recalculateAccrualsForSourceClient,
+  recalculateReferralAccrualsAfterTransferApproval,
 };

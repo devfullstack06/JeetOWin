@@ -880,6 +880,13 @@ exports.approveAdminTransferTicket = async (req, res) => {
     await conn.commit();
     conn.release();
 
+    try {
+      const { recalculateReferralAccrualsAfterTransferApproval } = require("../../services/referralAccrualService");
+      await recalculateReferralAccrualsAfterTransferApproval(t.client_id, new Date());
+    } catch (referralErr) {
+      console.error("[referral] accrual after transfer approve:", referralErr);
+    }
+
     const [rows] = await pool.query(
       `SELECT tt.id, tt.client_id, tt.client_account_id, tt.brand_companies_id, tt.direction, tt.amount, tt.status,
               tt.ledger_transaction_number, tt.reason, tt.evidence_path, tt.notes,

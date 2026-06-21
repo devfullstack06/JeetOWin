@@ -310,6 +310,7 @@ export default function LoggedInLayout({ activeId = "dashboard", children }) {
             <LeftNav
               variant="sidebar"
               userName={firstName}
+              loginUsername={username}
               balanceValue={balanceDisplay}
               activeId={activeId}
               onNavigate={go}
@@ -330,6 +331,7 @@ export default function LoggedInLayout({ activeId = "dashboard", children }) {
       <LeftNav
         variant="drawer"
         userName={firstName}
+        loginUsername={username}
         balanceValue={balanceDisplay}
         isOpen={navOpen}
         onClose={() => setNavOpen(false)}

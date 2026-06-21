@@ -25,6 +25,7 @@ export default function LeftNav({
   variant = "sidebar",
 
   userName = "Ali",
+  loginUsername,
   balanceLabel = "My Balance:",
   balanceValue = "Rs. 1,000,000",
 
@@ -43,6 +44,7 @@ export default function LeftNav({
   const [isBalanceHidden, setIsBalanceHidden] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const usernameLabel = loginUsername || userName || "User";
 
   const pages = useMemo(
     () => [
@@ -78,7 +80,10 @@ export default function LeftNav({
       <div className="jw-leftNavHeader">
         {/* Username */}
         <div className="jw-leftNavName">
-          <div className="jw-leftNavHi">Hi,</div>
+          <div className="jw-leftNavHi">
+            <span className="jw-leftNavHi__greeting">Hi,</span>
+            <span className="jw-leftNavHi__username">Username: {usernameLabel}</span>
+          </div>
           <div className="jw-leftNavUser">{userName || "User"}</div>
         </div>
 

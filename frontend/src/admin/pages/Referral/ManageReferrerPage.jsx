@@ -10,6 +10,9 @@ import AdminPagination from "../../components/AdminPagination/AdminPagination";
 import { formatAdminDateTime } from "../../utils/adminDateUtils";
 import ReferralDetailsRichEditor from "../../components/ReferralDetailsRichEditor";
 import ReferrerCommissionModal from "./ReferrerCommissionModal";
+import BrandRulesDetailsModal, {
+  resolveCurrentGlobalBrandStatus,
+} from "./BrandRulesDetailsModal";
 import {
   fetchReferralSettings,
   patchReferralSettings,
@@ -21,7 +24,6 @@ import {
   fetchAdminBrandRules,
   postAdminBrandRule,
   fetchAdminAccrualPreview,
-  runAdminAccrual,
 } from "../../services/referralAdminApi";
 import "../../components/AdminFilterBar/adminFilterBar.css";
 import "../../components/AdminTable/adminTable.css";
@@ -206,12 +208,12 @@ export default function ManageReferrerPage() {
   const [brandsLoading, setBrandsLoading] = useState(false);
   const [brandForm, setBrandForm] = useState({ brandId: "", isIncluded: false });
   const [brandSaving, setBrandSaving] = useState(false);
+  const [brandDetailsOpen, setBrandDetailsOpen] = useState(false);
 
   const [accrualMonth, setAccrualMonth] = useState(() => new Date().toISOString().slice(0, 7));
   const [accrualAppliedMonth, setAccrualAppliedMonth] = useState(() => new Date().toISOString().slice(0, 7));
   const [accruals, setAccruals] = useState([]);
   const [accrualsLoading, setAccrualsLoading] = useState(false);
-  const [accrualRunning, setAccrualRunning] = useState(false);
   const [detailsEditorKey, setDetailsEditorKey] = useState(0);
 
   const loadSettings = useCallback(async () => {
@@ -479,19 +481,6 @@ export default function ManageReferrerPage() {
     }
   };
 
-  const runAccrual = async () => {
-    setAccrualRunning(true);
-    setErrorText("");
-    try {
-      await runAdminAccrual(accrualAppliedMonth);
-      await loadAccruals();
-    } catch (e) {
-      setErrorText(e.message || "Accrual run failed.");
-    } finally {
-      setAccrualRunning(false);
-    }
-  };
-
   const referrerDisplayRows = useMemo(() => {
     if (referrersLoading && referrers.length === 0) return [{ id: "loading-row" }];
     if (!referrersLoading && referrers.length === 0) return [{ id: "empty-row" }];
@@ -503,6 +492,18 @@ export default function ManageReferrerPage() {
     if (!brandsLoading && brandRules.length === 0) return [{ id: "empty-row" }];
     return brandRules;
   }, [brandRules, brandsLoading]);
+
+  const brandStatusRows = useMemo(
+    () =>
+      [...brands]
+        .sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")))
+        .map((b) => ({
+          brandId: b.id,
+          brandName: b.name || "—",
+          isIncluded: resolveCurrentGlobalBrandStatus(b.id, brandRules),
+        })),
+    [brands, brandRules]
+  );
 
   const accrualDisplayRows = useMemo(() => {
     if (accrualsLoading && accruals.length === 0) return [{ id: "loading-row" }];
@@ -535,6 +536,9 @@ export default function ManageReferrerPage() {
       <AdminFilterBar
         actions={
           <>
+            <AdminButton variant="light" onClick={() => setBrandDetailsOpen(true)}>
+              Details
+            </AdminButton>
             <AdminButton variant="light" onClick={() => setBrandForm({ brandId: "", isIncluded: false })}>
               Clear
             </AdminButton>
@@ -577,11 +581,6 @@ export default function ManageReferrerPage() {
           setAccrualMonth(now);
           setAccrualAppliedMonth(now);
         }}
-        actionsAddon={
-          <AdminButton variant="green" onClick={runAccrual} disabled={accrualRunning}>
-            {accrualRunning ? "Running…" : "Run accrual"}
-          </AdminButton>
-        }
       >
         <AdminFilterField label="Month">
           <input
@@ -863,7 +862,9 @@ export default function ManageReferrerPage() {
       <div className="jw-adminRefTableSection">
         <div className="jw-adminRefTableSection__head">
           <h3 className="jw-adminRefTableSection__title">Accrual preview — {accrualAppliedMonth}</h3>
-          <p className="jw-adminRefTableSection__sub">TRI − TRO net, 3-tier commission for the selected Karachi month.</p>
+          <p className="jw-adminRefTableSection__sub">
+            TRI − TRO net, 3-tier commission for the selected Karachi month. Updated automatically when transfers are approved.
+          </p>
         </div>
         <div className="jw-adminTableWrap">
           <table className="jw-adminTable">
@@ -891,7 +892,7 @@ export default function ManageReferrerPage() {
               ) : accrualDisplayRows.length === 1 && accrualDisplayRows[0]?.id === "empty-row" ? (
                 <tr>
                   <td colSpan={8} className="jw-adminEmpty">
-                    No accruals for this month — run accrual after the month ends
+                    No accruals for this month yet
                   </td>
                 </tr>
               ) : (
@@ -957,6 +958,11 @@ export default function ManageReferrerPage() {
         onReferralTierFilterChange={handleReferralTierFilterChange}
         referralDownline={referralDownline}
         onClose={closeCommissionModal}
+      />
+      <BrandRulesDetailsModal
+        open={brandDetailsOpen}
+        rows={brandStatusRows}
+        onClose={() => setBrandDetailsOpen(false)}
       />
       <AdminPageShell
         title="Manage Referrer"

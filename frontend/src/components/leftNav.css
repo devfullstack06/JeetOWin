@@ -68,13 +68,31 @@
 
 /* Username block */
 .jw-leftNavName {
+  width: 100%;
   padding: 6px 0;
 }
 .jw-leftNavHi {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
   font-size: 12px;
   font-weight: 400;
   font-family: var(--jw-font);
   opacity: 0.98;
+}
+.jw-leftNavHi__greeting {
+  flex-shrink: 0;
+}
+.jw-leftNavHi__username {
+  flex-shrink: 1;
+  min-width: 0;
+  text-align: right;
+  margin-right: 30px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .jw-leftNavUser {
   margin-top: 4px;

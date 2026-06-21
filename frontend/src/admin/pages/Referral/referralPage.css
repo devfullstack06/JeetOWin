@@ -287,6 +287,71 @@
   max-height: min(40vh, 300px);
 }
 
+.jw-adminRefBrandDetailsModal {
+  width: min(440px, 100%);
+}
+
+.jw-adminRefBrandDetailsModal .jw-adminTableWrap {
+  overflow-x: visible;
+}
+
+.jw-adminRefBrandDetailsTable.jw-adminTable {
+  min-width: 0;
+  width: 100%;
+  table-layout: fixed;
+}
+
+.jw-adminRefBrandDetailsModal__intro {
+  margin: 0 0 14px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #6b7280;
+}
+
+.jw-adminRefBrandDetailsTable th:first-child,
+.jw-adminRefBrandDetailsTable td:first-child {
+  width: auto;
+}
+
+.jw-adminRefBrandDetailsTable th:last-child,
+.jw-adminRefBrandDetailsTable td:last-child,
+.jw-adminRefBrandDetailsTable__statusHead,
+.jw-adminRefBrandDetailsTable__statusCell {
+  width: 140px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.jw-adminRefBrandDetailsTable__statusCell {
+  vertical-align: middle;
+}
+
+.jw-adminRefBrandDetailsTable__statusCell .jw-adminRefBrandStatus {
+  margin-left: auto;
+}
+
+.jw-adminRefBrandStatus {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 88px;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.jw-adminRefBrandStatus.is-included {
+  background: #eaf8ef;
+  color: #159447;
+}
+
+.jw-adminRefBrandStatus.is-excluded {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
 @media (max-width: 768px) {
   .jw-adminRefFormGrid,
   .jw-adminRefReleaseForm,
