@@ -33,6 +33,7 @@ const leaderboardPublicRouter = require("./routes/leaderboardPublic");
 const chatWidgetRouter = require("./routes/chatWidget");
 const { startPromotionStatusJob } = require("./scripts/promotionStatusJob");
 const { startReferralAccrualJob } = require("./scripts/referralAccrualJob");
+const affiliateRouter = require("./routes/affiliate");
 
 const app = express();
 
@@ -71,6 +72,7 @@ app.use("/api/trending-games", trendingGamesRouter);
 app.use("/api/brands", brandsPublicRouter);
 app.use("/api/leaderboard", leaderboardPublicRouter);
 app.use("/api/chat-widget", chatWidgetRouter);
+app.use("/api/affiliate", affiliateRouter);
 app.use("/api/admin", adminRouter);
 // Choose port from environment or default to 3000
 const PORT = process.env.PORT || 3000;

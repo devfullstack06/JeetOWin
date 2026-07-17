@@ -1,0 +1,56 @@
+.jw-affMsgDirectionTabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 10px;
+}
+
+.jw-affMsgDirectionTab {
+  height: 36px;
+  padding: 0 14px;
+  border: 1px solid #e2e2e2;
+  border-radius: 10px;
+  background: #f7f7f7;
+  color: #333;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.jw-affMsgDirectionTab.is-active {
+  border: none;
+  color: #fff;
+  background: linear-gradient(180deg, #28d26a 0%, #13a94c 100%);
+}
+
+.jw-affMsgBubble {
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #e8ebf0;
+}
+
+.jw-affMsgBubble.is-from {
+  background: #f7f8fa;
+}
+
+.jw-affMsgBubble.is-to {
+  background: #effaf3;
+  border-color: #ccebd7;
+}
+
+.jw-affMsgBubble__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.jw-affMsgBubble__text {
+  color: #1f2937;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}

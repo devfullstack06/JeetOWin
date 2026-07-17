@@ -10,14 +10,27 @@ export function AdminFilterField({ label, children }) {
   );
 }
 
-export function AdminInput({ value, onChange, placeholder, inputMode = "text" }) {
+export function AdminInput({
+  value,
+  onChange,
+  placeholder,
+  inputMode = "text",
+  type = "text",
+  required,
+  disabled,
+  readOnly,
+}) {
   return (
     <input
       className="jw-adminInput"
+      type={type}
       value={value}
       onChange={(e) => onChange?.(e.target.value)}
       placeholder={placeholder}
       inputMode={inputMode}
+      required={required}
+      disabled={disabled}
+      readOnly={readOnly}
     />
   );
 }
@@ -27,12 +40,14 @@ export function AdminButton({
   variant = "light",
   onClick,
   type = "button",
+  disabled = false,
 }) {
   return (
     <button
       type={type}
       className={`jw-adminBtn ${variant === "green" ? "is-green" : "is-light"}`}
       onClick={onClick}
+      disabled={disabled}
     >
       {children}
     </button>

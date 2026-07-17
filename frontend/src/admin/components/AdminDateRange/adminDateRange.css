@@ -49,6 +49,15 @@
   z-index: 1000;
 }
 
+.jw-adminDateRange__pop--portal {
+  position: fixed;
+  right: auto;
+  z-index: 1400;
+  max-height: min(280px, calc(100vh - 16px));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .jw-adminDateRange__row {
   display: flex;
   flex-direction: column;

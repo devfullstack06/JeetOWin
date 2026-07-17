@@ -99,6 +99,39 @@ const {
   getLeaderboardMockDetailView,
 } = require("../controllers/admin/leaderboardMocksController");
 const {
+  getAdminAffiliates,
+  postAdminAffiliate,
+  getAdminAffiliateById,
+  patchAdminAffiliate,
+  getAdminAffiliatePlans,
+  postAdminAffiliatePlan,
+  patchAdminAffiliatePlan,
+} = require("../controllers/admin/affiliateAdminController");
+const {
+  getAdminAffiliateCommissions,
+  patchAdminAffiliateCommissionStatus,
+  postAdminAffiliateCommissionAdjust,
+  getAdminAffiliateCommissionAdjustments,
+  getAdminAffiliateWithdrawals,
+  patchAdminAffiliateWithdrawalStatus,
+  getAdminAffiliateWallets,
+  patchAdminAffiliateWalletStatus,
+  getAdminAffiliateAssets,
+  postAdminAffiliateAsset,
+  patchAdminAffiliateAsset,
+  deleteAdminAffiliateAsset,
+  getAdminAffiliateReports,
+  getAdminAffiliateSettings,
+  patchAdminAffiliateSettings,
+} = require("../controllers/admin/affiliateAdminOpsController");
+const {
+  getAdminAffiliateSupportMessages,
+  getAdminAffiliateSupportMessage,
+  replyAdminAffiliateSupportMessage,
+  patchAdminAffiliateSupportMessageStatus,
+} = require("../controllers/admin/affiliateSupportAdminController");
+const { optionalAffiliateAssetUpload } = require("../middleware/uploadAffiliateAsset");
+const {
   getAdminBrands,
   createAdminBrand,
   updateAdminBrand,
@@ -190,10 +223,12 @@ const {
   getAdminAnnouncementAudience,
   getAdminAnnouncementSeenBy,
   postAdminAnnouncementMemberCountPreview,
+  postAdminAnnouncementAffiliateCountPreview,
 } = require("../controllers/admin/announcementsController");
 const {
   getAdminInboxFilterOptions,
   postAdminInboxMemberCountPreview,
+  postAdminInboxAffiliateCountPreview,
   getAdminInboxMessages,
   getAdminInboxMessageById,
   createAdminInboxMessage,
@@ -240,6 +275,11 @@ router.post(
   requireAdminAuth,
   postAdminAnnouncementMemberCountPreview
 );
+router.post(
+  "/announcements/affiliate-count-preview",
+  requireAdminAuth,
+  postAdminAnnouncementAffiliateCountPreview
+);
 router.get("/announcements", requireAdminAuth, getAdminAnnouncements);
 router.get("/announcements/:id", requireAdminAuth, getAdminAnnouncementById);
 router.get("/announcements/:id/audience", requireAdminAuth, getAdminAnnouncementAudience);
@@ -280,6 +320,7 @@ router.post(
 
 router.get("/inbox/options", requireAdminAuth, getAdminInboxFilterOptions);
 router.post("/inbox/member-count-preview", requireAdminAuth, postAdminInboxMemberCountPreview);
+router.post("/inbox/affiliate-count-preview", requireAdminAuth, postAdminInboxAffiliateCountPreview);
 router.get("/inbox", requireAdminAuth, getAdminInboxMessages);
 router.get("/inbox/:id", requireAdminAuth, getAdminInboxMessageById);
 router.get("/inbox/:id/audience", requireAdminAuth, getAdminInboxAudience);
@@ -452,5 +493,32 @@ router.patch(
   rejectAdminTransferTicket
 );
 router.patch("/transfer-tickets/:id", requireAdminAuth, patchAdminTransferTicket);
+
+router.get("/affiliates", requireAdminAuth, getAdminAffiliates);
+router.post("/affiliates", requireAdminAuth, postAdminAffiliate);
+router.get("/affiliates/:id", requireAdminAuth, getAdminAffiliateById);
+router.patch("/affiliates/:id", requireAdminAuth, patchAdminAffiliate);
+router.get("/affiliate-plans", requireAdminAuth, getAdminAffiliatePlans);
+router.post("/affiliate-plans", requireAdminAuth, postAdminAffiliatePlan);
+router.patch("/affiliate-plans/:id", requireAdminAuth, patchAdminAffiliatePlan);
+router.get("/affiliate-commissions", requireAdminAuth, getAdminAffiliateCommissions);
+router.get("/affiliate-commissions/:id/adjustments", requireAdminAuth, getAdminAffiliateCommissionAdjustments);
+router.patch("/affiliate-commissions/:id/status", requireAdminAuth, patchAdminAffiliateCommissionStatus);
+router.post("/affiliate-commissions/:id/adjust", requireAdminAuth, postAdminAffiliateCommissionAdjust);
+router.get("/affiliate-withdrawals", requireAdminAuth, getAdminAffiliateWithdrawals);
+router.patch("/affiliate-withdrawals/:id/status", requireAdminAuth, patchAdminAffiliateWithdrawalStatus);
+router.get("/affiliate-wallets", requireAdminAuth, getAdminAffiliateWallets);
+router.patch("/affiliate-wallets/:id/status", requireAdminAuth, patchAdminAffiliateWalletStatus);
+router.get("/affiliate-assets", requireAdminAuth, getAdminAffiliateAssets);
+router.post("/affiliate-assets", requireAdminAuth, optionalAffiliateAssetUpload, postAdminAffiliateAsset);
+router.patch("/affiliate-assets/:id", requireAdminAuth, optionalAffiliateAssetUpload, patchAdminAffiliateAsset);
+router.delete("/affiliate-assets/:id", requireAdminAuth, deleteAdminAffiliateAsset);
+router.get("/affiliate-reports", requireAdminAuth, getAdminAffiliateReports);
+router.get("/affiliate-settings", requireAdminAuth, getAdminAffiliateSettings);
+router.patch("/affiliate-settings", requireAdminAuth, patchAdminAffiliateSettings);
+router.get("/affiliate-support-messages", requireAdminAuth, getAdminAffiliateSupportMessages);
+router.get("/affiliate-support-messages/:id", requireAdminAuth, getAdminAffiliateSupportMessage);
+router.post("/affiliate-support-messages/:id/reply", requireAdminAuth, replyAdminAffiliateSupportMessage);
+router.patch("/affiliate-support-messages/:id/status", requireAdminAuth, patchAdminAffiliateSupportMessageStatus);
 
 module.exports = router;

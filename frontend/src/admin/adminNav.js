@@ -78,6 +78,7 @@ export const adminNavGroups = [
         { id: "admin-notif-ann", label: "Announcements", path: "/admin/notifications/announcements", crumb: "Admin > Notifications > Announcements" },
         { id: "admin-notif-inbox", label: "Inbox", path: "/admin/notifications/inbox", crumb: "Admin > Notifications > Inbox" },
         { id: "admin-notif-groups", label: "Groups", path: "/admin/notifications/groups", crumb: "Admin > Notifications > Groups" },
+        { id: "admin-notif-aff-msg", label: "Affiliate Messages", path: "/admin/notifications/affiliate-messages", crumb: "Admin > Notifications > Affiliate Messages" },
       ],
     },
     {
@@ -85,6 +86,19 @@ export const adminNavGroups = [
       items: [
         { id: "admin-ref-manage", label: "Manage Referrer", path: "/admin/referral/manage-referrer", crumb: "Admin > Referral Program > Manage Referrer" },
         { id: "admin-ref-release", label: "Release Commission", path: "/admin/referral/release-commission", crumb: "Admin > Referral Program > Release Commission" },
+      ],
+    },
+    {
+      group: "Affiliates",
+      items: [
+        { id: "admin-aff-list", label: "Affiliates", path: "/admin/affiliate/affiliates", crumb: "Admin > Affiliates > Affiliates" },
+        { id: "admin-aff-commissions", label: "Commission Ledger", path: "/admin/affiliate/commissions", crumb: "Admin > Affiliates > Commission Ledger" },
+        { id: "admin-aff-withdrawals", label: "Withdrawals", path: "/admin/affiliate/withdrawals", crumb: "Admin > Affiliates > Withdrawals" },
+        { id: "admin-aff-wallets", label: "Wallets", path: "/admin/affiliate/wallets", crumb: "Admin > Affiliates > Wallets" },
+        { id: "admin-aff-plans", label: "Commission Plans", path: "/admin/affiliate/plans", crumb: "Admin > Affiliates > Commission Plans" },
+        { id: "admin-aff-assets", label: "Marketing Assets", path: "/admin/affiliate/assets", crumb: "Admin > Affiliates > Marketing Assets" },
+        { id: "admin-aff-reports", label: "Reports", path: "/admin/affiliate/reports", crumb: "Admin > Affiliates > Reports" },
+        { id: "admin-aff-settings", label: "Settings", path: "/admin/affiliate/settings", crumb: "Admin > Affiliates > Settings" },
       ],
     },
   ];

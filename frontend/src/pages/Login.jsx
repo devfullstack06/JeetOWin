@@ -60,6 +60,10 @@ export default function Login() {
       navigate("/admin", { replace: true });
       return;
     }
+    if (token && role === "affiliate") {
+      navigate("/affiliate/dashboard", { replace: true });
+      return;
+    }
     if (token && role === "client") {
       navigate("/home", { replace: true });
     }
@@ -112,6 +116,8 @@ export default function Login() {
       // ✅ route by role
       if (data?.role === "admin") {
         navigate("/admin", { replace: true });
+      } else if (data?.role === "affiliate") {
+        navigate("/affiliate/dashboard", { replace: true });
       } else if (data?.role === "client") {
         navigate("/home", { replace: true });
       } else {

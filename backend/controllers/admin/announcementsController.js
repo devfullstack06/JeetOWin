@@ -119,6 +119,26 @@ async function getAllClientUserIds(conn) {
   return rows.map((r) => Number(r.id)).filter((x) => Number.isInteger(x) && x > 0);
 }
 
+async function getAllAffiliateUserIds(conn) {
+  const [rows] = await conn.query(
+    `
+    SELECT u.id
+    FROM users u
+    INNER JOIN roles r ON r.id = u.role_id AND r.name = 'affiliate'
+    INNER JOIN affiliate_profiles ap ON ap.user_id = u.id
+    WHERE u.status = 'active' AND ap.status = 'active'
+    `
+  );
+  return rows.map((r) => Number(r.id)).filter((x) => Number.isInteger(x) && x > 0);
+}
+
+function parseAudienceMode(raw) {
+  const s = String(raw || "all").toLowerCase();
+  if (s === "custom") return "custom";
+  if (s === "affiliates") return "affiliates";
+  return "all";
+}
+
 async function assertClientUsers(conn, userIds) {
   if (!userIds.length) return true;
   const placeholders = userIds.map(() => "?").join(",");
@@ -223,6 +243,11 @@ exports.getAdminAnnouncementFilterOptions = async (req, res) => {
         { value: "Asia/Karachi", label: "PKT (Asia/Karachi)" },
         { value: "UTC", label: "UTC" },
       ],
+      audienceModeOptions: [
+        { value: "custom", label: "Custom (client groups)" },
+        { value: "all", label: "All clients" },
+        { value: "affiliates", label: "All affiliates" },
+      ],
     });
   } catch (e) {
     if (e.code === "ER_NO_SUCH_TABLE") {
@@ -232,6 +257,19 @@ exports.getAdminAnnouncementFilterOptions = async (req, res) => {
     }
     console.error("[announcements/options]", e);
     return res.status(500).json({ message: "Failed to load announcement filter options." });
+  }
+};
+
+exports.postAdminAnnouncementAffiliateCountPreview = async (req, res) => {
+  try {
+    const ids = await getAllAffiliateUserIds(pool);
+    return res.json({ count: ids.length });
+  } catch (e) {
+    if (e.code === "ER_NO_SUCH_TABLE") {
+      return res.json({ count: 0 });
+    }
+    console.error("[announcements/affiliate-count]", e);
+    return res.status(500).json({ message: "Failed to preview affiliate audience." });
   }
 };
 
@@ -481,8 +519,7 @@ exports.getAdminAnnouncementById = async (req, res) => {
 exports.createAdminAnnouncement = async (req, res) => {
   const title = String(req.body?.title || "").trim();
   const bodyMarkdown = String(req.body?.messageMarkdown || "").trim();
-  const audienceModeRaw = String(req.body?.audienceMode || "all").toLowerCase();
-  const audienceMode = audienceModeRaw === "custom" ? "custom" : "all";
+  const audienceMode = parseAudienceMode(req.body?.audienceMode);
   const timezone = String(req.body?.timezone || "Asia/Karachi").trim() || "Asia/Karachi";
   const scheduledAtIso = req.body?.scheduledAt || null;
   const audienceRows = normalizeAudienceRows(req.body?.audienceRows);
@@ -549,14 +586,14 @@ exports.createAdminAnnouncement = async (req, res) => {
     await refreshDueAnnouncements(conn);
 
     const idCheck = [...new Set([...excludedIds, ...includedIds])];
-    if (!(await assertClientUsers(conn, idCheck))) {
+    if (audienceMode !== "affiliates" && idCheck.length && !(await assertClientUsers(conn, idCheck))) {
       await conn.rollback();
       return res.status(400).json({
         message: "Excluded and selected users must be existing client accounts.",
       });
     }
 
-    const audienceErr = await validateAudienceRows(conn, audienceRows);
+    const audienceErr = audienceMode === "custom" ? await validateAudienceRows(conn, audienceRows) : "";
     if (audienceErr) {
       await conn.rollback();
       return res.status(400).json({ message: audienceErr });
@@ -566,6 +603,9 @@ exports.createAdminAnnouncement = async (req, res) => {
     if (audienceMode === "all") {
       const allClientIds = await getAllClientUserIds(conn);
       recipientsSet = new Set(allClientIds);
+    } else if (audienceMode === "affiliates") {
+      const affiliateIds = await getAllAffiliateUserIds(conn);
+      recipientsSet = new Set(affiliateIds);
     } else {
       for (const row of audienceRows) {
         for (const gid of row.groupIds) {
