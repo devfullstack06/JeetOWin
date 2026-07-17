@@ -7,7 +7,9 @@ import usePageTitle from "../../../hooks/usePageTitle";
 import NotificationGroupsTab from "./NotificationGroupsTab";
 import AnnouncementsTab from "./AnnouncementsTab";
 import InboxTab from "./InboxTab";
+import AffiliateMessagesTab from "./AffiliateMessagesTab";
 import "../Content/contentPage.css";
+import "./affiliateMessagesTab.css";
 
 const notificationTabs = (() => {
   const g = adminNavGroups.find((x) => x.group === "Notifications");
@@ -59,6 +61,8 @@ export default function AdminNotificationsPage() {
           <InboxTab />
         ) : activeTab === "groups" ? (
           <NotificationGroupsTab />
+        ) : activeTab === "affiliate-messages" ? (
+          <AffiliateMessagesTab />
         ) : (
           <div className="jw-adminContentPlaceholder">
             {tabLabel} — Coming soon.

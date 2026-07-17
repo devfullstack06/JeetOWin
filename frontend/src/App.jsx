@@ -39,7 +39,21 @@ import AdminNotificationsPage from "./admin/pages/Notifications/AdminNotificatio
 import ManagePromosPage from "./admin/pages/Promotions/ManagePromosPage";
 import ManageReferrerPage from "./admin/pages/Referral/ManageReferrerPage";
 import ReleaseCommissionPage from "./admin/pages/Referral/ReleaseCommissionPage";
+import AdminAffiliatePage from "./admin/pages/Affiliates/AdminAffiliatePage";
+import AdminAffiliateDetailPage from "./admin/pages/Affiliates/AdminAffiliateDetailPage";
 import { adminNavGroups } from "./admin/adminNav";
+
+import AffiliateLayout from "./affiliate/AffiliateLayout";
+import AffiliateDashboardPage from "./affiliate/pages/AffiliateDashboardPage";
+import AffiliateLinksPage from "./affiliate/pages/AffiliateLinksPage";
+import AffiliatePlayersPage from "./affiliate/pages/AffiliatePlayersPage";
+import AffiliateCommissionsPage from "./affiliate/pages/AffiliateCommissionsPage";
+import AffiliateWalletsPage from "./affiliate/pages/AffiliateWalletsPage";
+import AffiliateWithdrawalsPage from "./affiliate/pages/AffiliateWithdrawalsPage";
+import AffiliateMarketingPage from "./affiliate/pages/AffiliateMarketingPage";
+import AffiliateReportsPage from "./affiliate/pages/AffiliateReportsPage";
+import AffiliateProfilePage from "./affiliate/pages/AffiliateProfilePage";
+import AffiliateNotificationsPage, { AffiliateSupportPage } from "./affiliate/pages/AffiliateNotificationsPage";
 
 function MobileNavLayout() {
   return (
@@ -72,6 +86,14 @@ function AdminProtectedLayout() {
   );
 }
 
+function AffiliateProtectedLayout() {
+  return (
+    <ProtectedRoute allowedRole="affiliate">
+      <Outlet />
+    </ProtectedRoute>
+  );
+}
+
 // Flatten admin nav items for route generation
 function getAdminItems() {
   const items = [];
@@ -89,12 +111,28 @@ function getRole() {
 function RedirectIfAdmin() {
   const role = getRole();
   if (role === "admin") return <Navigate to="/admin" replace />;
+  if (role === "affiliate") return <Navigate to="/affiliate/dashboard" replace />;
   return <Outlet />;
 }
 
 function RedirectIfClient() {
   const role = getRole();
   if (role === "client") return <Navigate to="/home" replace />;
+  if (role === "affiliate") return <Navigate to="/affiliate/dashboard" replace />;
+  return <Outlet />;
+}
+
+/** Affiliate portal: only affiliates may proceed; others sent to their home. */
+function RedirectIfNonAffiliate() {
+  const role = getRole();
+  if (role === "admin") return <Navigate to="/admin" replace />;
+  if (role === "client") return <Navigate to="/home" replace />;
+  return <Outlet />;
+}
+
+function RedirectIfAffiliate() {
+  const role = getRole();
+  if (role === "affiliate") return <Navigate to="/affiliate/dashboard" replace />;
   return <Outlet />;
 }
 
@@ -160,9 +198,25 @@ export default function App() {
             <Route path="notifications/announcements" element={<AdminNotificationsPage />} />
             <Route path="notifications/inbox" element={<AdminNotificationsPage />} />
             <Route path="notifications/groups" element={<AdminNotificationsPage />} />
+            <Route path="notifications/affiliate-messages" element={<AdminNotificationsPage />} />
             <Route path="promotions/manage-promos" element={<ManagePromosPage />} />
             <Route path="referral/manage-referrer" element={<ManageReferrerPage />} />
             <Route path="referral/release-commission" element={<ReleaseCommissionPage />} />
+            {/* Affiliates: shell + tabs (same pattern as Content / Notifications) */}
+            <Route path="affiliate" element={<Navigate to="/admin/affiliate/affiliates" replace />} />
+            <Route path="affiliate/affiliates/:id" element={<AdminAffiliateDetailPage />} />
+            <Route path="affiliate/:affiliateTab" element={<AdminAffiliatePage />} />
+
+            {/* Legacy affiliate paths → redirect */}
+            <Route path="affiliates" element={<Navigate to="/admin/affiliate/affiliates" replace />} />
+            <Route path="affiliates/:id" element={<AdminAffiliateDetailPage />} />
+            <Route path="affiliate-commissions" element={<Navigate to="/admin/affiliate/commissions" replace />} />
+            <Route path="affiliate-withdrawals" element={<Navigate to="/admin/affiliate/withdrawals" replace />} />
+            <Route path="affiliate-wallets" element={<Navigate to="/admin/affiliate/wallets" replace />} />
+            <Route path="affiliate-plans" element={<Navigate to="/admin/affiliate/plans" replace />} />
+            <Route path="affiliate-assets" element={<Navigate to="/admin/affiliate/assets" replace />} />
+            <Route path="affiliate-reports" element={<Navigate to="/admin/affiliate/reports" replace />} />
+            <Route path="affiliate-settings" element={<Navigate to="/admin/affiliate/settings" replace />} />
 
             {/* Auto placeholders for remaining admin routes */}
             {adminItems.map((it) => {
@@ -193,9 +247,21 @@ export default function App() {
               if (nestedPath === "notifications/announcements") return null;
               if (nestedPath === "notifications/inbox") return null;
               if (nestedPath === "notifications/groups") return null;
+              if (nestedPath === "notifications/affiliate-messages") return null;
               if (nestedPath === "promotions/manage-promos") return null;
               if (nestedPath === "referral/manage-referrer") return null;
               if (nestedPath === "referral/release-commission") return null;
+              if (nestedPath === "affiliate") return null;
+              if (nestedPath.startsWith("affiliate/")) return null;
+              if (nestedPath === "affiliates") return null;
+              if (nestedPath.startsWith("affiliates/")) return null;
+              if (nestedPath === "affiliate-commissions") return null;
+              if (nestedPath === "affiliate-withdrawals") return null;
+              if (nestedPath === "affiliate-wallets") return null;
+              if (nestedPath === "affiliate-plans") return null;
+              if (nestedPath === "affiliate-assets") return null;
+              if (nestedPath === "affiliate-reports") return null;
+              if (nestedPath === "affiliate-settings") return null;
 
               return (
                 <Route
@@ -218,6 +284,29 @@ export default function App() {
         </Route>
 
         {/* ===================== */}
+        {/* AFFILIATE ROUTES */}
+        {/* ===================== */}
+        <Route element={<RedirectIfNonAffiliate />}>
+          <Route element={<AffiliateProtectedLayout />}>
+            <Route path="/affiliate" element={<AffiliateLayout />}>
+              <Route index element={<Navigate to="/affiliate/dashboard" replace />} />
+              <Route path="dashboard" element={<AffiliateDashboardPage />} />
+              <Route path="links" element={<AffiliateLinksPage />} />
+              <Route path="players" element={<AffiliatePlayersPage />} />
+              <Route path="commissions" element={<AffiliateCommissionsPage />} />
+              <Route path="wallets" element={<AffiliateWalletsPage />} />
+              <Route path="withdrawals" element={<AffiliateWithdrawalsPage />} />
+              <Route path="marketing-tools" element={<AffiliateMarketingPage />} />
+              <Route path="reports" element={<AffiliateReportsPage />} />
+              <Route path="profile" element={<AffiliateProfilePage />} />
+              <Route path="notifications" element={<AffiliateNotificationsPage />} />
+              <Route path="support" element={<AffiliateSupportPage />} />
+              <Route path="*" element={<Navigate to="/affiliate/dashboard" replace />} />
+            </Route>
+          </Route>
+        </Route>
+
+        {/* ===================== */}
         {/* CLIENT ROUTES */}
         {/* ===================== */}
         <Route element={<MobileNavLayout />}>
@@ -228,6 +317,7 @@ export default function App() {
 
           {/* Client protected routes */}
           <Route element={<RedirectIfAdmin />}>
+            <Route element={<RedirectIfAffiliate />}>
             <Route element={<ClientProtectedLayout />}>
               <Route path="home" element={<Home />} />
               <Route path="accounts" element={<AccountsPage />} />
@@ -248,6 +338,7 @@ export default function App() {
                 path="withdraw"
                 element={<TransactionsPage initialTab="withdraw" />}
               />
+            </Route>
             </Route>
           </Route>
         </Route>

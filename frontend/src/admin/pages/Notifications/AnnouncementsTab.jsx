@@ -375,6 +375,7 @@ function SelectUsersSearchPicker({ selected, onChange }) {
 function CreateAnnouncementModal({ open, onClose, options, onSaved }) {
   const [title, setTitle] = useState("");
   const titleInputRef = useRef(null);
+  const [audienceMode, setAudienceMode] = useState("custom");
   const [selectedGroupIds, setSelectedGroupIds] = useState([]);
   const [includeUsers, setIncludeUsers] = useState([]);
   const [excludeUsers, setExcludeUsers] = useState([]);
@@ -386,6 +387,8 @@ function CreateAnnouncementModal({ open, onClose, options, onSaved }) {
   const [saving, setSaving] = useState(false);
   const [preview, setPreview] = useState("");
   const [editorResetKey, setEditorResetKey] = useState(0);
+  const [audienceCount, setAudienceCount] = useState(null);
+  const [audienceCountLoading, setAudienceCountLoading] = useState(false);
   const previewHtml = useMemo(() => markdownToHtml(message), [message]);
 
   const activeGroups = options.activeMemberGroups || [];
@@ -395,6 +398,7 @@ function CreateAnnouncementModal({ open, onClose, options, onSaved }) {
   useEffect(() => {
     if (!open) return;
     setTitle("");
+    setAudienceMode("custom");
     setSelectedGroupIds([]);
     setIncludeUsers([]);
     setExcludeUsers([]);
@@ -405,7 +409,41 @@ function CreateAnnouncementModal({ open, onClose, options, onSaved }) {
     setErrorText("");
     setPreview("");
     setEditorResetKey((k) => k + 1);
+    setAudienceCount(null);
   }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    if (audienceMode === "affiliates") {
+      setAudienceCountLoading(true);
+      const token = localStorage.getItem("token") || "";
+      fetch("/api/admin/announcements/affiliate-count-preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({}),
+      })
+        .then((r) => r.json())
+        .then((d) => setAudienceCount(Number(d.count) || 0))
+        .catch(() => setAudienceCount(0))
+        .finally(() => setAudienceCountLoading(false));
+      return;
+    }
+    if (audienceMode === "all") {
+      setAudienceCountLoading(true);
+      const token = localStorage.getItem("token") || "";
+      fetch("/api/admin/announcements/member-count-preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ groupIds: [], includeUserIds: [] }),
+      })
+        .then((r) => r.json())
+        .then(() => setAudienceCount(null))
+        .catch(() => setAudienceCount(null))
+        .finally(() => setAudienceCountLoading(false));
+      return;
+    }
+    setAudienceCount(null);
+  }, [open, audienceMode]);
 
   const uploadImages = async (files) => {
     if (!files.length) return;
@@ -454,7 +492,7 @@ function CreateAnnouncementModal({ open, onClose, options, onSaved }) {
     }
     const groupIds = [...new Set(selectedGroupIds.map((x) => Number(x)).filter((n) => Number.isInteger(n) && n > 0))];
     const includeIds = [...new Set(includeUsers.map((u) => Number(u.userId)).filter((n) => Number.isInteger(n) && n > 0))];
-    if (!groupIds.length && !includeIds.length) {
+    if (audienceMode === "custom" && !groupIds.length && !includeIds.length) {
       return setErrorText("Select at least one group or add at least one user.");
     }
     setSaving(true);
@@ -463,10 +501,10 @@ function CreateAnnouncementModal({ open, onClose, options, onSaved }) {
       const body = {
         title,
         messageMarkdown: message,
-        audienceMode: "custom",
-        audienceRows: [{ band: "member", groupIds }],
-        includeUserIds: includeIds,
-        excludeUserIds: excludeUsers.map((u) => u.userId),
+        audienceMode,
+        audienceRows: audienceMode === "custom" ? [{ band: "member", groupIds }] : [],
+        includeUserIds: audienceMode === "custom" ? includeIds : [],
+        excludeUserIds: audienceMode === "custom" ? excludeUsers.map((u) => u.userId) : [],
         timezone,
         scheduledAt: scheduleAt ? new Date(scheduleAt).toISOString() : null,
         imagePaths: images.map((im) => im.path),
@@ -540,6 +578,34 @@ function CreateAnnouncementModal({ open, onClose, options, onSaved }) {
             </div>
           </div>
 
+          <div className="jw-adminUsersModal__field">
+            <label className="jw-adminUsersModal__label">Audience</label>
+            <select
+              className="jw-adminInput"
+              value={audienceMode}
+              onChange={(e) => setAudienceMode(e.target.value)}
+              disabled={saving}
+            >
+              {(options.audienceModeOptions || [
+                { value: "custom", label: "Custom (client groups)" },
+                { value: "all", label: "All clients" },
+                { value: "affiliates", label: "All affiliates" },
+              ]).map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+            {audienceMode === "affiliates" ? (
+              <div className="jw-adminUsersModal__hint">
+                {audienceCountLoading ? "Counting affiliates…" : `Active affiliates: ${audienceCount ?? 0}`}
+              </div>
+            ) : null}
+            {audienceMode === "all" ? (
+              <div className="jw-adminUsersModal__hint">Sends to all client accounts.</div>
+            ) : null}
+          </div>
+
+          {audienceMode === "custom" ? (
+          <>
           <AnnouncementGroupPicker
             groups={activeGroups}
             selectedIds={selectedGroupIds}
@@ -552,6 +618,8 @@ function CreateAnnouncementModal({ open, onClose, options, onSaved }) {
           <SelectUsersSearchPicker selected={includeUsers} onChange={setIncludeUsers} />
 
           <UserSearchPicker selected={excludeUsers} onChange={setExcludeUsers} />
+          </>
+          ) : null}
 
           <div className="jw-adminUsersModal__field jw-adminAnnMessageField">
             <label className="jw-adminUsersModal__label">Message (max 300 words)</label>

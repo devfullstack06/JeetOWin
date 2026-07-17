@@ -7,6 +7,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { pool } = require("../config/database");
 const { generateUniqueReferralCode } = require("../utils/referralCode");
+const { getAffiliateSetting } = require("../services/affiliateSettingsService");
 
 /**
  * REGISTER - Create a new client account
@@ -16,7 +17,7 @@ const { generateUniqueReferralCode } = require("../utils/referralCode");
  */
 async function register(req, res) {
   try {
-    const { username, password, referral_code, fullName, mobile } = req.body;
+    const { username, password, referral_code, fullName, mobile, campaign } = req.body;
 
     // Validation: Check required fields
     if (!username || !password) {
@@ -99,18 +100,37 @@ async function register(req, res) {
       const ownReferralCode = await generateUniqueReferralCode(username.trim(), connection);
 
       let referredByClientId = null;
+      let affiliateAttribution = null;
       const codeTrimmed = referral_code ? String(referral_code).trim() : "";
+      const campaignKey = campaign ? String(campaign).trim() : "";
 
       if (codeTrimmed) {
-        const [referrers] = await connection.query(
-          `SELECT id FROM clients
-           WHERE referral_code = ? AND referrer_status = 'active'
+        const [affiliateRows] = await connection.query(
+          `SELECT id, user_id, referral_code, status
+           FROM affiliate_profiles
+           WHERE referral_code = ? AND status = 'active'
            LIMIT 1`,
-          [codeTrimmed],
+          [codeTrimmed]
         );
 
-        if (referrers.length > 0) {
-          referredByClientId = referrers[0].id;
+        if (affiliateRows.length > 0) {
+          affiliateAttribution = affiliateRows[0];
+
+          const selfReferralAllowed = (await getAffiliateSetting("self_referral_allowed")) === "1";
+          if (!selfReferralAllowed && Number(affiliateAttribution.user_id) === Number(userId)) {
+            throw Object.assign(new Error("Self-referral is not allowed."), { statusCode: 400 });
+          }
+        } else {
+          const [referrers] = await connection.query(
+            `SELECT id FROM clients
+             WHERE referral_code = ? AND referrer_status = 'active'
+             LIMIT 1`,
+            [codeTrimmed]
+          );
+
+          if (referrers.length > 0) {
+            referredByClientId = referrers[0].id;
+          }
         }
       }
 
@@ -126,6 +146,38 @@ async function register(req, res) {
           mobile || null,
         ],
       );
+
+      const [[clientRow]] = await connection.query(
+        "SELECT id FROM clients WHERE user_id = ? LIMIT 1",
+        [userId]
+      );
+
+      if (affiliateAttribution && clientRow) {
+        let campaignId = null;
+        if (campaignKey) {
+          const [[camp]] = await connection.query(
+            `SELECT id FROM affiliate_campaigns
+             WHERE affiliate_id = ? AND campaign_key = ?
+             LIMIT 1`,
+            [affiliateAttribution.id, campaignKey]
+          );
+          campaignId = camp?.id ?? null;
+        }
+
+        await connection.query(
+          `INSERT INTO affiliate_players
+            (affiliate_id, client_id, user_id, campaign_id, status)
+           VALUES (?, ?, ?, ?, 'active')`,
+          [affiliateAttribution.id, clientRow.id, userId, campaignId]
+        );
+
+        if (campaignId) {
+          await connection.query(
+            `UPDATE affiliate_campaigns SET registrations_count = registrations_count + 1 WHERE id = ?`,
+            [campaignId]
+          );
+        }
+      }
 
       // Commit the transaction (all inserts succeeded)
       await connection.commit();
@@ -160,6 +212,10 @@ async function register(req, res) {
     // If this is a known validation/error response, it was already sent, don't send again
     if (res.headersSent) {
       return;
+    }
+
+    if (error.statusCode === 400) {
+      return res.status(400).json({ error: error.message });
     }
 
     // Extract meaningful error message from database errors
@@ -262,10 +318,13 @@ async function login(req, res) {
       u.status, 
       r.name as role_name,
       c.full_name as full_name,
-      c.status AS client_status
+      c.status AS client_status,
+      ap.name AS affiliate_name,
+      ap.status AS affiliate_status
    FROM users u
    JOIN roles r ON u.role_id = r.id
    LEFT JOIN clients c ON c.user_id = u.id
+   LEFT JOIN affiliate_profiles ap ON ap.user_id = u.id
    WHERE u.username = ?`,
       [username.trim()],
     );
@@ -285,6 +344,20 @@ async function login(req, res) {
       if (clientStatus === "suspended") {
         return res.status(403).json({
           error: "Your account has been suspended. Please contact support.",
+        });
+      }
+    }
+
+    if (user.role_name === "affiliate") {
+      const affiliateStatus = String(user.affiliate_status || "").toLowerCase();
+      if (affiliateStatus === "suspended") {
+        return res.status(403).json({
+          error: "Your affiliate account has been suspended. Please contact support.",
+        });
+      }
+      if (affiliateStatus !== "active") {
+        return res.status(403).json({
+          error: "Your affiliate account is not active yet. Please contact support.",
         });
       }
     }
@@ -328,7 +401,7 @@ async function login(req, res) {
     res.json({
       token,
       role: user.role_name,
-      fullName: user.full_name || null,
+      fullName: user.full_name || user.affiliate_name || null,
       username: user.username,
     });
   } catch (error) {

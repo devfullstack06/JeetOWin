@@ -64,6 +64,12 @@ function sanitizeFullNameInput(raw) {
 }
 
 const REFERRAL_STORAGE_KEY = "jw:signupReferralCode";
+const AFFILIATE_REF_STORAGE_KEY = "jw:signupAffiliateRef";
+const CAMPAIGN_STORAGE_KEY = "jw:signupCampaign";
+
+function isAffiliateReferralCode(code) {
+  return /^AFF/i.test(String(code || "").trim());
+}
 
 function readStoredReferralCode() {
   try {
@@ -98,6 +104,7 @@ export default function Signup() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [referralCode, setReferralCode] = useState("");
   const [referralLocked, setReferralLocked] = useState(false);
+  const [affiliateSignup, setAffiliateSignup] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -109,12 +116,37 @@ export default function Signup() {
   const hasLoginBanner = !!(loginBanners.mobile || loginBanners.desktop);
 
   const refFromUrl = searchParams.get("ref")?.trim() || "";
+  const campaignFromUrl = searchParams.get("campaign")?.trim() || "";
+  const isAffiliateRef = isAffiliateReferralCode(refFromUrl);
 
   useEffect(() => {
     if (refFromUrl) {
+      if (isAffiliateRef) {
+        try {
+          sessionStorage.setItem(AFFILIATE_REF_STORAGE_KEY, refFromUrl);
+          if (campaignFromUrl) sessionStorage.setItem(CAMPAIGN_STORAGE_KEY, campaignFromUrl);
+          sessionStorage.removeItem(REFERRAL_STORAGE_KEY);
+        } catch {
+          /* ignore */
+        }
+        setReferralCode("");
+        setReferralLocked(true);
+        setAffiliateSignup(true);
+        fetch(`/api/affiliate/track-click?ref=${encodeURIComponent(refFromUrl)}&campaign=${encodeURIComponent(campaignFromUrl)}&landingUrl=${encodeURIComponent(window.location.href)}`).catch(() => {});
+        return;
+      }
       writeStoredReferralCode(refFromUrl);
       setReferralCode(refFromUrl);
       setReferralLocked(true);
+      return;
+    }
+    const storedAff = (() => {
+      try { return sessionStorage.getItem(AFFILIATE_REF_STORAGE_KEY)?.trim() || ""; } catch { return ""; }
+    })();
+    if (storedAff && isAffiliateReferralCode(storedAff)) {
+      setReferralCode("");
+      setReferralLocked(true);
+      setAffiliateSignup(true);
       return;
     }
     const stored = readStoredReferralCode();
@@ -122,7 +154,7 @@ export default function Signup() {
       setReferralCode(stored);
       setReferralLocked(true);
     }
-  }, [refFromUrl]);
+  }, [refFromUrl, campaignFromUrl, isAffiliateRef]);
 
   // Auto-redirect if already logged in (client)
   useEffect(() => {
@@ -307,18 +339,34 @@ export default function Signup() {
       // Format mobile to E.164: "+92" + 10digits
       const mobileE164 = `+92${mobile}`;
 
-      // Call register API (referral_code is optional, send only if provided)
+      const affiliateRef = (() => {
+        try { return sessionStorage.getItem(AFFILIATE_REF_STORAGE_KEY)?.trim() || ""; } catch { return ""; }
+      })();
+      const campaign = (() => {
+        try { return sessionStorage.getItem(CAMPAIGN_STORAGE_KEY)?.trim() || ""; } catch { return ""; }
+      })();
+      const effectiveRef = isAffiliateReferralCode(affiliateRef)
+        ? affiliateRef
+        : (referralCode.trim() || undefined);
+
       const data = await registerApi({
         fullName: fullName.trim(),
         username,
         mobile: mobileE164,
         password,
-        referral_code: referralCode.trim() || undefined,
+        referral_code: effectiveRef,
+        campaign: campaign || undefined,
       });
 
       // Show success message
       setSuccess(data?.message || "Registration successful! Redirecting to login...");
       writeStoredReferralCode("");
+      try {
+        sessionStorage.removeItem(AFFILIATE_REF_STORAGE_KEY);
+        sessionStorage.removeItem(CAMPAIGN_STORAGE_KEY);
+      } catch {
+        /* ignore */
+      }
 
       // Redirect to login after 2 seconds
       setTimeout(() => {
@@ -442,7 +490,8 @@ export default function Signup() {
                 </div>
               </label>
 
-              {/* Referral Code (Optional; locked when opened via ?ref= link) */}
+              {/* Referral Code (hidden for affiliate signup links) */}
+              {!affiliateSignup ? (
               <label className="jw-field">
                 <input
                   className={`jw-input${referralLocked ? " jw-input--locked" : ""}`}
@@ -456,6 +505,7 @@ export default function Signup() {
                   disabled={loading}
                 />
               </label>
+              ) : null}
 
               {/* Password */}
               <label className="jw-field">

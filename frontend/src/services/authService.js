@@ -92,7 +92,7 @@ export async function login({ username, password }) {
  * @returns {Promise<object>} - Response data from server
  * @throws {Error} - Throws error with readable message if registration fails
  */
-export async function register({ fullName, username, mobile, password, referral_code }) {
+export async function register({ fullName, username, mobile, password, referral_code, campaign }) {
   let res;
   let responseText;
 
@@ -101,7 +101,7 @@ export async function register({ fullName, username, mobile, password, referral_
     res = await fetch("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fullName, username, mobile, password, referral_code }),
+      body: JSON.stringify({ fullName, username, mobile, password, referral_code, campaign }),
     });
   } catch (networkError) {
     // Handle network errors (server not reachable, CORS, etc.)

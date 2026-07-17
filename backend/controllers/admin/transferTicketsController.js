@@ -887,6 +887,13 @@ exports.approveAdminTransferTicket = async (req, res) => {
       console.error("[referral] accrual after transfer approve:", referralErr);
     }
 
+    try {
+      const { recalculateAffiliateCommissionAfterTransferApproval } = require("../../services/affiliateCommissionService");
+      await recalculateAffiliateCommissionAfterTransferApproval(t.client_id, new Date());
+    } catch (affiliateErr) {
+      console.error("[affiliate] commission after transfer approve:", affiliateErr);
+    }
+
     const [rows] = await pool.query(
       `SELECT tt.id, tt.client_id, tt.client_account_id, tt.brand_companies_id, tt.direction, tt.amount, tt.status,
               tt.ledger_transaction_number, tt.reason, tt.evidence_path, tt.notes,
